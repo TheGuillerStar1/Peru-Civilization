@@ -52,7 +52,8 @@
     contacto_inverso: 'barco', florecimiento: 'cultura', propuesta_paz: 'paz', tupac_amaru: 'guerra', independencia: 'sol',
     guano: 'oro', guerra_pacifico: 'guerra', caucho: 'recurso', reforma_agraria: 'alimento', bancarrota: 'alerta', revuelta: 'alerta',
     fase2: 'mapa', fase3: 'mapa', fase4: 'mapa', congreso: 'congreso', propuesta_lazos: 'diplomacia', propuesta_paso: 'diplomacia',
-    guerra_conjunta: 'guerra', ultimatum: 'guerra', colonos_llegan: 'barco', propuesta_alianza: 'diplomacia', llamada_aliado: 'guerra', exigencia_tributo: 'oro'
+    guerra_conjunta: 'guerra', ultimatum: 'guerra', colonos_llegan: 'barco', propuesta_alianza: 'diplomacia', llamada_aliado: 'guerra', exigencia_tributo: 'oro',
+    doctrina_monroe: 'diplomacia', triple_alianza: 'guerra', canal_panama: 'barco', revolucion_mexicana: 'guerra', guerra_chaco: 'guerra', guerra_fria: 'alerta', crisis_petroleo: 'recurso'
   };
   PC.unitIconKey = function (type) {
     const U = PC.UNITS[type];

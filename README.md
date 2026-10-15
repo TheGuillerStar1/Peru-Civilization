@@ -49,6 +49,8 @@ La partida se guarda automáticamente en el navegador cada turno y también se p
 - **Recursos que cambian la historia**: el bronce exige cobre o estaño, el hierro exige hierro (Marcona, Apurímac), el acero carbón y la pólvora salitre o guano. Asentarte junto a los minerales permite tener armas de hierro o de fuego antes de 1532. Sin el recurso propio, la tecnología se puede comerciar con un vecino en paz, pero cuesta más.
 - **Culturas históricas** (Chavín, Paracas, Moche, Nasca, Wari, Tiwanaku, Lambayeque, Chimú, Chachapoyas, Chanka, Colla, Incas…) aparecen en su fecha. Si la tierra es de una IA, la nueva cultura le sucede (Huaca Prieta → Moche → Chimú). Si es tuya, florece dentro de tu civilización.
 - **Eventos con decisiones**: El Niño, terremotos, contacto con Mesoamérica, el viaje de Túpac Yupanqui, la guerra de sucesión, la epidemia de 1525, la **llegada de los españoles** (recibirlos en Cajamarca, emboscarlos, aliarse o fortificarse), la caída de la capital (resistencia en Vilcabamba o vasallaje), Túpac Amaru II, la Independencia, la era del guano, la Guerra del Pacífico, la fiebre del caucho y la reforma agraria.
+- **Eventos continentales** (Fases 2 y 3): la Doctrina Monroe, la Guerra de la Triple Alianza, el Canal de Panamá, la Revolución mexicana, la Guerra del Chaco, la Guerra Fría y la crisis del petróleo, cada uno con al menos una opción que se desvía de la historia.
+- **Escenarios**: Orígenes (3000 a.C.), Tahuantinsuyo (1438), Cajamarca (1532, Atahualpa ante Pizarro), Independencia (1820, contra el ejército realista), Guerra del Pacífico (1879) y Sudamérica (1810), que empieza directamente en la Fase 2.
 - **Divergencias**: la crónica registra cada vez que tu historia se aparta de la real.
 
 ### Niveles de IA
@@ -63,6 +65,8 @@ La partida se guarda automáticamente en el navegador cada turno y también se p
 1. **Perú** — completa.
 2. **Sudamérica** — jugable. Se desbloquea al controlar el 80% de las provincias. Conservas tecnologías, ciudades (reubicadas por coordenadas reales) y ejército. El continente se puebla según el año: pueblos originarios (muiscas, mapuches, guaraníes, tupíes…), virreinatos o repúblicas. Si llegas antes de 1500, los europeos desembarcan en su fecha (Brasil portugués en 1500, Nueva Granada en 1525, el Río de la Plata en 1536, Chile en 1541…), con epidemias por delante y refuerzos de ultramar; las colonias pueden afianzarse e independizarse o ser expulsadas.
 3. **América** — jugable. Se desbloquea al controlar el 75% de las regiones de Sudamérica. Un mapa de todo el continente, del Ártico a la Tierra del Fuego (≈880 hexágonos de tierra y 68 regiones, con la longitud comprimida según la latitud para que Canadá no ocupe más que Sudamérica), con tundra, bosque boreal, praderas, las Rocosas, la Sierra Madre, los Apalaches, los Grandes Lagos, el Misisipi y las Antillas. Aparecen mexicas (o toltecas antes de 1325), mayas, purépechas, zapotecas, taínos, la cultura del Misisipi, los haudenosaunee, lakotas o cheroquis; luego Nueva España, Nueva Francia y las colonias británicas, y finalmente México, Estados Unidos, Canadá, Centroamérica, Cuba o Haití.
+- **Maravillas continentales**: Puerta del Sol de Tiwanaku y Cerro Rico de Potosí (altiplano), Teotihuacan y Tenochtitlan (valle de México), Chichén Itzá (Yucatán), Tikal (Guatemala), Cahokia (Misisipi), Canal de Panamá (istmo, era industrial) y Cristo Redentor (sudeste de Brasil, era moderna); solo se construyen en su fase y en una ciudad de su región.
+
 4. **El Mundo** — en desarrollo. Se anunciará al controlar el 70% de las regiones de América.
 
 ## Estructura
@@ -76,6 +80,7 @@ js/data/geo_am.js      geografía de América (Fase 3): contorno, islas, cordill
 js/data/leaders_hist.js líderes históricos de cada país por año y nombres de los países según la época
 js/data/rules.js       terrenos, fauna, recursos, mejoras, tecnologías, unidades, edificios, maravillas, dificultad
 js/data/civs.js        culturas jugables, facciones, apariciones históricas, escenarios
+js/data/continent.js   maravillas continentales, la República del Perú y los escenarios de 1532, 1810, 1820 y 1879
 js/core/mapgen.js      generador del mapa del Perú (proyección por macrozonas)
 js/core/game.js        motor: ciudades, unidades, movimiento, combate, desgaste, cohesión, turnos
 js/core/ai.js          IA de las facciones
@@ -84,6 +89,8 @@ js/core/events.js      historia dinámica, llegada europea, eventos y divergenci
 js/core/diplomacy.js   guerra, paz y anexión por reciprocidad
 js/core/phases.js      fases de expansión: mapas continentales y traslado de tu civilización
 js/core/world.js       historia viva: sucesión de líderes, independencias, colonizaciones, iniciativas de la IA y congreso
+js/core/continent.js   maravillas por fase y región, y preparación de los escenarios nuevos
+js/core/events_continent.js eventos continentales de las Fases 2 y 3
 js/ui/icons.js         iconos y emblemas tocapu
 js/ui/render3d.js      maqueta 3D (three.js)
 js/ui/ui.js            interfaz
@@ -98,4 +105,4 @@ tests/smoke.js         prueba que juega partidas completas en piloto automático
 npm test          # o: node tests/smoke.js [semilla] [escenario] [cultura]
 ```
 
-Juega 12 partidas completas, con todos los escenarios, varias culturas, las 4 dificultades y las transiciones a las Fases 2 y 3, y falla si hay algún error.
+Juega 12 partidas completas y 4 partidas cortas de los escenarios nuevos, con todos los escenarios, varias culturas, las 4 dificultades y las transiciones a las Fases 2 y 3, y falla si hay algún error.
