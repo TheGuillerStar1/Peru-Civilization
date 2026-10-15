@@ -217,8 +217,7 @@
     }
     if (spain && g.flags.espanaGuerra && !PC.civUnits(spain).length && !PC.civCities(spain).length && g.flags.coronaDesiste) spain.alive = false;
     // Fase 2
-    const total = g.map.regions.length;
-    if (!g.fired.fase2 && PC.playerRegionCount() >= Math.ceil(total * 0.8)) { g.fired.fase2 = true; PC.queueEvent('fase2', {}); }
+    if (!g.fired.fase2 && PC.playerRegionCount() >= PC.phaseNeed()) { g.fired.fase2 = true; PC.queueEvent('fase2', {}); }
     void player;
   };
 

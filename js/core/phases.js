@@ -3,14 +3,15 @@
   'use strict';
 
   PC.PHASES = [
-    { id: 'peru', name: 'Fase 1 · Perú', ready: true, next: 'sudamerica', need: 0.8 },
-    { id: 'sudamerica', name: 'Fase 2 · Sudamérica', ready: true, next: 'america', need: 0.75 },
-    { id: 'america', name: 'Fase 3 · América', ready: true, next: 'mundo', need: 0.7 },
+    { id: 'peru', name: 'Fase 1 · Perú', ready: true, next: 'sudamerica', need: 0.6 },
+    { id: 'sudamerica', name: 'Fase 2 · Sudamérica', ready: true, next: 'america', need: 0.6 },
+    { id: 'america', name: 'Fase 3 · América', ready: true, next: 'mundo', need: 0.6 },
     { id: 'mundo', name: 'Fase 4 · El Mundo', ready: false }
   ];
   PC.phaseInfo = (id) => PC.PHASES.find((p) => p.id === (id || PC.G.phase));
-  // Fracción de regiones que hay que controlar para pasar a la siguiente fase.
-  PC.phaseNeed = () => Math.ceil(PC.G.map.regions.length * (PC.phaseInfo().need || 1));
+  // Regiones que hay que controlar para pasar a la siguiente fase: el 60% (desde 1600 basta el 40%).
+  PC.phaseShare = () => (PC.G.year >= 1600 ? 0.4 : (PC.phaseInfo().need || 1));
+  PC.phaseNeed = () => Math.ceil(PC.G.map.regions.length * PC.phaseShare());
 
   // Terreno de Sudamérica por reglas climáticas aproximadas.
   function saTerrain(lon, lat, geo, seed, x, y) {

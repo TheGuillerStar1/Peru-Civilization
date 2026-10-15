@@ -745,12 +745,8 @@
         }
       }
     });
-    // Mantenimiento militar
-    const mil = PC.civUnits(civ).filter(PC.isMil).length;
-    const era = PC.eraOf(civ);
-    const upkeep = Math.max(0, mil - PC.civCities(civ).length * 2) * (1 + Math.floor(era / 3));
-    const bUpkeep = PC.civCities(civ).reduce((s2, c) => s2 + c.buildings.filter((b) => PC.BUILDINGS[b]).length, 0);
-    gold -= upkeep + Math.round(bUpkeep * (0.5 + era * 0.15));
+    // Mantenimiento de tropas y edificios (js/core/economy.js)
+    gold -= PC.civUpkeep(civ, gold).total;
     if (civ.tribute) { const tr = Math.max(0, Math.floor(gold * civ.tribute)); gold -= tr; }
     civ.gold += gold; civ.lastIncome = gold; civ.lastSci = sci; civ.lastCult = cult;
     civ.culture += cult;

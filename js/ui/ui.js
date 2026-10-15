@@ -168,7 +168,7 @@
         <li>Costa: los valles son fértiles y el desierto desgasta. Sierra: las cordilleras frenan y se cruzan por las abras. Selva: niebla densa, desgaste y fauna peligrosa.</li>
         <li>Algunas tecnologías exigen recursos: sin cobre no hay bronce, sin hierro no hay hierro y sin salitre o guano no hay pólvora.</li>
         <li>Las unidades antiguas se pueden modernizar con oro cuando descubres su sucesora.</li>
-        <li>Controla el 80% de las provincias para pasar a la Fase 2: Sudamérica, y el 75% de las regiones del continente para la Fase 3: América.</li>
+        <li>Controla el 60% de las provincias para pasar a la Fase 2: Sudamérica, y el 60% de las regiones del continente para la Fase 3: América (desde 1600 basta el 40%).</li>
       </ul>
       <div class="choices"><button class="btn primary big" data-close type="button">${ic('sol')}Empezar</button></div>`, 'intro');
   }
@@ -338,6 +338,7 @@
       if (bc !== null) h += `<div class="actions"><button class="btn" data-act="buy" type="button" ${civ.gold >= bc && city.bought !== PC.G.turn ? '' : 'disabled'}>${ic('oro')}Comprar por ${bc} oro</button></div>`;
     } else h += `<p class="note ${b ? 'info' : ''}">${ic(b ? 'oro' : 'alerta')}${b ? 'Produce riqueza: la producción se convierte en oro.' : 'Elige qué producir.'}</p>`;
     h += '</div>';
+    if (PC.projectOptions) h += `<div class="sec"><h4>Grandes proyectos</h4><div class="actgrid">${PC.projectOptions(city).map((o) => `<button type="button" class="act" data-act="project" data-id="${o.id}" title="${esc(o.desc)}" ${o.ok ? '' : 'disabled'}>${ic(o.icon)}<span>${esc(o.name)}</span><small>${o.wait ? `en ${o.wait} t` : `${o.cost} oro`}</small></button>`).join('')}</div></div>`;
     const opts = PC.buildOptions(city);
     const tabs = [['unit', 'Unidades'], ['building', 'Edificios'], ['wonder', 'Maravillas']];
     h += `<div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button type="button" role="tab" data-tab="${k}" aria-selected="${UI.buildTab === k}">${l} <small>${opts.filter((o) => o.kind === k).length}</small></button>`).join('')}</div>`;
@@ -377,6 +378,7 @@
     else if (act === 'disband' && u) { ask(`¿Disolver ${PC.UNITS[u.type].name}?`, 'Disolver', () => { PC.removeUnit(u); UI.select(null); refresh(); }); }
     else if (act === 'build' && sel && sel.city) { sel.city.build = { kind: b.dataset.kind, id: b.dataset.id }; UI.select({ city: sel.city }); }
     else if (act === 'buy' && sel && sel.city) { PC.buy(sel.city); UI.select({ city: sel.city }); }
+    else if (act === 'project' && sel && sel.city) { PC.startProject(sel.city, b.dataset.id); UI.select({ city: sel.city }); }
     else if (act === 'fase2' && PC.canAdvancePhase()) { PC.startNextPhase(); PC.G.phaseChanged = false; startGame(false); }
     refresh();
   }
@@ -759,7 +761,7 @@
     const total = g.map.regions.length, mine = PC.playerRegionCount(), need = PC.phaseNeed();
     const info = PC.phaseInfo(), next = info.next && PC.phaseInfo(info.next);
     const zones = [...new Set(g.map.regions.map((r) => r.zone))];
-    let h = `<h2>Provincias</h2><p class="lead">Controlas ${mine} de ${total}. ${next ? `Necesitas ${need} (el ${Math.round(info.need * 100)}%) para pasar a la ${esc(next.name.replace(' · ', ': '))}${next.ready ? '' : ' (en desarrollo)'}.` : ''}</p>
+    let h = `<h2>Provincias</h2><p class="lead">Controlas ${mine} de ${total}. ${next ? `Necesitas ${need} (el ${Math.round(PC.phaseShare() * 100)}%) para pasar a la ${esc(next.name.replace(' · ', ': '))}${next.ready ? '' : ' (en desarrollo)'}.` : ''}</p>
       <div class="bar"><i style="width:${Math.min(100, mine / need * 100)}%"></i><span>${mine} de ${need}</span></div>`;
     if (g.map.kind === 'peru') h += `<p class="small muted">El mapa tiene ${g.map.counts.costa} hexágonos de costa, ${g.map.counts.sierra} de sierra y ${g.map.counts.selva} de selva, en las proporciones reales del Perú.</p>`;
     h += '<div class="regcols">';
