@@ -1,0 +1,57 @@
+/* Experiencia de juego v0.1.2: minimapa, consejero, resumen de turno y ranuras de guardado. */
+
+/* Minimapa: banda de lana en la esquina inferior izquierda, sobre los controles de cámara */
+#minimap { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+  background: #0b1022ee; border: 1px solid #2c3766; border-radius: var(--r); padding: 4px; box-shadow: 0 6px 18px #0008; }
+#minimap .mm-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 2px 3px; font: 700 var(--t-xs)/1 var(--f-display); letter-spacing: .06em; color: var(--algodon-2); }
+#minimap .mm-x { background: none; border: 0; color: var(--algodon-2); padding: 2px; cursor: pointer; display: flex; }
+#minimap .mm-x:hover, #minimap .mm-x:focus-visible { color: var(--qolli); }
+#minimap .mm-x .ico { width: 12px; height: 12px; }
+#minimap canvas { display: block; cursor: crosshair; border-radius: 2px; touch-action: none; }
+
+/* Consejero: tarjeta junto al minimapa */
+#advisor { position: absolute; left: calc(max(12px, env(safe-area-inset-left, 0px)) + 236px); bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+  width: min(360px, calc(100% - 640px)); min-width: 260px; display: flex; gap: 10px; align-items: flex-start;
+  background: var(--lana-2); border: 1px solid #3a4677; border-top: 3px solid var(--qolli); border-radius: var(--r); padding: 10px 12px; box-shadow: 0 8px 22px #0009; }
+#advisor.threat { border-top-color: var(--cinabrio); }
+#advisor .adv-ico .ico { width: 26px; height: 26px; color: var(--qolli); }
+#advisor.threat .adv-ico .ico { color: var(--cinabrio); }
+#advisor .adv-body > b { font: 700 var(--t-s)/1.1 var(--f-display); letter-spacing: .05em; color: var(--qolli-2); }
+#advisor.threat .adv-body > b { color: var(--cinabrio); }
+#advisor p { margin: 4px 0 8px; font-size: var(--t-s); line-height: 1.4; color: var(--algodon); }
+#advisor .adv-acts { display: flex; gap: 6px; flex-wrap: wrap; }
+#advisor .adv-acts .btn { padding: 4px 10px; font-size: var(--t-xs); }
+
+/* Resumen de turno: aviso compacto arriba, en el centro del área del mapa */
+#turn-summary { position: absolute; top: calc(74px + env(safe-area-inset-top, 0px)); left: calc((100% - 360px) / 2); transform: translateX(-50%);
+  width: min(400px, calc(100% - 820px)); min-width: 280px; background: #0b1022f2; border: 1px solid #2c3766; border-left: 3px solid var(--qolli); border-radius: var(--r); padding: 8px 10px; box-shadow: 0 6px 18px #0008; }
+#turn-summary .ts-head { display: flex; justify-content: space-between; align-items: center; font: 700 var(--t-s)/1.2 var(--f-display); color: var(--qolli-2); font-variant-numeric: tabular-nums; }
+#turn-summary .ts-x { background: none; border: 0; color: var(--algodon-2); cursor: pointer; padding: 2px; display: flex; }
+#turn-summary .ts-x .ico { width: 12px; height: 12px; }
+#turn-summary ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 3px; }
+#turn-summary li { display: flex; gap: 6px; align-items: flex-start; font-size: var(--t-s); }
+#turn-summary li > .ico { width: 14px; height: 14px; flex: none; margin-top: 2px; color: var(--qolli); }
+#turn-summary li.ts-war > .ico { color: var(--cinabrio); }
+#turn-summary .ts-link { background: none; border: 0; padding: 0; color: var(--algodon); font: inherit; text-align: left; cursor: pointer; }
+#turn-summary .ts-link:hover, #turn-summary .ts-link:focus-visible { color: var(--qolli-2); text-decoration: underline; }
+#turn-summary li.ts-war .ts-link { color: var(--cinabrio); }
+
+/* Ranuras de guardado */
+.slots { display: grid; gap: 6px; margin: 8px 0; }
+.slots .slot b { display: flex; justify-content: space-between; gap: 12px; }
+.slots .slot b em { font: 400 var(--t-xs) var(--f-body); color: var(--algodon-2); font-style: normal; font-variant-numeric: tabular-nums; }
+.slots .slot.auto b { color: var(--algodon-2); }
+
+@media (max-width: 1180px) {
+  #advisor { width: min(340px, calc(100% - 580px)); }
+  #turn-summary { left: calc((100% - 320px) / 2); width: min(380px, calc(100% - 700px)); }
+}
+@media (max-width: 1000px) {
+  #advisor { left: max(12px, env(safe-area-inset-left, 0px)); bottom: calc(290px + env(safe-area-inset-bottom, 0px)); width: min(360px, calc(100% - 400px)); }
+}
+@media (max-width: 760px) {
+  #minimap { bottom: auto; top: calc(70px + env(safe-area-inset-top, 0px)); left: auto; right: 12px; }
+  #minimap canvas { max-width: 110px; height: auto !important; }
+  #advisor { bottom: calc(46% + 100px); left: 12px; right: 12px; width: auto; min-width: 0; }
+  #turn-summary { left: 12px; right: 12px; transform: none; width: auto; min-width: 0; }
+}

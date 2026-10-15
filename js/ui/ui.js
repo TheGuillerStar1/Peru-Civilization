@@ -6,16 +6,31 @@
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const ic = (n, cls) => PC.icon(n, cls);
   const UI = PC.UI = { menu: { scenario: 'origenes', culture: 'caral', difficulty: 'medio', leader: null, start: '' }, modal: null, buildTab: 'unit' };
-  const SAVE_KEY = 'peru-civ-save';
+  // Guardado: ranuras de js/ui/saves.js (la última partida y el guardado automático rotativo).
   const storage = {
-    get() { try { return localStorage.getItem(SAVE_KEY); } catch (e) { return null; } },
-    set(v) { try { localStorage.setItem(SAVE_KEY, v); return true; } catch (e) { return false; } }
+    get() { const x = PC.Saves.latest(); return x ? PC.Saves.get(x.slot) : null; },
+    set(v) { return PC.Saves.autosave(v); }
   };
+  // Ganchos para los módulos de interfaz en archivos aparte (consejero, minimapa, resumen...).
+  const hooks = {};
+  UI.on = (name, fn) => { (hooks[name] = hooks[name] || []).push(fn); };
+  const emit = (name, arg) => (hooks[name] || []).forEach((fn) => { try { fn(arg); } catch (e) { console.error(e); } });
 
   // ------------------------------------------------------------------ Menú (pantallas como en Civilization)
   const OPT_KEY = 'peru-civ-opciones';
   const prefs = (() => { try { return JSON.parse(localStorage.getItem(OPT_KEY)) || {}; } catch (e) { return {}; } })();
   const savePrefs = () => { try { localStorage.setItem(OPT_KEY, JSON.stringify(prefs)); } catch (e) { /* sin almacenamiento */ } };
+  UI.prefs = prefs; UI.savePrefs = savePrefs; UI.esc = esc;
+  // Casilla de verificación en Opciones › Ayudas y accesibilidad (preferencia con valor por defecto).
+  UI.pref = (key, def) => (prefs[key] === undefined ? def : !!prefs[key]);
+  UI.addOption = function (key, label, def, onChange) {
+    let fs = $('#opt-extra');
+    if (!fs) { $('#scr-options .scr-body').insertAdjacentHTML('beforeend', '<fieldset class="step" id="opt-extra"><legend>Ayudas y accesibilidad</legend></fieldset>'); fs = $('#opt-extra'); }
+    fs.insertAdjacentHTML('beforeend', `<label class="check" for="opt-${key}"><input id="opt-${key}" type="checkbox"> ${esc(label)}</label>`);
+    const box = $('#opt-' + key);
+    box.checked = UI.pref(key, def);
+    box.onchange = (e) => { prefs[key] = e.target.checked; savePrefs(); if (onChange) onChange(e.target.checked); };
+  };
   UI.screen = 'title';
   function showScreen(name) {
     UI.screen = name;
@@ -33,9 +48,9 @@
     if (!sc.playable.includes(m.culture)) m.culture = sc.playable[0];
     if (!m.leader) m.leader = PC.defaultLeader(m.culture);
     // Principal
-    const save = storage.get();
+    const save = PC.Saves.latest();
     $('#btn-continue').disabled = !save;
-    if (save) { try { const d = JSON.parse(save); const pc = d.civs.find((c) => c.isPlayer); $('#continue-info').textContent = `${pc.name} · ${PC.fmtYear(d.year)} · turno ${d.turn}`; } catch (e) { $('#continue-info').textContent = 'Retoma tu última partida'; } }
+    if (save) { const d = save.meta; $('#continue-info').textContent = `${d.civ} · ${PC.fmtYear(d.year)} · turno ${d.turn}`; }
     else $('#continue-info').textContent = 'No hay partidas guardadas';
     if (UI.screen === 'leader') {
       $('#leader-list').innerHTML = Object.keys(PC.LEADERS).map((id) => {
@@ -80,14 +95,13 @@
       if (PC.G && PC.G.preview) { R.sel = { regionHL: fixed ? 'cusco' : (m.start || C.region) }; R.draw(); }
     } else if (PC.G && PC.G.preview && R.sel && R.sel.regionHL) { R.sel = null; R.draw(); }
     if (UI.screen === 'load') {
-      let html = '';
-      if (save) { try { const d = JSON.parse(save); const pc = d.civs.find((c) => c.isPlayer); html = `<button type="button" class="mm" data-loadslot="1"><b>${esc(pc.name)}</b><small>${PC.fmtYear(d.year)} · turno ${d.turn} · ${esc((PC.DIFFICULTY[d.difficulty] || {}).name || '')}</small></button>`; } catch (e) { html = ''; } }
-      $('#save-list').innerHTML = html || '<p class="muted">No hay partidas guardadas en este navegador.</p>';
+      $('#save-list').innerHTML = PC.Saves.html(esc, 'load') || '<p class="muted">No hay partidas guardadas en este navegador.</p>';
     }
     if (UI.screen === 'options') {
       $('#opt-quality').innerHTML = ['alta', 'baja'].map((q) => `<button type="button" data-q="${q}" aria-pressed="${(prefs.quality || 'alta') === q}">${q === 'alta' ? 'Alta' : 'Baja'}</button>`).join('');
       $('#opt-regions').checked = !!prefs.regions;
     }
+    emit('menu', UI.screen);
   }
   function previewWorld() {
     // Maqueta de fondo del menú: una partida de muestra con el mapa revelado, girando despacio.
@@ -108,7 +122,7 @@
       if (b.dataset.cu) UI.menu.culture = b.dataset.cu;
       if (b.dataset.df) UI.menu.difficulty = b.dataset.df;
       if (b.dataset.q) { prefs.quality = b.dataset.q; savePrefs(); R.setQuality(b.dataset.q); }
-      if (b.dataset.loadslot) { try { PC.load(storage.get()); startGame(false); } catch (err) { menuError('No se pudo abrir la partida guardada.'); } return; }
+      if (b.dataset.loadslot) { try { PC.load(PC.Saves.get(b.dataset.loadslot)); startGame(false); } catch (err) { menuError('No se pudo abrir la partida guardada.'); } return; }
       if (b.dataset.ld || b.dataset.sc || b.dataset.cu || b.dataset.df || b.dataset.q) renderMenu();
       if (rebuild) previewWorld();
     });
@@ -153,6 +167,7 @@
     renderNav(); renderMapCtl();
     if (fresh) showIntro();
     refresh();
+    emit('start', fresh);
   }
   function showIntro() {
     const g = PC.G, p = PC.player();
@@ -395,6 +410,7 @@
   }
 
   // ------------------------------------------------------------------ Ciclo de unidades
+  UI.needsOrders = (u) => needsOrders(u); UI.nextUnit = () => nextUnit();
   function needsOrders(u) { return u.moves > 0 && !u.fort && !u.task && !u.auto && !u.path && !u.heal && !u.sentry && u.skipTurn !== PC.G.turn; }
   function nextUnit() {
     const list = PC.civUnits(PC.player()).filter(needsOrders);
@@ -567,8 +583,6 @@
     else if (k === 'b' && u && u.type === 'colono' && u.civ === PC.G.playerId && PC.validCitySite(PC.tile(u.t), PC.player())) { const t = PC.tile(u.t); PC.foundCity(PC.player(), t); PC.removeUnit(u); UI.select({ city: PC.cityAt(t.i) }); refresh(); }
     else if (k === 't') openTechs(); else if (k === 'd') openDiplo(); else if (k === 'p') openRegions(); else if (k === 'c') openChronicle();
     else if (k === 'q') R.rotate(-0.3); else if (k === 'e') R.rotate(0.3);
-    else if (k === 'arrowleft') R.pan(80, 0); else if (k === 'arrowright') R.pan(-80, 0);
-    else if (k === 'arrowup') R.pan(0, 80); else if (k === 'arrowdown') R.pan(0, -80);
     else if (k === '+' || k === '=') R.zoom(1 / 1.2); else if (k === '-') R.zoom(1.2);
   }
 
@@ -589,6 +603,7 @@
       $('#btn-end').disabled = false;
       storage.set(PC.serialize());
       UI.select(null);
+      emit('turn');
       refresh();
       if (g.eventQueue.length) showEvent();
       else if (g.gameOver) showGameOver();
@@ -597,6 +612,7 @@
   function refresh() {
     if (!PC.G || PC.G.preview) return;
     renderTop(); renderPanel(); R.refresh(); flushToasts();
+    emit('refresh');
   }
   UI.refresh = refresh;
 
@@ -611,6 +627,7 @@
     setTimeout(() => el.remove(), 6400);
     while ($('#toasts').children.length > 5) $('#toasts').firstChild.remove();
   }
+  UI.toast = toast;
   function flushToasts() { PC.G.notices.splice(0).slice(-5).forEach((n) => toast(n.text, n.type)); }
 
   // ------------------------------------------------------------------ Diálogos
@@ -627,8 +644,7 @@
     const f = $('#modal-body').querySelector('button:not(:disabled)'); if (f) f.focus({ preventScroll: true });
   }
   function closeModal() { UI.modal = null; $('#modal').hidden = true; if (PC.G && !PC.G.preview) refresh(); }
-  UI.closeModal = closeModal;
-  UI.openModal = openModal;
+  UI.closeModal = closeModal; UI.openModal = openModal;
 
   function showEvent() {
     const ev = PC.currentEvent();
@@ -831,10 +847,12 @@
         if (d.dataset.diplo === 'annex') PC.annex(p, c);
         refresh(); openDiplo(); return;
       }
+      const sv = e.target.closest('[data-saveslot]');
+      if (sv) { const ok = PC.Saves.save(sv.dataset.saveslot); closeModal(); toast(ok ? `Partida guardada en la ${PC.Saves.label(sv.dataset.saveslot).toLowerCase()}.` : 'Este navegador no permite guardar. Exporta la partida a un archivo.', ok ? 'info' : 'warn'); return; }
       const a = e.target.closest('[data-act2]');
       if (a) {
         const act = a.dataset.act2;
-        if (act === 'save') { closeModal(); toast(storage.set(PC.serialize()) ? 'Partida guardada en este navegador.' : 'Este navegador no permite guardar. Exporta la partida a un archivo.', 'info'); }
+        if (act === 'save') openModal(`<h2>Guardar la partida</h2><p class="small muted">Elige una ranura. Además hay dos guardados automáticos que se turnan al terminar cada turno.</p>${PC.Saves.html(esc, 'save')}`, 'save');
         if (act === 'export') {
           try {
             const blob = new Blob([PC.serialize()], { type: 'application/json' });

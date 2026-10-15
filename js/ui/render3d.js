@@ -410,13 +410,21 @@
   }
 
   // Fronteras de territorio y de provincias.
-  function edgeQuad(parts, t, k, h, color, w, inset) {
+  function edgeQuad(parts, t, k, h, color, w, inset, f0, f1) {
     const [cx, cz] = R.tileXZ(t);
-    const [ax, az] = hexCorner(cx, cz, k, 1 - inset), [bx, bz] = hexCorner(cx, cz, k + 1, 1 - inset);
+    let [ax, az] = hexCorner(cx, cz, k, 1 - inset), [bx, bz] = hexCorner(cx, cz, k + 1, 1 - inset);
+    if (f0 !== undefined) { const dx = bx - ax, dz = bz - az; [ax, az, bx, bz] = [ax + dx * f0, az + dz * f0, ax + dx * f1, az + dz * f1]; }
     const mx = (ax + bx) / 2, mz = (az + bz) / 2;
     const len = Math.hypot(bx - ax, bz - az);
     const ang = Math.atan2(bz - az, bx - ax);
     parts.push(['box', color, mx, h, mz, len, 0.035, w, 0, -ang, 0]);
+  }
+  // Bordes con patrón (opción para daltonismo): cada civilización tiene su trazo además de su color.
+  const BORDER_PATTERNS = [[[0, 0.42], [0.58, 1]], [[0.04, 0.24], [0.4, 0.6], [0.76, 0.96]], null, [[0, 0.62], [0.78, 0.92]]];
+  function patternEdge(parts, t, k, h, civ) {
+    const color = PC.civ(civ).color, pat = BORDER_PATTERNS[civ % BORDER_PATTERNS.length];
+    if (!pat) { edgeQuad(parts, t, k, h, color, 0.05, 0.05); edgeQuad(parts, t, k, h, color, 0.05, 0.19); return; } // línea doble
+    pat.forEach(([a, b]) => edgeQuad(parts, t, k, h, color, 0.11, 0.07, a, b));
   }
   const EDGE_DIR = [0, 5, 4, 3, 2, 1]; // índice de vecino → lado del hexágono
   function buildBorders() {
@@ -430,7 +438,7 @@
       nb.forEach(([c, r], j) => {
         const n = PC.tileCR(c, r);
         const side = (EDGE_DIR[j] + 6 - 0) % 6;
-        if (t.owner && (!n || n.owner !== t.owner)) edgeQuad(parts, t, side, h, PC.civ(t.owner).color, 0.09, 0.07);
+        if (t.owner && (!n || n.owner !== t.owner)) { if (R.patternBorders) patternEdge(parts, t, side, h, t.owner); else edgeQuad(parts, t, side, h, PC.civ(t.owner).color, 0.09, 0.07); }
         if (R.showRegions && n && t.region && n.region && n.region !== t.region) edgeQuad(rparts, t, side, h + 0.01, '#efe4cc', 0.035, 0.0);
       });
     });
@@ -1277,5 +1285,20 @@
     const [x, z] = R.mapCenter();
     cam.tx = x; cam.tz = z; cam.dist = PC.G.map.kind === 'peru' ? 40 : 46; camGoal.active = false;
   };
+  // Esquinas de la vista sobre el suelo (para el recuadro del minimapa), en coordenadas x/z del mundo.
+  R.viewCorners = function () {
+    if (!camera) return null;
+    const out = [];
+    for (const [sx, sy] of [[-1, 1], [1, 1], [1, -1], [-1, -1]]) {
+      const v = new THREE.Vector3(sx, sy, 0.5).unproject(camera).sub(camera.position);
+      v.normalize();
+      const far = cam.dist * 1.6; // los rayos casi rasantes se recortan para que el recuadro no se dispare
+      const k = v.y < -1e-4 ? Math.min(-camera.position.y / v.y, far) : far;
+      out.push([camera.position.x + v.x * k, camera.position.z + v.z * k]);
+    }
+    return out;
+  };
+  R.camTarget = () => [cam.tx, cam.tz];
+  R.lookAt = function (x, z, instant) { camGoal.tx = x; camGoal.tz = z; camGoal.active = true; if (instant) { cam.tx = x; cam.tz = z; camGoal.active = false; } };
   R.setZoom = function (d) { cam.dist = PC.clamp(d, cam.minD, cam.maxD); };
 })(globalThis.PC = globalThis.PC || {});
