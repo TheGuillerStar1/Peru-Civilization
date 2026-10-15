@@ -170,6 +170,7 @@
     emit('start', fresh);
   }
   function showIntro() {
+    if (UI.renderIntro) { UI.renderIntro(); return; }
     const g = PC.G, p = PC.player();
     openModal(`<h2>${esc(p.name)}, ${PC.fmtYear(g.year)}</h2>
       <p class="lead">${esc(PC.CULTURES[p.key].desc)}</p>

@@ -1,8 +1,57 @@
+<div align="center">
+
 # Perú Civilization
 
-Juego de estrategia por turnos (estilo *Civilization*) sobre la historia del Perú, **no lineal**: tus decisiones, los recursos que controlas y los eventos que enfrentas producen un Perú distinto en cada partida. Va de Caral (3000 a.C.) al siglo XXI y se expande por fases: **Perú → Sudamérica → América → el Mundo**.
+**Estrategia por turnos sobre la historia del Perú, de Caral a la Conquista y más allá.**<br>
+La historia real es el punto de partida; lo que pase después depende de ti.
 
-La base histórica y demográfica está en [`docs/INVESTIGACION_HISTORICA.md`](docs/INVESTIGACION_HISTORICA.md).
+[![Pruebas](https://github.com/TheGuillerStar1/Peru-Civilization/actions/workflows/test.yml/badge.svg)](https://github.com/TheGuillerStar1/Peru-Civilization/actions/workflows/test.yml)
+![Versión](https://img.shields.io/badge/versi%C3%B3n-0.1.3-e2a72e)
+![Sin instalación](https://img.shields.io/badge/instalaci%C3%B3n-ninguna-86ba6f)
+![three.js](https://img.shields.io/badge/3D-three.js-a3243b)
+![Idioma](https://img.shields.io/badge/idioma-espa%C3%B1ol-28335c)
+
+<img src="docs/img/03-peru-ciudad.jpg" alt="Cusco, capital del Tahuantinsuyo, en la maqueta 3D del juego" width="860">
+
+[Jugar](#cómo-jugar) · [Capturas](#capturas) · [La Conquista](#la-conquista-v013) · [Diseño](DESIGN.md) · [Investigación histórica](docs/INVESTIGACION_HISTORICA.md)
+
+</div>
+
+## El juego en breve
+
+Un *Civilization* **no lineal** sobre el Perú: tus decisiones, los recursos que controlas y los eventos que enfrentas producen un Perú distinto en cada partida. Va de Caral (3000 a.C.) al siglo XXI y se expande por fases: **Perú → Sudamérica → América → el Mundo**.
+
+- **Geografía que decide**: costa, sierra y selva se juegan distinto. Hay abras, desiertos, niebla densa, fauna amazónica y yacimientos reales que habilitan tecnologías (el hierro de Marcona, el salitre, el guano).
+- **Historia no lineal**: las culturas aparecen en su fecha, y cada punto de divergencia con la historia real queda registrado en tu crónica.
+- **Líderes con rostro**: 17 líderes jugables y gobernantes históricos para decenas de países, de los Sapa Inca a los presidentes de hoy, con modelo 3D propio y agenda.
+- **La Conquista**: once frentes entre las Antillas y Chile con comandantes históricos, alianzas, traiciones, ligas de resistencia y pactos con la Corona.
+- **Cuatro formas de ganar** (dominación, cultural, diplomática e histórica), un congreso de los pueblos que vota resoluciones y cuatro dificultades, de Fácil a **Realista**.
+- **Sin instalación**: HTML, CSS y JavaScript puros con three.js incluido. Guarda en el navegador y exporta a `.json`.
+
+## Capturas
+
+<table>
+<tr>
+<td width="50%"><img src="docs/img/01-menu.jpg" alt="Pantalla principal de Perú Civilization"><br><sub><b>Pantalla principal.</b> La maqueta del Perú gira detrás del menú.</sub></td>
+<td width="50%"><img src="docs/img/02-lideres.jpg" alt="Elección de líder con el modelo 3D de Pachacútec"><br><sub><b>Elige a tu líder.</b> Modelo 3D, habilidad única y personalidad.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/img/00-guia.jpg" alt="La guía de inicio, con capturas reales del juego"><br><sub><b>Guía de inicio.</b> Cada tarjeta es una captura real de la maqueta.</sub></td>
+<td width="50%"><img src="docs/img/04-peru-mapa.jpg" alt="El Perú entero: costa, sierra y selva"><br><sub><b>El Perú a escala.</b> Costa, sierra y selva en sus proporciones reales.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/img/07-america.jpg" alt="El Caribe y Mesoamérica en la Fase 3"><br><sub><b>Fase 3 · América.</b> Del Ártico a la Tierra del Fuego, con el Caribe y Mesoamérica.</sub></td>
+<td width="50%"><img src="docs/img/08-conquista.jpg" alt="La ventana de La Conquista con los frentes, la liga y el pacto"><br><sub><b>La Conquista.</b> Frentes, comandantes, pueblos que resisten o traicionan.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/img/06-evento.jpg" alt="Evento: hombres barbudos en Tumbes"><br><sub><b>Eventos con decisiones.</b> La llegada de los españoles, 1532.</sub></td>
+<td width="50%"><img src="docs/img/09-requerimiento.jpg" alt="El Requerimiento de un capitán español"><br><sub><b>Decisiones con consecuencias.</b> Aceptar el vasallaje, resistir o pedir ayuda a la liga.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/img/05-diplomacia.jpg" alt="Diplomacia con un líder rival"><br><sub><b>Diplomacia.</b> Cada líder tiene su agenda; las acciones cuestan influencia.</sub></td>
+<td width="50%"><img src="docs/img/10-victorias.jpg" alt="La ventana de victorias y legados"><br><sub><b>Victorias y legados.</b> Cuatro formas de ganar y legados de la historia.</sub></td>
+</tr>
+</table>
 
 ## Cómo jugar
 
@@ -90,7 +139,9 @@ Cuatro formas de ganar, con su avance en **Menú → Victorias**: **Dominación*
 ## Estructura
 
 ```
-index.html, css/style.css, css/experiencia.css (minimapa, consejero, resumen, ranuras)
+index.html, css/*.css  estilos (style, victory, conquista, experiencia, intro)
+img/intro/             capturas 3D de la guía de inicio
+docs/img/              capturas del README, css/experiencia.css (minimapa, consejero, resumen, ranuras)
 js/core/util.js        azar con semilla, ruido, hexágonos
 js/data/geo.js         geografía del Perú (contorno, Andes, ríos, abras, provincias, yacimientos)
 js/data/geo_sa.js      geografía de Sudamérica (Fase 2) y sus colonizaciones
