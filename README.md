@@ -34,7 +34,7 @@ Maqueta 3D low-poly hecha con three.js sobre un manto tejido. La interfaz usa ic
 - **Modernización**: una unidad antigua se moderniza pagando oro cuando descubres su sucesora, y cambia de modelo.
 - **Ciudades**: cambian con la era (chozas, kanchas de piedra, casas coloniales, ladrillo industrial y torres), la población y los edificios. Las maravillas (Caral, Chavín, Nasca, Chan Chan, Kuélap, Machu Picchu…) tienen modelo propio, igual que los recursos, las mejoras y la fauna.
 
-La partida se guarda automáticamente en el navegador cada turno y también se puede exportar o importar como `.json`.
+La partida se guarda automáticamente en el navegador cada turno y también se puede exportar o importar como `.json`. El guardado (formato v2) es compacto (≈290 KB tras 150 turnos en América, antes ≈530 KB) y las partidas guardadas con versiones anteriores se migran solas al cargarlas.
 
 ## Diseño
 
@@ -80,6 +80,7 @@ js/core/mapgen.js      generador del mapa del Perú (proyección por macrozonas)
 js/core/game.js        motor: ciudades, unidades, movimiento, combate, desgaste, cohesión, turnos
 js/core/ai.js          IA de las facciones
 js/core/setup.js       creación, guardado y carga de partidas
+js/core/save.js        formato de guardado compacto (v2) y migración de partidas antiguas (PC.migrateSave)
 js/core/events.js      historia dinámica, llegada europea, eventos y divergencias
 js/core/diplomacy.js   guerra, paz y anexión por reciprocidad
 js/core/phases.js      fases de expansión: mapas continentales y traslado de tu civilización
@@ -90,12 +91,18 @@ js/ui/ui.js            interfaz
 js/vendor/three.min.js three.js r158 (licencia MIT)
 .claude/skills/impeccable  skill de diseño de interfaces (Apache 2.0)
 tests/smoke.js         prueba que juega partidas completas en piloto automático
+tests/determinism.js   misma semilla → misma partida, también guardando y cargando a mitad
+tests/save.js          guardar y cargar en cada fase, migración desde v1 y tamaño del guardado
+.github/workflows/test.yml  integración continua: npm test con Node 20 en cada push y pull request
 ```
 
 ## Pruebas
 
 ```bash
-npm test          # o: node tests/smoke.js [semilla] [escenario] [cultura]
+npm test          # humo + determinismo + guardado
+node tests/smoke.js [semilla] [escenario] [cultura]
+node tests/determinism.js [semilla]
+node tests/save.js [semilla]
 ```
 
-Juega 12 partidas completas, con todos los escenarios, varias culturas, las 4 dificultades y las transiciones a las Fases 2 y 3, y falla si hay algún error.
+Juega 12 partidas completas, con todos los escenarios, varias culturas, las 4 dificultades y las transiciones a las Fases 2 y 3, y falla si hay algún error. Además se comprueba que la misma semilla produce la misma partida turno a turno (también tras guardar y cargar) y que el guardado funciona en las tres fases y con partidas antiguas.

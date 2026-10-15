@@ -1,0 +1,15 @@
+# Integración continua: ejecuta todas las pruebas (humo, determinismo y guardado) en cada push y pull request.
+name: Pruebas
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm test
