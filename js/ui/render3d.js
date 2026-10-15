@@ -985,6 +985,26 @@
     if (top === 'sol') P.push(['cyl12', topColor || GOLD, x, (h || 1.3) + 0.06, 0.08, 0.11, 0.02, 0.11, Math.PI / 2, 0, 0]);
     if (top === 'remo') P.push(['box', '#8a6a44', x, (h || 1.3) - 0.05, 0.08, 0.1, 0.32, 0.02]);
   }
+  // Uniforme republicano: casaca, charreteras de oro, botones y botas.
+  function uniform(P, o) {
+    leaderBody(P, { tunic: o.coat, tocapu: false, sleeve: o.coat, skin: o.skin || '#b07850', beard: o.beard, hair: o.hair || '#2a1e16', belt: o.belt || GOLD, cloak: o.cloak || false });
+    P.push(['box', o.trousers || '#e8e2d2', -0.1, 0.2, 0, 0.12, 0.38, 0.13]); P.push(['box', o.trousers || '#e8e2d2', 0.1, 0.2, 0, 0.12, 0.38, 0.13]);
+    P.push(['box', BLACK, -0.1, 0.08, 0.02, 0.13, 0.16, 0.16]); P.push(['box', BLACK, 0.1, 0.08, 0.02, 0.13, 0.16, 0.16]);
+    P.push(['box', GOLD, -0.27, 1.17, 0, 0.14, 0.04, 0.14]); P.push(['box', GOLD, 0.27, 1.17, 0, 0.14, 0.04, 0.14]);
+    for (let k = 0; k < 4; k++) P.push(['sph', GOLD, 0, 0.98 - k * 0.1, 0.205, 0.018, 0.018, 0.018]);
+    P.push(['box', WHITE, 0, 1.15, 0.15, 0.1, 0.08, 0.04]);
+  }
+  function sword(P, x) { P.push(['box', SILVER, x, 0.5, 0.12, 0.025, 0.6, 0.03, 0, 0, 0.12]); P.push(['box', GOLD, x - 0.04, 0.82, 0.12, 0.12, 0.025, 0.04, 0, 0, 0.12]); }
+  function bicorne(P, color, trim) {
+    // prisma triangular tumbado de lado a lado, con la arista hacia arriba
+    P.push(['prism', color, 0, 1.6, 0, 0.09, 0.48, 0.12, -Math.PI / 2, 0, Math.PI / 2]);
+    P.push(['box', trim || GOLD, 0, 1.56, 0.05, 0.48, 0.025, 0.02]);
+    P.push(['cyl12', '#c23a50', 0.06, 1.62, 0.06, 0.035, 0.015, 0.035, Math.PI / 2, 0, 0]);
+  }
+  function kepi(P, color) {
+    P.push(['cyl12', color, 0, 1.58, 0, 0.16, 0.14, 0.16]); P.push(['cyl12', '#c23a50', 0, 1.53, 0, 0.165, 0.03, 0.165]);
+    P.push(['box', BLACK, 0, 1.52, 0.15, 0.2, 0.02, 0.1, -0.3, 0, 0]);
+  }
   PC.LEADER_MODELS = {
     pachacutec: (c) => { const P = []; leaderBody(P, { tunic: c, cloak: RED }); incaCrown(P, {}); staff(P, 0.42, 'estrella'); return P; },
     tupac_yupanqui: (c) => { const P = []; leaderBody(P, { tunic: c, cloak: '#2f5f8f' }); incaCrown(P, { band: '#2fa39a' }); staff(P, 0.42, 'remo', null, 1.4);
@@ -1029,6 +1049,41 @@
       P.push(['cyl', BLACK, 0, 1.1, -0.16, 0.13, 0.5, 0.06]);
       P.push(['prism', BLACK, 0, 1.58, 0, 0.3, 0.12, 0.3, 0, 0, 0]); P.push(['cyl12', BLACK, 0, 1.53, 0, 0.27, 0.03, 0.27]);
       staff(P, 0.42, 'sol', SILVER, 1.25); return P; },
+    juan_santos: (c) => { const P = []; leaderBody(P, { tunic: '#7a5a3a', longDress: true, tocapu: false, cloak: false, sleeve: '#7a5a3a', skin: '#8a5a35' });
+      for (let k = 0; k < 6; k++) P.push(['box', c, 0, 0.2 + k * 0.12, 0.31 - k * 0.012, 0.42, 0.025, 0.02]);
+      for (let k = -4; k <= 4; k++) P.push(['box', [RED, GOLD, '#2f8f4f', WHITE][(k + 8) % 4], k * 0.045, 1.62, -0.05, 0.035, 0.26, 0.01, 0, 0, k * 0.15]);
+      P.push(['cyl', c, 0, 1.47, 0, 0.18, 0.05, 0.18]); P.push(['box', RED, -0.07, 1.35, 0.165, 0.04, 0.015, 0.01]); P.push(['box', RED, 0.07, 1.35, 0.165, 0.04, 0.015, 0.01]);
+      P.push(['box', '#efe4cc', 0, 1.12, 0.2, 0.08, 0.08, 0.02]);
+      P.push(['halftorus', '#6b4a2f', 0.42, 0.85, 0.08, 0.38, 0.38, 0.38, 0, Math.PI / 2, Math.PI / 2]); return P; },
+    parado_bellido: (c) => { const P = []; leaderBody(P, { tunic: c, longDress: true, tocapu: false, belt: GOLD, sleeve: WHITE, skin: '#a87048' });
+      P.push(['cone', c, 0, 0.36, 0, 0.48, 0.72, 0.4]);
+      for (let k = 0; k < 3; k++) P.push(['cyl', [GOLD, WHITE, '#2f8f4f'][k], 0, 0.06 + k * 0.05, 0, 0.47 - k * 0.012, 0.02, 0.39 - k * 0.01]);
+      P.push(['box', '#3a2a5a', 0, 1.09, 0.02, 0.58, 0.22, 0.32]); P.push(['sph', GOLD, 0, 1.12, 0.19, 0.035, 0.035, 0.035]);
+      P.push(['cyl12', '#efe4cc', 0, 1.55, 0, 0.28, 0.03, 0.28]); P.push(['cyl', '#efe4cc', 0, 1.62, 0, 0.15, 0.13, 0.15]); P.push(['cyl', BLACK, 0, 1.57, 0, 0.155, 0.025, 0.155]);
+      P.push(['cyl', BLACK, -0.1, 1.08, -0.15, 0.035, 0.5, 0.035]); P.push(['cyl', BLACK, 0.1, 1.08, -0.15, 0.035, 0.5, 0.035]);
+      P.push(['box', WHITE, 0.36, 0.64, 0.12, 0.14, 0.1, 0.01, 0, 0, 0.2]); return P; },
+    jose_olaya: (c) => { const P = []; leaderBody(P, { tunic: WHITE, tocapu: false, sleeve: WHITE, skin: '#9a6440', belt: c });
+      P.push(['box', c, -0.1, 0.28, 0, 0.12, 0.2, 0.13]); P.push(['box', c, 0.1, 0.28, 0, 0.12, 0.2, 0.13]);
+      P.push(['cyl12', '#d9b86a', 0, 1.55, 0, 0.3, 0.02, 0.3]); P.push(['cyl', '#d9b86a', 0, 1.6, 0, 0.15, 0.1, 0.15]); P.push(['cyl', c, 0, 1.57, 0, 0.155, 0.02, 0.155]);
+      P.push(['box', '#8a6a44', 0.36, 0.7, 0.12, 0.08, 0.16, 0.02, 0, 0, 0.2]); P.push(['box', '#efe4cc', 0.37, 0.73, 0.135, 0.05, 0.06, 0.005, 0, 0, 0.2]);
+      P.push(['halftorus', '#c8b48a', -0.4, 0.62, 0.05, 0.2, 0.2, 0.2, 0, Math.PI / 2, 0]); return P; },
+    ramon_castilla: (c) => { const P = []; uniform(P, { coat: BLACK, beard: false, cloak: c });
+      P.push(['box', '#c23a50', 0, 0.98, 0.21, 0.07, 0.5, 0.02, 0, 0, 0.6]); P.push(['box', WHITE, 0.03, 0.98, 0.212, 0.03, 0.5, 0.02, 0, 0, 0.6]);
+      P.push(['box', '#2a1e16', 0, 1.3, 0.16, 0.14, 0.03, 0.02]);
+      bicorne(P, BLACK); P.push(['cyl', '#6b4a2f', 0.42, 0.55, 0.1, 0.02, 1.1, 0.02]); P.push(['sph', GOLD, 0.42, 1.1, 0.1, 0.04, 0.04, 0.04]); return P; },
+    miguel_grau: (c) => { const P = []; uniform(P, { coat: c, trousers: c, beard: '#2a1e16' });
+      for (let k = 0; k < 3; k++) P.push(['box', GOLD, k % 2 ? 0.31 : -0.31, 0.68, 0.06, 0.11, 0.02, 0.12]);
+      bicorne(P, BLACK); sword(P, 0.36);
+      P.push(['torus', '#3a2a1a', -0.4, 0.75, 0.1, 0.12, 0.12, 0.12]); for (let k = 0; k < 4; k++) P.push(['box', '#3a2a1a', -0.4, 0.75, 0.1, 0.02, 0.24, 0.02, 0, 0, k * Math.PI / 4]);
+      return P; },
+    francisco_bolognesi: (c) => { const P = []; uniform(P, { coat: '#2a3048', trousers: '#c23a50', beard: '#e8e2d2', hair: '#e8e2d2' });
+      P.push(['box', c, 0, 0.5, 0, 0.58, 0.06, 0.44]); kepi(P, '#2a3048'); sword(P, 0.36);
+      P.push(['cyl', BLACK, -0.42, 0.45, 0.15, 0.08, 0.5, 0.08, 0.3, 0, 0.6]); P.push(['cyl12', '#6b4a2f', -0.42, 0.18, 0.05, 0.16, 0.04, 0.16, 0, 0, Math.PI / 2]); return P; },
+    andres_caceres: (c) => { const P = []; uniform(P, { coat: '#3a3a30', trousers: '#5a4a3a', beard: '#2a1e16' });
+      P.push(['box', c, 0, 0.95, 0.01, 0.62, 0.5, 0.48]);
+      for (let r = 0; r < 3; r++) P.push(['box', [RED, GOLD, WHITE][r], 0, 0.78 + r * 0.06, 0.245, 0.6, 0.025, 0.01]);
+      P.push(['box', '#2a1e16', 0, 1.3, 0.17, 0.26, 0.04, 0.03]);
+      kepi(P, '#3a3a30'); sword(P, 0.36); return P; },
     // Arquetipos para los líderes de la IA
     curaca: (c) => { const P = []; leaderBody(P, { tunic: c, cloak: '#5a3a22' }); P.push(['cyl', c, 0, 1.47, 0, 0.18, 0.05, 0.18]);
       P.push(['cyl12', SILVER, -0.17, 1.37, 0, 0.05, 0.02, 0.05, 0, 0, Math.PI / 2]); P.push(['cyl12', SILVER, 0.17, 1.37, 0, 0.05, 0.02, 0.05, 0, 0, Math.PI / 2]); staff(P, 0.42, 'estrella', SILVER); return P; },

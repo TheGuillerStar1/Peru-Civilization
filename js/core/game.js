@@ -349,6 +349,7 @@
     if (U.commander) {
       const pool = PC.COMMANDER_NAMES[civ.key === 'espana' ? 'espana' : PC.eraOf(civ) >= 7 ? 'moderno' : 'andino'];
       const used = new Set(g.units.filter((x) => x.name).map((x) => x.name));
+      if (civ.leaderId && PC.LEADERS[civ.leaderId]) used.add(PC.LEADERS[civ.leaderId].name); // el líder no aparece también como comandante
       u.name = pool.find((n) => !used.has(n)) || pool[g.units.length % pool.length];
     }
     g.units.push(u);
@@ -530,11 +531,11 @@
     let mult = 1;
     if (role === 'atk' && civ.bonus.atk) mult *= 1 + civ.bonus.atk / 100;
     if (role === 'def') {
-      if (t.terrain === 'oceano') return 1;
+      if (t.terrain === 'oceano') return civ.bonus.seaDef ? Math.max(1, base * 0.5 * (1 + civ.bonus.seaDef / 100) * (0.5 + 0.5 * u.hp / 100)) : 1;
       mult *= 1 + PC.TERRAIN[t.terrain].def + (t.feature === 'abra' ? 0.25 : 0);
       if (u.fort) mult *= 1.25;
       const city = t.cityId ? PC.cityAt(t.i) : null;
-      if (city) mult *= 1.25 + PC.cityDefBonus(city);
+      if (city) mult *= 1.25 + PC.cityDefBonus(city) + (civ.bonus.cityDef || 0) / 100;
     }
     if (civ.selva && PC.TERRAIN[t.terrain].zone === 'selva') mult *= 1.25;
     if (role === 'def' && civ.bonus.defense) mult *= 1 + civ.bonus.defense / 100;
@@ -556,7 +557,7 @@
   PC.cityStrength = function (city) {
     const civ = PC.civ(city.civ);
     const base = 3 + city.pop + PC.eraOf(civ) * 2.5;
-    return base * (1 + PC.cityDefBonus(city)) * (1 + PC.TERRAIN[PC.tile(city.t).terrain].def) * (0.5 + 0.5 * city.hp / 100);
+    return base * (1 + PC.cityDefBonus(city) + (civ.bonus.cityDef || 0) / 100) * (1 + PC.TERRAIN[PC.tile(city.t).terrain].def) * (0.5 + 0.5 * city.hp / 100);
   };
   PC.bestDefender = function (ti, attackerCiv) {
     const defs = PC.unitsAt(ti).filter((o) => PC.isMil(o) && PC.atWar(attackerCiv, o.civ));
@@ -682,7 +683,7 @@
     const parts = [];
     let t = 60;
     parts.push(['Base', 60]);
-    if (civ.bonus.stab) { t += civ.bonus.stab; parts.push(['Cultura', civ.bonus.stab]); }
+    if (civ.bonus.stab) { t += civ.bonus.stab; parts.push(['Cultura y líder', civ.bonus.stab]); }
     let bs = 0;
     cities.forEach((c) => PC.cityBuildings(c).forEach((b) => { bs += b.stab || 0; }));
     if (cities.length) { const v = Math.round(bs / cities.length * 2); if (v) { t += v; parts.push(['Templos y edificios', v]); } }
