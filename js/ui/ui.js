@@ -190,7 +190,7 @@
 
   // ------------------------------------------------------------------ Barra superior y navegación
   function renderNav() {
-    const items = { techs: ['tecnologia', 'Tecnologías', 'T'], diplo: ['diplomacia', 'Diplomacia', 'D'], regions: ['provincias', 'Provincias', 'P'], chronicle: ['cronica', 'Crónica', 'C'], menu: ['menu', 'Menú', ''] };
+    const items = { techs: ['tecnologia', 'Tecnologías', 'T'], diplo: ['diplomacia', 'Diplomacia', 'D'], regions: ['provincias', 'Provincias', 'P'], chronicle: ['cronica', 'Crónica', 'C'], conquista: ['conquista', 'Conquista', 'G'], menu: ['menu', 'Menú', ''] };
     document.querySelectorAll('[data-modal]').forEach((b) => {
       const [i, l, k] = items[b.dataset.modal];
       b.innerHTML = `${ic(i)}<span>${l}</span>${k ? `<kbd>${k}</kbd>` : ''}`;
@@ -304,7 +304,7 @@
     const U = PC.utype(u), civ = PC.civ(u.civ), t = PC.tile(u.t);
     const own = u.civ === PC.G.playerId;
     const war = !own && PC.atWar(PC.G.playerId, u.civ);
-    const title = u.name ? `${esc(u.name)}<small class="muted"> · ${esc(U.name)}</small>` : esc(U.name);
+    const title = u.name ? `${esc(u.name)}<br><small class="muted">${esc(U.name)}</small>` : esc(U.name);
     let h = `<div class="ph" style="--civ:${civ.color}"><div class="tile-ico">${ic(PC.unitIconKey(u.type))}</div><div><h3>${title}</h3>
       <p>${esc(civ.name)}${own ? '' : war ? ' · <span class="bad">en guerra contigo</span>' : ' · en paz'}${t.terrain === 'oceano' ? ' · embarcada' : ''}</p></div></div>`;
     h += `<div class="trio"><div><span>${ic('salud')}Vida</span><b>${u.hp}</b></div><div><span>${ic('movimiento')}Movimiento</span><b>${+u.moves.toFixed(1)}/${PC.maxMoves(u)}</b></div>
@@ -508,7 +508,7 @@
     const us = PC.isVisible(t.i) ? PC.unitsAt(t.i) : [];
     let html = `<b>${esc(city ? city.name : PC.terrainName(t))}</b>${rg ? `<br>${esc(rg.name)}` : ''}`;
     if (t.owner) html += `<br><span class="swatch" style="background:${PC.civ(t.owner).color}"></span>${esc(PC.civ(t.owner).name)}`;
-    us.forEach((u) => { html += `<br>${esc(PC.UNITS[u.type].name)} · ${esc(PC.civ(u.civ).name)} · vida ${u.hp}`; });
+    us.forEach((u) => { html += `<br>${esc(u.name ? `${u.name}, ${PC.UNITS[u.type].name.toLowerCase()}` : PC.UNITS[u.type].name)} · ${esc(PC.civ(u.civ).name)} · vida ${u.hp}`; });
     if (t.res && PC.resVisible(PC.player(), t.res)) html += `<br>Recurso: ${esc(PC.RESOURCES[t.res].name)}`;
     if (t.fauna) html += `<br><span class="warn">${esc(PC.FAUNA[t.fauna].name)}</span>`;
     const su = R.sel && R.sel.unit;
@@ -581,7 +581,7 @@
     }
     else if (k === ' ' && u && u.civ === PC.G.playerId) { u.skipTurn = PC.G.turn; nextUnit(); e.preventDefault(); }
     else if (k === 'b' && u && u.type === 'colono' && u.civ === PC.G.playerId && PC.validCitySite(PC.tile(u.t), PC.player())) { const t = PC.tile(u.t); PC.foundCity(PC.player(), t); PC.removeUnit(u); UI.select({ city: PC.cityAt(t.i) }); refresh(); }
-    else if (k === 't') openTechs(); else if (k === 'd') openDiplo(); else if (k === 'p') openRegions(); else if (k === 'c') openChronicle();
+    else if (k === 't') openTechs(); else if (k === 'd') openDiplo(); else if (k === 'p') openRegions(); else if (k === 'c') openChronicle(); else if (k === 'g' && UI.openConquista && PC.conquistaActive()) UI.openConquista();
     else if (k === 'q') R.rotate(-0.3); else if (k === 'e') R.rotate(0.3);
     else if (k === '+' || k === '=') R.zoom(1 / 1.2); else if (k === '-') R.zoom(1.2);
   }
@@ -632,9 +632,9 @@
 
   // ------------------------------------------------------------------ Diálogos
   let askYes = null, askNo = null;
-  function ask(text, yesLabel, onYes, onNo) {
+  function ask(text, yesLabel, onYes, onNo, detail) {
     askYes = onYes; askNo = onNo || null;
-    openModal(`<h2>${esc(text)}</h2><div class="choices"><button class="btn primary big" data-ask="yes" type="button">${esc(yesLabel)}</button><button class="btn big" data-ask="no" type="button">Cancelar</button></div>`, 'ask');
+    openModal(`<h2>${esc(text)}</h2>${detail ? `<p class="lead">${esc(detail)}</p>` : ''}<div class="choices"><button class="btn primary big" data-ask="yes" type="button">${esc(yesLabel)}</button><button class="btn big" data-ask="no" type="button">Cancelar</button></div>`, 'ask');
   }
   function openModal(html, kind) {
     UI.modal = kind || 'info';
@@ -644,7 +644,7 @@
     const f = $('#modal-body').querySelector('button:not(:disabled)'); if (f) f.focus({ preventScroll: true });
   }
   function closeModal() { UI.modal = null; $('#modal').hidden = true; if (PC.G && !PC.G.preview) refresh(); }
-  UI.closeModal = closeModal; UI.openModal = openModal;
+  UI.closeModal = closeModal; UI.openModal = openModal; UI.ask = ask;
 
   function showEvent() {
     const ev = PC.currentEvent();
@@ -808,6 +808,7 @@
       <button class="btn big" data-act2="export" type="button">Exportar a un archivo</button>
       <button class="btn big" data-act2="help" type="button">Cómo se juega</button>
       ${UI.openVictories ? '<button class="btn big" data-act2="victorias" type="button">Victorias</button>' : ''}
+      ${UI.openConquista && PC.conquistaActive() ? '<button class="btn big" data-act2="conquista" type="button">La Conquista</button>' : ''}
       ${canP2 ? `<button class="btn primary big" data-act2="fase2" type="button">${ic('mapa')}${esc(nextPhaseName())}</button>` : ''}
       <button class="btn big" data-act2="menu" type="button">Volver al menú principal</button></div>
       <p class="small muted">Semilla del mapa ${PC.G.seed} · ${esc(PC.SCENARIOS[PC.G.scenario].name)} · ${esc(PC.diff().name)}. La partida también se guarda sola al terminar cada turno.</p>`, 'menu');
@@ -861,13 +862,14 @@
         }
         if (act === 'help') showIntro();
         if (act === 'victorias' && UI.openVictories) UI.openVictories();
+        if (act === 'conquista' && UI.openConquista) UI.openConquista();
         if (act === 'menu') showMenu();
         if (act === 'keep') { PC.G.gameOver = null; closeModal(); }
         if (act === 'fase2' && PC.canAdvancePhase()) { PC.startNextPhase(); PC.G.phaseChanged = false; closeModal(); startGame(false); }
       }
     });
     document.querySelectorAll('[data-modal]').forEach((b) => {
-      b.onclick = () => ({ techs: openTechs, diplo: openDiplo, regions: openRegions, chronicle: openChronicle, menu: openMenu }[b.dataset.modal])();
+      b.onclick = () => ({ techs: openTechs, diplo: openDiplo, regions: openRegions, chronicle: openChronicle, conquista: () => UI.openConquista && UI.openConquista(), menu: openMenu }[b.dataset.modal])();
     });
     $('#topbar').addEventListener('click', (e) => { if (e.target.closest('[data-open="techs"]')) openTechs(); });
     $('#panel').addEventListener('click', onPanelClick);
