@@ -1,4 +1,4 @@
-// Fases de expansión: 1 Perú → 2 Sudamérica → 3 América → 4 El Mundo.
+// Fases de expansión: 1 Perú  2 Sudamérica  3 América  4 El Mundo.
 (function (PC) {
   'use strict';
 
@@ -121,6 +121,7 @@
       if (!best) { const host = g.cities[0]; if (host) host.pop += Math.ceil(c.pop / 2); return; }
       const nc = PC.foundCity(player, best, c.name, c.pop);
       nc.buildings = c.buildings.slice(); nc.culture = c.culture; nc.expanded = true; nc.founded = c.founded;
+      nc.build = c.build; nc.prod = c.prod; nc.food = c.food;
       PC.claimTiles(nc, c.culture >= 30 ? 2 : 1);
       if (first) { player.capitalId = nc.id; first = false; }
     });
@@ -151,7 +152,7 @@
       if (!PC.civCities(civ).length) civ.alive = false;
     });
     g.fired.fase2 = true; g.flags.fase2Disponible = false; g.phaseChanged = true;
-    PC.log(`🗺️ Comienza la Fase 2: Sudamérica (${PC.fmtYear(g.year)}). ${player.name} entra en la historia del continente.`, 'history');
+    PC.log(`Comienza la Fase 2: Sudamérica (${PC.fmtYear(g.year)}). ${player.name} entra en la historia del continente.`, 'history');
     PC.updateVisibility();
   };
 
@@ -165,7 +166,7 @@
     }
   };
   PC.EVENTS.fase3 = (g) => ({
-    title: '¡Sudamérica es tuya!', img: '🌎',
+    title: '¡Sudamérica es tuya!', img: '',
     text: `Dominas ${PC.playerRegionCount()} de ${g.map.regions.length} regiones del continente. La Fase 3 (América: Mesoamérica, el Caribe y Norteamérica) está en desarrollo; por ahora puedes seguir escribiendo tu historia en Sudamérica.`,
     choices: [{ label: 'Seguir jugando', effect: () => { PC.diverge('Una sola civilización andina unifica Sudamérica.'); return 'Tu nombre resuena en todo el continente.'; } }]
   });

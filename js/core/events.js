@@ -5,7 +5,7 @@
 
   PC.diverge = function (text) {
     G().divergences.push({ year: G().year, text });
-    PC.log(`🔀 Divergencia histórica: ${text}`, 'history');
+    PC.log(`Divergencia histórica: ${text}`, 'history');
   };
   PC.queueEvent = function (id, data) {
     const g = G();
@@ -70,7 +70,7 @@
     const resentful = PC.civCities(player).filter((c) => c.conquered).length;
     const extra = Math.min(3, Math.floor(resentful * (player.stability < 50 ? 0.7 : 0.3)));
     for (let i = 0; i < extra; i++) { PC.spawnUnit(spain, 'aliado', at); allies++; }
-    if (allies) PC.log(`🪓 ${allies} contingentes de pueblos sometidos o rivales se suman a los españoles.`, 'war');
+    if (allies) PC.log(`${allies} contingentes de pueblos sometidos o rivales se suman a los españoles.`, 'war');
     g.flags.espanaLlego = g.year;
     return spain;
   };
@@ -132,7 +132,7 @@
         PC.spawnUnit(civ, PC.aiBestUnit(civ), PC.tile(taken[0].t));
         if (!PC.civCities(host).length) { host.alive = false; g.units.filter((u) => u.civ === host.id).forEach((u) => { u.civ = civ.id; }); }
         else if (host.capitalId === ownerCity.id) host.capitalId = PC.civCities(host)[0].id;
-        PC.log(`🌄 La cultura ${F.name} surge en ${rg.name}, heredera de ${host.name}.`, 'history');
+        PC.log(`La cultura ${F.name} surge en ${rg.name}, heredera de ${host.name}.`, 'history');
         return;
       }
       const t = PC.bestSiteInRegion(rg.id, civ);
@@ -141,7 +141,7 @@
       c.culture = 30; c.expanded = true; PC.claimTiles(c, 2);
       PC.spawnUnit(civ, PC.aiBestUnit(civ), t); PC.spawnUnit(civ, PC.aiBestUnit(civ), t);
       PC.spawnUnit(civ, 'colono', t);
-      PC.log(`🌄 Surge la cultura ${F.name} en ${rg.name}${owners.size ? '' : ''}.`, 'history');
+      PC.log(`Surge la cultura ${F.name} en ${rg.name}${owners.size ? '' : ''}.`, 'history');
     });
   }
 
@@ -188,7 +188,7 @@
         Object.keys(big.techs).forEach((t) => PC.grantTech(reb, t, true));
         half.forEach((c) => { c.civ = reb.id; PC.tile(c.t).owner = reb.id; g.units.filter((u) => u.t === c.t && u.civ === big.id).forEach((u) => { u.civ = reb.id; }); });
         reb.capitalId = half.length ? half[0].id : null;
-        if (half.length) { PC.declareWar(reb, big); PC.log(`👑 Guerra civil en ${big.name}: el imperio se divide.`, 'history'); }
+        if (half.length) { PC.declareWar(reb, big); PC.log(`Guerra civil en ${big.name}: el imperio se divide.`, 'history'); }
       }
     }
   }
@@ -204,7 +204,7 @@
       const presence = PC.civUnits(spain).length + PC.civCities(spain).length;
       if (g.year < 1600 && g.turn - (g.flags.spainLastWave || 0) >= 5 && (g.flags.spainWaves < (PC.diff().histAI ? 8 : 5) || PC.civCities(spain).length)) {
         const at = PC.spainWave(Math.max(2, Math.round((3 + Math.min(3, g.flags.spainWaves)) * PC.diff().spain)));
-        PC.log(`⛵ Llegan refuerzos españoles a ${at.region ? g.map.regions.find((r) => r.id === at.region).name : 'la costa'}.`, 'war');
+        PC.log(`Llegan refuerzos españoles a ${at.region ? g.map.regions.find((r) => r.id === at.region).name : 'la costa'}.`, 'war');
       }
       const noFoothold = !PC.civCities(spain).length;
       if (noFoothold && g.flags.spainWaves >= (PC.diff().histAI ? 6 : 3) && (!presence || g.year >= 1600) && !g.fired.corona_desiste) {
@@ -267,7 +267,7 @@
   const E = PC.EVENTS = {};
 
   E.el_nino = (g, p) => ({
-    title: 'Fenómeno El Niño', img: '🌊',
+    title: 'Fenómeno El Niño', img: '',
     text: 'El mar se calienta, las anchovetas desaparecen y lluvias torrenciales arrasan los canales de la costa. Los valles costeros sufren.',
     choices: [
       { label: 'Abrir las qollqas', hint: 'Requiere Qollqas. Sin pérdidas.', cond: !!p.techs.qollqas, effect: () => {
@@ -288,7 +288,7 @@
     const c = PC.pick(PC.civCities(p));
     const pirka = p.techs.administracion || p.techs.andenes;
     return {
-      title: `Terremoto en ${c.name}`, img: '🌋',
+      title: `Terremoto en ${c.name}`, img: '',
       text: pirka ? `La tierra tiembla en ${c.name}. La mampostería andina de piedras encajadas resiste mucho mejor que el adobe.`
         : `Un violento sismo sacude ${c.name}. Muros de adobe y templos se derrumban.`,
       choices: [
@@ -303,7 +303,7 @@
   };
 
   E.veta = (g, p, d) => ({
-    title: `Una veta de ${PC.RESOURCES[d.res].name.toLowerCase()}`, img: '⛏️',
+    title: `Una veta de ${PC.RESOURCES[d.res].name.toLowerCase()}`, img: '',
     text: 'Tus mineros han abierto una veta riquísima. En los Andes el oro es "sudor del Sol" y la plata "lágrimas de la Luna": ¿para los dioses o para el Estado?',
     choices: [
       { label: 'Para los dioses', hint: '+40 cultura, +cohesión', effect: () => { p.culture += 40; PC.addStabMod(p, 'Ofrendas de metales', 6, 15); return 'Los templos se cubren de láminas de oro.'; } },
@@ -312,7 +312,7 @@
   });
 
   E.mesoamerica = (g, p) => ({
-    title: 'Mercaderes del norte', img: '🛶',
+    title: 'Mercaderes del norte', img: '',
     text: 'Balsas de comerciantes llegan desde tierras lejanas del norte (Mesoamérica) buscando conchas spondylus. Traen semillas, ideas y rumores de grandes ciudades.',
     choices: [
       { label: 'Comerciar', hint: '+40 oro, +progreso científico', effect: () => { p.gold += 40; p.progress += 60; return 'El intercambio enriquece a ambos pueblos.'; } },
@@ -323,7 +323,7 @@
   });
 
   E.tupac_viaje = (g, p) => ({
-    title: 'Viaje al poniente', img: '⛵',
+    title: 'Viaje al poniente', img: '',
     text: 'Según Sarmiento de Gamboa, Túpac Yupanqui navegó al oeste hasta las islas Avachumbi y Ninachumbi. Tus navegantes proponen una gran expedición por el Pacífico.',
     choices: [
       { label: 'Zarpar al poniente', hint: '−50 oro. 65%: descubrimientos; 35%: naufragio', cond: p.gold >= 50, effect: () => {
@@ -337,7 +337,7 @@
   E.guerra_sucesion = (g, p) => {
     const cities = PC.civCities(p);
     return {
-      title: 'Guerra de sucesión', img: '👑',
+      title: 'Guerra de sucesión', img: '',
       text: g.flags.crisisSucesoria ? 'El soberano y su heredero murieron en la epidemia. Dos hermanos —como Huáscar y Atahualpa— reclaman el trono.'
         : 'La muerte del soberano enfrenta a dos facciones de la nobleza por el poder.',
       choices: [
@@ -367,7 +367,7 @@
   E.epidemia = (g, p) => {
     const vario = !!p.techs.variolizacion;
     return {
-      title: 'Una peste desconocida', img: '🦠',
+      title: 'Una peste desconocida', img: '',
       text: vario ? 'Una enfermedad terrible llega desde el norte, adelantándose a unos extranjeros. Pero tus médicos conocen la variolización.'
         : 'Una enfermedad nunca vista (viruela) avanza desde el norte, antes incluso que los extranjeros que la traen. Muere gente de todas las clases, también la familia real.',
       choices: vario ? [
@@ -392,7 +392,7 @@
     const real = PC.diff().histAI;
     const strong = real ? (PC.power(p) >= 200 && p.techs.hierro && p.techs.polvora) : (PC.power(p) >= 120 && (p.techs.hierro || p.techs.polvora));
     return {
-      title: 'Hombres barbudos en Tumbes', img: '⛵',
+      title: 'Hombres barbudos en Tumbes', img: '',
       text: 'Unas casas flotantes llegan a la costa norte. Sus hombres visten metal brillante, montan animales enormes y portan palos que escupen fuego. Dicen venir en nombre de un rey lejano y de su dios.' +
         (strong ? ' Tus guerreros, sin embargo, también conocen el hierro.' : ''),
       choices: [
@@ -426,7 +426,7 @@
   };
 
   E.caida_capital = (g, p) => ({
-    title: 'Ha caído la capital', img: '🏚️',
+    title: 'Ha caído la capital', img: '',
     text: 'Los invasores ocupan tu capital y se apoderan de sus tesoros. Como Manco Inca en 1536, debes decidir: resistir desde las montañas y la selva, o aceptar ser vasallo.',
     choices: [
       { label: 'Resistencia (Vilcabamba)', hint: '+2 unidades y moral de resistencia', cond: PC.civCities(p).length > 0, effect: () => {
@@ -441,7 +441,7 @@
   });
 
   E.corona_desiste = (g, p) => ({
-    title: 'La Corona desiste', img: '🏳️',
+    title: 'La Corona desiste', img: '',
     text: 'Tras repetidas derrotas, los consejeros del rey extranjero declaran que la conquista de los Andes es imposible. Los Andes siguen siendo libres.',
     choices: [
       { label: 'Aprovechar el botín de guerra', hint: 'Caballos, armas capturadas y oro', effect: () => {
@@ -455,7 +455,7 @@
   });
 
   E.embajada_europea = (g, p) => ({
-    title: 'Embajada europea', img: '📜',
+    title: 'Embajada europea', img: '',
     text: 'Gracias a tus viajes oceánicos, los reinos de Europa ya conocen tu poder. Sus barcos llegan como embajadores, no como conquistadores.',
     choices: [
       { label: 'Intercambio de conocimientos', hint: 'Caballos y +progreso científico', effect: () => {
@@ -468,7 +468,7 @@
   });
 
   E.contacto_inverso = (g, p) => ({
-    title: 'Más allá del océano', img: '🌍',
+    title: 'Más allá del océano', img: '',
     text: 'Tus naves oceánicas pueden cruzar el mar. ¿Navegar hacia el oriente —hacia Europa y África— o hacia el poniente, hacia Asia?',
     choices: [
       { label: 'Expedición a Europa', hint: 'Contacto inverso: cambia la llegada europea', effect: () => {
@@ -483,7 +483,7 @@
     const F = PC.FACTIONS[d.faction];
     const city = PC.cityById(d.city);
     return {
-      title: `${F.name} florece en tu civilización`, img: '🌄',
+      title: `${F.name} florece en tu civilización`, img: '',
       text: `En la historia real, la cultura ${F.name} surgió por esta época en esta región. Como ya es tu territorio, sus innovaciones nacen dentro de tu pueblo${city ? ', en ' + city.name : ''}.`,
       choices: [
         { label: 'Integrar a sus artesanos', hint: '+cultura y +progreso científico', effect: () => { p.culture += 30; p.progress += 50 + PC.eraOf(p) * 30; return `La tradición ${F.name} enriquece tu cultura.`; } },
@@ -495,7 +495,7 @@
   E.propuesta_paz = (g, p, d) => {
     const c = PC.civ(d.from);
     return {
-      title: `${c.name} propone la paz`, img: '🕊️',
+      title: `${c.name} propone la paz`, img: '',
       text: `Los mensajeros de ${c.name} llegan con ofrendas y proponen poner fin a la guerra.`,
       choices: [
         { label: 'Aceptar la paz', hint: '+cohesión', cond: c.alive && PC.atWar(p.id, c.id), effect: () => { PC.makePeace(p, c); PC.addStabMod(p, 'Paz', 4, 6); return 'Se firma la paz.'; } },
@@ -507,7 +507,7 @@
   E.tupac_amaru = (g, p) => {
     const spain = find('espana');
     return {
-      title: 'La rebelión de Túpac Amaru II', img: '🔥',
+      title: 'La rebelión de Túpac Amaru II', img: '',
       text: 'José Gabriel Condorcanqui, curaca de Tinta, se alza contra los abusos de los corregidores. Con Micaela Bastidas, llama a todos los pueblos andinos a la rebelión.',
       choices: [
         { label: '¡Unirse a la rebelión!', hint: 'Guerra contra el Virreinato; ciudades serranas se te unen', cond: !!spain, effect: () => {
@@ -528,7 +528,7 @@
     const spain = find('espana');
     if (spain && PC.civCities(spain).length) {
       return {
-        title: 'La Corriente Libertadora', img: '🇵🇪',
+        title: 'La Corriente Libertadora', img: '',
         text: 'Las expediciones de San Martín y Bolívar llegan para expulsar al poder virreinal. "El Perú es desde este momento libre e independiente…"',
         choices: [
           { label: 'Unirse a los libertadores', hint: 'Las ciudades virreinales pasan a tu control', effect: () => {
@@ -541,7 +541,7 @@
       };
     }
     return {
-      title: 'Tiempos de reformas', img: '📜',
+      title: 'Tiempos de reformas', img: '',
       text: 'Las ideas de la Ilustración recorren el mundo. ¿Cómo debe gobernarse tu Estado en la nueva era?',
       choices: [
         { label: 'República', hint: '+oro, +cohesión', effect: () => { p.gold += 100; PC.addStabMod(p, 'Nueva constitución', 8, 15); g.flags.republica = true; p.name = 'República del Perú'; return 'Se proclama la república.'; } },
@@ -553,7 +553,7 @@
   };
 
   E.guano = (g, p) => ({
-    title: 'La era del guano', img: '🐦',
+    title: 'La era del guano', img: '',
     text: 'Europa paga fortunas por el guano de tus islas como fertilizante. ¿Qué hacer con esta riqueza que no durará para siempre?',
     choices: [
       { label: 'Invertir en industria', hint: 'Fábrica gratis en la capital', effect: () => {
@@ -564,7 +564,7 @@
   });
 
   E.guerra_pacifico = (g, p) => ({
-    title: 'Guerra del Pacífico', img: '⚓',
+    title: 'Guerra del Pacífico', img: '',
     text: 'Chile reclama el salitre del sur y declara la guerra. Sus regimientos modernos desembarcan en la costa sur.',
     choices: [
       { label: 'Defender con todo (Grau y Bolognesi)', hint: '−100 oro, +2 unidades', effect: () => { startChile(p); p.gold -= 100; const c = cap(p); if (c) { PC.spawnUnit(p, PC.aiBestUnit(p), PC.tile(c.t)); PC.spawnUnit(p, PC.aiBestUnit(p), PC.tile(c.t)); } return '¡A las armas!'; } },
@@ -589,7 +589,7 @@
   }
 
   E.caucho = (g, p) => ({
-    title: 'La fiebre del caucho', img: '🌳',
+    title: 'La fiebre del caucho', img: '',
     text: 'La industria mundial necesita caucho. Las caucherías de la Amazonía prometen fortunas… a costa de los pueblos indígenas.',
     choices: [
       { label: 'Explotación libre', hint: '+250 oro; guerra con pueblos amazónicos', effect: () => {
@@ -603,7 +603,7 @@
   });
 
   E.reforma_agraria = (g, p) => ({
-    title: 'La cuestión de la tierra', img: '🌾',
+    title: 'La cuestión de la tierra', img: '',
     text: 'Grandes haciendas concentran la tierra mientras millones de campesinos andinos no tienen dónde sembrar.',
     choices: [
       { label: 'Reforma agraria', hint: '−100 oro, +cohesión, +alimento', effect: () => { p.gold -= 100; PC.addStabMod(p, 'La tierra es de quien la trabaja', 10, 20); PC.civCities(p).forEach((c) => { c.food += 20; }); return 'Las haciendas pasan a cooperativas campesinas.'; } },
@@ -612,7 +612,7 @@
   });
 
   E.bancarrota = (g, p) => ({
-    title: 'Bancarrota', img: '💸',
+    title: 'Bancarrota', img: '',
     text: 'El tesoro está vacío: no se puede pagar a los ejércitos ni a los funcionarios.',
     choices: [
       { label: 'Préstamo extranjero', hint: '+150 oro, pero tributo del 10%', effect: () => { p.gold += 150; p.tribute = Math.max(p.tribute || 0, 0.1); return 'Los acreedores extranjeros cobran sus intereses.'; } },
@@ -625,10 +625,10 @@
   E.revuelta = (g, p) => {
     const cs = PC.civCities(p).filter((c) => c.id !== p.capitalId).sort((a, b) => (b.conquered - a.conquered) || (a.pop - b.pop));
     const c = cs[0];
-    if (!c) return { title: 'Descontento', img: '😠', text: 'El pueblo murmura.', choices: [{ label: 'Escuchar', effect: () => 'El descontento amaina.' }] };
+    if (!c) return { title: 'Descontento', img: '', text: 'El pueblo murmura.', choices: [{ label: 'Escuchar', effect: () => 'El descontento amaina.' }] };
     const garrison = g.units.some((u) => u.t === c.t && u.civ === p.id && PC.isMil(u));
     return {
-      title: `Revuelta en ${c.name}`, img: '✊',
+      title: `Revuelta en ${c.name}`, img: '',
       text: `La baja cohesión de tu Estado provoca que ${c.name} se rebele contra el gobierno central.`,
       choices: [
         { label: 'Reprimir', hint: 'Requiere guarnición. −cohesión', cond: garrison, effect: () => { PC.addStabMod(p, 'Represión', -5, 8); c.pop = Math.max(1, c.pop - 1); return 'La revuelta es aplastada.'; } },
@@ -644,7 +644,7 @@
   };
 
   E.fase2 = (g, p) => ({
-    title: '¡El Perú está unificado!', img: '🗺️',
+    title: '¡El Perú está unificado!', img: '',
     text: `Controlas ${PC.playerRegionCount()} de ${g.map.regions.length} provincias. Tu civilización está lista para proyectarse sobre todo el continente.`,
     choices: [
       { label: 'Avanzar a la Fase 2: Sudamérica', hint: 'Nuevo mapa continental, conservas tecnologías y ciudades', cond: !!PC.startPhase2, effect: () => { PC.startPhase2(); return 'Comienza la Fase 2: Sudamérica.'; } },
@@ -670,7 +670,7 @@
     g.eventQueue.shift();
     if (!ch || ch.cond === false) return null;
     const res = ch.effect();
-    PC.log(`📜 ${ev.title}: ${ch.label}. ${res || ''}`, 'event');
+    PC.log(`${ev.title}: ${ch.label}. ${res || ''}`, 'event');
     PC.updateVisibility();
     return res;
   };

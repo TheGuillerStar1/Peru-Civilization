@@ -39,14 +39,14 @@
     PC.rel(a, b).war = true; PC.rel(b, a).war = true;
     PC.rel(a, b).since = PC.rel(b, a).since = G().turn;
     PC.rel(b, a).att -= 40;
-    if (!quiet) PC.log(`⚔️ ${a.name} declara la guerra a ${b.name}.`, 'war', [a.id, b.id]);
+    if (!quiet) PC.log(`${a.name} declara la guerra a ${b.name}.`, 'war', [a.id, b.id]);
   };
   PC.makePeace = function (a, b) {
     if (!PC.atWar(a.id, b.id)) return;
     PC.rel(a, b).war = false; PC.rel(b, a).war = false;
     PC.rel(a, b).since = PC.rel(b, a).since = G().turn;
     PC.rel(a, b).att += 15; PC.rel(b, a).att += 15;
-    PC.log(`🕊️ ${a.name} y ${b.name} firman la paz.`, 'war', [a.id, b.id]);
+    PC.log(`${a.name} y ${b.name} firman la paz.`, 'war', [a.id, b.id]);
   };
 
   // --- Civilizaciones
@@ -65,7 +65,7 @@
     if (civ.techs[id]) return;
     civ.techs[id] = G().year;
     if (civ.research === id) { civ.research = null; }
-    if (!quiet) PC.log(`💡 ${civ.name} descubre: ${PC.TECH[id].name}.`, 'tech', [civ.id]);
+    if (!quiet) PC.log(`${civ.name} descubre: ${PC.TECH[id].name}.`, 'tech', [civ.id]);
     if (PC.onTech) PC.onTech(civ, id);
   };
   PC.baselineTechs = function (year) {
@@ -217,7 +217,7 @@
     if (t.imp && !['mina', 'pozo'].includes(t.imp)) t.imp = null;
     PC.claimTiles(city, 1);
     if (!civ.capitalId) civ.capitalId = city.id;
-    PC.log(`🏛️ ${civ.name} funda ${city.name}.`, 'city', [civ.id]);
+    PC.log(`${civ.name} funda ${city.name}.`, 'city', [civ.id]);
     return city;
   };
   PC.claimTiles = function (city, rad) {
@@ -235,7 +235,7 @@
     });
     PC.tile(city.t).owner = nc.id;
     g.units = g.units.filter((u) => !(u.t === city.t && u.civ !== nc.id));
-    PC.log(`🔥 ${nc.name} conquista ${city.name} (antes de ${old.name}).`, 'war', [old.id, nc.id]);
+    PC.log(`${nc.name} conquista ${city.name} (antes de ${old.name}).`, 'war', [old.id, nc.id]);
     if (wasCapital) {
       const rest = PC.civCities(old).sort((a, b) => b.pop - a.pop);
       old.capitalId = rest.length ? rest[0].id : null;
@@ -249,7 +249,7 @@
     civ.alive = false;
     g.units = g.units.filter((u) => u.civ !== civ.id);
     g.map.tiles.forEach((t) => { if (t && t.owner === civ.id) t.owner = null; });
-    PC.log(`☠️ ${civ.name} desaparece${by ? ' ante ' + by.name : ''}.`, 'war');
+    PC.log(`${civ.name} desaparece${by ? ' ante ' + by.name : ''}.`, 'war');
   };
 
   PC.isCoastalTile = (t) => PC.neighbors(t).some((u) => u.terrain === 'oceano');
@@ -334,6 +334,30 @@
     const u = { id: PC.uid(), type, civ: civ.id, t: spot.i, hp: 100, moves: U.moves, fort: false, moved: false, path: null, task: null, auto: false };
     g.units.push(u);
     return u;
+  };
+  // Mejora de unidades: devuelve el tipo más avanzado de su línea que la civilización puede entrenar.
+  PC.upgradeTarget = function (u) {
+    const civ = PC.civ(u.civ);
+    const line = Object.values(PC.UNIT_LINES).find((l) => l.includes(u.type));
+    if (!line) return null;
+    let best = null;
+    for (let k = line.indexOf(u.type) + 1; k < line.length; k++) {
+      const U = PC.UNITS[line[k]];
+      if ((!U.tech || civ.techs[U.tech]) && (!U.needs || U.needs.some((r) => PC.civHasRes(civ, r)))) best = line[k];
+    }
+    return best;
+  };
+  PC.upgradeCost = function (u) {
+    const to = PC.upgradeTarget(u);
+    return to ? Math.round((PC.UNITS[to].cost - PC.UNITS[u.type].cost) * 1.5 + 10) : null;
+  };
+  PC.upgradeUnit = function (u) {
+    const civ = PC.civ(u.civ), to = PC.upgradeTarget(u), cost = PC.upgradeCost(u);
+    if (!to || civ.gold < cost || u.moves <= 0) return false;
+    const from = PC.UNITS[u.type].name;
+    civ.gold -= cost; u.type = to; u.moves = 0; u.fort = false; u.hp = Math.max(u.hp, 50);
+    if (civ.isPlayer) PC.log(`${from} se moderniza: ahora es ${PC.UNITS[to].name}.`, 'city', [civ.id]);
+    return true;
   };
   PC.removeUnit = (u) => { G().units = G().units.filter((x) => x !== u); };
 
@@ -711,6 +735,8 @@
     civ.stabMods = civ.stabMods.filter((m) => m.turns > 0);
     const tgt = PC.stabilityTarget(civ).value;
     civ.stability = PC.clamp(civ.stability + (tgt - civ.stability) * 0.25, 0, 100);
+    // La IA moderniza sus unidades cuando le sobra oro.
+    if (!civ.isPlayer || g.autoplay) PC.civUnits(civ).forEach((u) => { const c = PC.upgradeCost(u); if (c !== null && civ.gold > c * 2 + 30 && u.moves > 0) PC.upgradeUnit(u); });
     // Unidades: trabajo, curación, desgaste
     PC.civUnits(civ).forEach((u) => {
       progressWork(u);
@@ -788,7 +814,7 @@
       city.build = null;
     } else if (b.kind === 'wonder') {
       city.buildings.push(b.id); g.wonders[b.id] = civ.id;
-      PC.log(`🌟 ${civ.name} completa la maravilla ${PC.WONDERS[b.id].name} en ${city.name}.`, 'history');
+      PC.log(`${civ.name} completa la maravilla ${PC.WONDERS[b.id].name} en ${city.name}.`, 'history');
       civ.culture += 20;
       city.build = null;
       if (PC.onWonder) PC.onWonder(civ, b.id, city);

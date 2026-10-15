@@ -6,13 +6,19 @@ La base histórica y demográfica está en [`docs/INVESTIGACION_HISTORICA.md`](d
 
 ## Cómo jugar
 
-No requiere instalación ni dependencias. Abre `index.html` en un navegador moderno (doble clic), o sírvelo localmente:
+No requiere instalación: three.js va incluido en `js/vendor/`. Abre `index.html` en un navegador moderno con WebGL, con doble clic, o sírvelo localmente:
 
 ```bash
 python3 -m http.server 8000   # y abre http://localhost:8000
 ```
 
-**Controles:** clic para seleccionar y mover · borde rojo = atacar · arrastrar para desplazar · rueda = zoom · `Enter` terminar turno · `N` siguiente unidad · `F` fortificar · `B` fundar ciudad · `Espacio` saltar · `T` tecnologías · `D` diplomacia · `P` provincias · `C` crónica.
+**Controles:** clic para seleccionar y mover · anillo rojo = atacar · arrastrar para desplazar · botón derecho o `Q`/`E` para girar · rueda = zoom · `Enter` terminar turno · `N` siguiente unidad · `F` fortificar · `B` fundar ciudad · `Espacio` esperar · `T` tecnologías · `D` diplomacia · `P` provincias · `C` crónica. En tablet: un dedo desplaza, dos dedos acercan y giran.
+
+### Gráficos
+Maqueta 3D low-poly hecha con three.js sobre un manto tejido. La interfaz usa iconos **tocapu** (pictogramas tejidos en una rejilla de 9×9) y no emojis; el sistema visual está documentado en [`DESIGN.md`](DESIGN.md).
+- **Unidades**: escuadrones con el equipo de su época (porra, honda, macana, lanza de cobre, hierro, arcabuz, fusil, casco moderno, caballería, cañón, blindado). Cada una lleva el estandarte con el emblema de su civilización y un anillo de bando: amarillo si es tuya, rojo pulsante si es enemiga en guerra.
+- **Modernización**: una unidad antigua se moderniza pagando oro cuando descubres su sucesora, y cambia de modelo.
+- **Ciudades**: cambian con la era (chozas, kanchas de piedra, casas coloniales, ladrillo industrial y torres), la población y los edificios. Las maravillas (Caral, Chavín, Nasca, Chan Chan, Kuélap, Machu Picchu…) tienen modelo propio, igual que los recursos, las mejoras y la fauna.
 
 La partida se guarda automáticamente en el navegador cada turno y también se puede exportar o importar como `.json`.
 
@@ -60,8 +66,11 @@ js/core/setup.js       creación, guardado y carga de partidas
 js/core/events.js      historia dinámica, llegada europea, eventos y divergencias
 js/core/diplomacy.js   guerra, paz y anexión por reciprocidad
 js/core/phases.js      fases de expansión (Sudamérica)
-js/ui/render.js        render del mapa en canvas
+js/ui/icons.js         iconos y emblemas tocapu
+js/ui/render3d.js      maqueta 3D (three.js)
 js/ui/ui.js            interfaz
+js/vendor/three.min.js three.js r158 (licencia MIT)
+.claude/skills/impeccable  skill de diseño de interfaces (Apache 2.0)
 tests/smoke.js         prueba que juega partidas completas en piloto automático
 ```
 

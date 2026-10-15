@@ -24,39 +24,39 @@
 
   // reveal: tecnología necesaria para ver el recurso. kind: estrategico | lujo | alimento
   PC.RESOURCES = {
-    oro:      { name: 'Oro', icon: '🟡', kind: 'lujo', f: 0, p: 0, g: 3, mineral: true },
-    plata:    { name: 'Plata', icon: '⚪', kind: 'lujo', f: 0, p: 0, g: 3, mineral: true },
-    cobre:    { name: 'Cobre', icon: '🟠', kind: 'estrategico', f: 0, p: 1, g: 1, mineral: true },
-    estano:   { name: 'Estaño', icon: '🔘', kind: 'estrategico', f: 0, p: 1, g: 1, mineral: true },
-    hierro:   { name: 'Hierro', icon: '⚙️', kind: 'estrategico', f: 0, p: 2, g: 0, mineral: true, reveal: 'metal_cobre' },
-    carbon:   { name: 'Carbón', icon: '⬛', kind: 'estrategico', f: 0, p: 2, g: 0, mineral: true, reveal: 'metal_cobre' },
-    mercurio: { name: 'Mercurio', icon: '💧', kind: 'estrategico', f: 0, p: 1, g: 2, mineral: true, reveal: 'orfebreria' },
-    salitre:  { name: 'Salitre', icon: '🧂', kind: 'estrategico', f: 0, p: 1, g: 1, mineral: true, reveal: 'quimica' },
-    guano:    { name: 'Guano', icon: '🐦', kind: 'estrategico', f: 1, p: 0, g: 2, mineral: true },
-    petroleo: { name: 'Petróleo', icon: '🛢️', kind: 'estrategico', f: 0, p: 1, g: 1, mineral: true, reveal: 'electricidad' },
-    caucho:   { name: 'Caucho', icon: '🌳', kind: 'lujo', f: 0, p: 0, g: 2 },
-    alpacas:  { name: 'Llamas y alpacas', icon: '🦙', kind: 'alimento', f: 1, p: 1, g: 1 },
-    coca:     { name: 'Coca', icon: '🌿', kind: 'lujo', f: 1, p: 0, g: 1 },
-    cacao:    { name: 'Cacao', icon: '🍫', kind: 'lujo', f: 0, p: 0, g: 2 },
-    castana:  { name: 'Castaña', icon: '🌰', kind: 'lujo', f: 1, p: 0, g: 1 },
-    algodon:  { name: 'Algodón', icon: '☁️', kind: 'lujo', f: 0, p: 1, g: 1 },
-    maiz:     { name: 'Maíz', icon: '🌽', kind: 'alimento', f: 2, p: 0, g: 0 },
-    papa:     { name: 'Papa', icon: '🥔', kind: 'alimento', f: 2, p: 0, g: 0 },
-    quinua:   { name: 'Quinua', icon: '🌾', kind: 'alimento', f: 2, p: 0, g: 0 },
-    vid:      { name: 'Vid', icon: '🍇', kind: 'lujo', f: 0, p: 0, g: 2 },
-    spondylus:{ name: 'Spondylus', icon: '🐚', kind: 'lujo', f: 0, p: 0, g: 2 },
-    sal:      { name: 'Sal', icon: '🔷', kind: 'lujo', f: 1, p: 0, g: 1 },
-    pesca:    { name: 'Anchoveta', icon: '🐟', kind: 'alimento', f: 2, p: 0, g: 0 }
+    oro:      { name: 'Oro', icon: '', kind: 'lujo', f: 0, p: 0, g: 3, mineral: true },
+    plata:    { name: 'Plata', icon: '', kind: 'lujo', f: 0, p: 0, g: 3, mineral: true },
+    cobre:    { name: 'Cobre', icon: '', kind: 'estrategico', f: 0, p: 1, g: 1, mineral: true },
+    estano:   { name: 'Estaño', icon: '', kind: 'estrategico', f: 0, p: 1, g: 1, mineral: true },
+    hierro:   { name: 'Hierro', icon: '', kind: 'estrategico', f: 0, p: 2, g: 0, mineral: true, reveal: 'metal_cobre' },
+    carbon:   { name: 'Carbón', icon: '', kind: 'estrategico', f: 0, p: 2, g: 0, mineral: true, reveal: 'metal_cobre' },
+    mercurio: { name: 'Mercurio', icon: '', kind: 'estrategico', f: 0, p: 1, g: 2, mineral: true, reveal: 'orfebreria' },
+    salitre:  { name: 'Salitre', icon: '', kind: 'estrategico', f: 0, p: 1, g: 1, mineral: true, reveal: 'quimica' },
+    guano:    { name: 'Guano', icon: '', kind: 'estrategico', f: 1, p: 0, g: 2, mineral: true },
+    petroleo: { name: 'Petróleo', icon: '', kind: 'estrategico', f: 0, p: 1, g: 1, mineral: true, reveal: 'electricidad' },
+    caucho:   { name: 'Caucho', icon: '', kind: 'lujo', f: 0, p: 0, g: 2 },
+    alpacas:  { name: 'Llamas y alpacas', icon: '', kind: 'alimento', f: 1, p: 1, g: 1 },
+    coca:     { name: 'Coca', icon: '', kind: 'lujo', f: 1, p: 0, g: 1 },
+    cacao:    { name: 'Cacao', icon: '', kind: 'lujo', f: 0, p: 0, g: 2 },
+    castana:  { name: 'Castaña', icon: '', kind: 'lujo', f: 1, p: 0, g: 1 },
+    algodon:  { name: 'Algodón', icon: '', kind: 'lujo', f: 0, p: 1, g: 1 },
+    maiz:     { name: 'Maíz', icon: '', kind: 'alimento', f: 2, p: 0, g: 0 },
+    papa:     { name: 'Papa', icon: '', kind: 'alimento', f: 2, p: 0, g: 0 },
+    quinua:   { name: 'Quinua', icon: '', kind: 'alimento', f: 2, p: 0, g: 0 },
+    vid:      { name: 'Vid', icon: '', kind: 'lujo', f: 0, p: 0, g: 2 },
+    spondylus:{ name: 'Spondylus', icon: '', kind: 'lujo', f: 0, p: 0, g: 2 },
+    sal:      { name: 'Sal', icon: '', kind: 'lujo', f: 1, p: 0, g: 1 },
+    pesca:    { name: 'Anchoveta', icon: '', kind: 'alimento', f: 2, p: 0, g: 0 }
   };
 
   // Peligros de la fauna amazónica: históricamente la selva era muy difícil de penetrar para los pueblos andinos
   // y los europeos. chance: probabilidad por turno; dmg: daño; civil: también afecta a colonos y trabajadores.
   PC.FAUNA = {
-    jaguar:    { name: 'Jaguar (otorongo)', icon: '🐆', chance: 0.18, dmg: 22, text: 'Un otorongo embosca a' },
-    serpiente: { name: 'Serpientes (shushupe, jergón)', icon: '🐍', chance: 0.22, dmg: 16, text: 'Una shushupe muerde a' },
-    caiman:    { name: 'Caimanes negros', icon: '🐊', chance: 0.18, dmg: 20, text: 'Los caimanes atacan a' },
-    pirana:    { name: 'Pirañas y anguilas', icon: '🐟', chance: 0.15, dmg: 14, text: 'Las pirañas hieren a' },
-    mosquitos: { name: 'Mosquitos (malaria, fiebre amarilla)', icon: '🦟', chance: 0.32, dmg: 12, disease: true, text: 'Las fiebres (malaria) debilitan a' }
+    jaguar:    { name: 'Jaguar (otorongo)', icon: '', chance: 0.18, dmg: 22, text: 'Un otorongo embosca a' },
+    serpiente: { name: 'Serpientes (shushupe, jergón)', icon: '', chance: 0.22, dmg: 16, text: 'Una shushupe muerde a' },
+    caiman:    { name: 'Caimanes negros', icon: '', chance: 0.18, dmg: 20, text: 'Los caimanes atacan a' },
+    pirana:    { name: 'Pirañas y anguilas', icon: '', chance: 0.15, dmg: 14, text: 'Las pirañas hieren a' },
+    mosquitos: { name: 'Mosquitos (malaria, fiebre amarilla)', icon: '', chance: 0.32, dmg: 12, disease: true, text: 'Las fiebres (malaria) debilitan a' }
   };
 
   PC.IMPROVEMENTS = {
@@ -142,26 +142,33 @@
   // Unidades. ranged: ataca sin represalia. noAttrIn: zonas sin desgaste.
   const U = (id, name, o) => Object.assign({ id, name, cat: 'military', atk: 0, def: 1, moves: 2, cost: 20, icon: '•' }, o);
   PC.UNITS = {
-    colono:     U('colono', 'Ayllu colonizador', { cat: 'civil', cost: 40, icon: '⛺', desc: 'Funda una ciudad (cuesta 1 población).' }),
-    trabajador: U('trabajador', "Ayllu de mit'a", { cat: 'civil', cost: 25, icon: '⛏️', desc: 'Construye chacras, andenes, canales, minas y caminos.' }),
-    explorador: U('explorador', 'Chaski explorador', { def: 1, moves: 3, cost: 15, icon: '👣', halfAttr: true, desc: 'Explora rápido; medio desgaste.' }),
-    guerrero:   U('guerrero', 'Guerrero con porra', { atk: 4, def: 3, cost: 20, icon: '🪓' }),
-    hondero:    U('hondero', 'Hondero', { atk: 5, def: 2, ranged: true, cost: 25, tech: 'textileria', icon: '🎯' }),
-    macanero:   U('macanero', 'Macanero', { atk: 7, def: 6, cost: 35, tech: 'guerra', icon: '🛡️' }),
-    lancero:    U('lancero', 'Lancero de cobre', { atk: 9, def: 9, cost: 45, tech: 'metal_cobre', needs: ['cobre', 'estano'], icon: '🔱' }),
-    awqa:       U('awqa', 'Awqa runa (ejército imperial)', { atk: 11, def: 10, cost: 55, tech: 'administracion', icon: '⚔️' }),
-    arquero:    U('arquero', 'Arquero amazónico', { atk: 8, def: 4, ranged: true, cost: 40, tech: 'amazonia', icon: '🏹', noAttrIn: ['selva'] }),
-    infante_hierro: U('infante_hierro', 'Infantería de hierro', { atk: 14, def: 14, cost: 70, tech: 'hierro', needs: ['hierro'], icon: '🗡️' }),
-    arcabucero: U('arcabucero', 'Arcabucero', { atk: 18, def: 14, cost: 90, tech: 'arcabuz', icon: '💥' }),
-    jinete:     U('jinete', 'Caballería', { atk: 18, def: 10, moves: 4, cost: 90, tech: 'equitacion', icon: '🐎' }),
-    canon:      U('canon', 'Cañón', { atk: 22, def: 6, ranged: true, cost: 110, tech: 'artilleria', icon: '💣' }),
-    fusilero:   U('fusilero', 'Fusilero', { atk: 26, def: 24, cost: 130, tech: 'fusil', icon: '🎖️' }),
-    infanteria: U('infanteria', 'Infantería moderna', { atk: 36, def: 34, cost: 180, tech: 'radio', icon: '🪖' }),
-    blindado:   U('blindado', 'Blindado', { atk: 48, def: 38, moves: 3, cost: 240, tech: 'motor', needs: ['petroleo'], icon: '🚛' }),
+    colono:     U('colono', 'Ayllu colonizador', { cat: 'civil', cost: 40, icon: '', desc: 'Funda una ciudad (cuesta 1 población).' }),
+    trabajador: U('trabajador', "Ayllu de mit'a", { cat: 'civil', cost: 25, icon: '', desc: 'Construye chacras, andenes, canales, minas y caminos.' }),
+    explorador: U('explorador', 'Chaski explorador', { def: 1, moves: 3, cost: 15, icon: '', halfAttr: true, desc: 'Explora rápido; medio desgaste.' }),
+    guerrero:   U('guerrero', 'Guerrero con porra', { atk: 4, def: 3, cost: 20, icon: '' }),
+    hondero:    U('hondero', 'Hondero', { atk: 5, def: 2, ranged: true, cost: 25, tech: 'textileria', icon: '' }),
+    macanero:   U('macanero', 'Macanero', { atk: 7, def: 6, cost: 35, tech: 'guerra', icon: '' }),
+    lancero:    U('lancero', 'Lancero de cobre', { atk: 9, def: 9, cost: 45, tech: 'metal_cobre', needs: ['cobre', 'estano'], icon: '' }),
+    awqa:       U('awqa', 'Awqa runa (ejército imperial)', { atk: 11, def: 10, cost: 55, tech: 'administracion', icon: '' }),
+    arquero:    U('arquero', 'Arquero amazónico', { atk: 8, def: 4, ranged: true, cost: 40, tech: 'amazonia', icon: '', noAttrIn: ['selva'] }),
+    infante_hierro: U('infante_hierro', 'Infantería de hierro', { atk: 14, def: 14, cost: 70, tech: 'hierro', needs: ['hierro'], icon: '' }),
+    arcabucero: U('arcabucero', 'Arcabucero', { atk: 18, def: 14, cost: 90, tech: 'arcabuz', icon: '' }),
+    jinete:     U('jinete', 'Caballería', { atk: 18, def: 10, moves: 4, cost: 90, tech: 'equitacion', icon: '' }),
+    canon:      U('canon', 'Cañón', { atk: 22, def: 6, ranged: true, cost: 110, tech: 'artilleria', icon: '' }),
+    fusilero:   U('fusilero', 'Fusilero', { atk: 26, def: 24, cost: 130, tech: 'fusil', icon: '' }),
+    infanteria: U('infanteria', 'Infantería moderna', { atk: 36, def: 34, cost: 180, tech: 'radio', icon: '' }),
+    blindado:   U('blindado', 'Blindado', { atk: 48, def: 38, moves: 3, cost: 240, tech: 'motor', needs: ['petroleo'], icon: '' }),
     // Unidades exclusivas de facciones externas.
-    conquistador: U('conquistador', 'Conquistador', { atk: 16, def: 14, moves: 3, cost: 999, icon: '⚔️', unique: true }),
-    caballero:  U('caballero', 'Caballero español', { atk: 20, def: 12, moves: 4, cost: 999, icon: '🐎', unique: true }),
-    aliado:     U('aliado', 'Auxiliar indígena', { atk: 8, def: 7, cost: 999, icon: '🪓', unique: true })
+    conquistador: U('conquistador', 'Conquistador', { atk: 16, def: 14, moves: 3, cost: 999, icon: '', unique: true }),
+    caballero:  U('caballero', 'Caballero español', { atk: 20, def: 12, moves: 4, cost: 999, icon: '', unique: true }),
+    aliado:     U('aliado', 'Auxiliar indígena', { atk: 8, def: 7, cost: 999, icon: '', unique: true })
+  };
+
+  // Líneas de mejora: una unidad antigua puede modernizarse (pagando oro) a la mejor unidad disponible de su línea.
+  PC.UNIT_LINES = {
+    infanteria: ['guerrero', 'macanero', 'lancero', 'awqa', 'infante_hierro', 'arcabucero', 'fusilero', 'infanteria'],
+    distancia: ['hondero', 'arquero', 'canon'],
+    montada: ['jinete', 'blindado']
   };
 
   // Edificios. stab: cohesión. def: bono defensivo de la ciudad. coastal: requiere costa.

@@ -39,7 +39,7 @@
     g.map.tiles.forEach((t) => { if (t && t.owner === ai.id) t.owner = player.id; });
     g.units.forEach((u) => { if (u.civ === ai.id) u.civ = player.id; });
     ai.alive = false;
-    PC.log(`🤝 ${ai.name} se incorpora pacíficamente a ${player.name} mediante la reciprocidad andina.`, 'history');
+    PC.log(`${ai.name} se incorpora pacíficamente a ${player.name} mediante la reciprocidad andina.`, 'history');
     PC.addStabMod(player, 'Incorporación pacífica', 4, 10);
     PC.updateVisibility();
     return true;

@@ -148,7 +148,7 @@
       if (t) { t.terrain = 'cordillera'; t.feature = 'abra'; t.name = ps.name; }
     });
 
-    // Provincias: casilla → semilla más cercana de su misma macrozona.
+    // Provincias: casilla: semilla más cercana de su misma macrozona.
     const seeds = geo.regions.map((rg) => ({ rg, p: toXY(rg.lon, rg.lat) }));
     land.forEach((t) => {
       let best = null, bd = Infinity;
