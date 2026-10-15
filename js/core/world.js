@@ -178,31 +178,35 @@
       civ.colony = { region, n: units, waves: 1, last: g.turn, year };
     });
     // Las coronas envían refuerzos a las colonias sin ciudades; tras tres intentos, la colonia fracasa.
+    // En Realista la metrópoli insiste más (más oleadas, más seguidas y durante más años), como en la historia.
+    const real = !!PC.diff().histAI;
+    const every = real ? 6 : 8, span = real ? 120 : 80, maxWaves = real ? 5 : 3;
     alive().forEach((c) => {
       if (!c.colony) return;
       const cl = c.colony;
       if (PC.civCities(c).length) {
         cl.lost = null;
         // Flujo constante de soldados y colonos desde la metrópoli durante las primeras décadas.
-        if (g.year < cl.year + 80 && g.turn - cl.last >= 8) {
+        if (g.year < cl.year + span && g.turn - cl.last >= every) {
           const cap = PC.cityById(c.capitalId) || PC.civCities(c)[0];
           PC.spawnUnit(c, PC.aiBestUnit(c), PC.tile(cap.t)); PC.spawnUnit(c, 'conquistador', PC.tile(cap.t));
-          if (PC.civCities(c).length < 3) PC.spawnUnit(c, 'colono', PC.tile(cap.t));
-          c.gold += 40; cl.last = g.turn;
+          if (real) PC.spawnUnit(c, PC.aiBestUnit(c), PC.tile(cap.t));
+          if (PC.civCities(c).length < (real ? 4 : 3)) PC.spawnUnit(c, 'colono', PC.tile(cap.t));
+          c.gold += real ? 70 : 40; cl.last = g.turn;
         }
         return;
       }
       if (cl.lost === null || cl.lost === undefined) cl.lost = g.turn;
-      if (cl.waves < 3 && g.turn - cl.last >= 8 && g.year < cl.year + 100) {
+      if (cl.waves < maxWaves && g.turn - cl.last >= every && g.year < cl.year + 100) {
         const land = g.map.tiles.filter((t) => t && t.region === cl.region && PC.isCoastalTile(t) && !['oceano', 'lago', 'cordillera'].includes(t.terrain) && !t.cityId && !g.units.some((u) => u.t === t.i));
         if (land.length) {
           const at = PC.pick(land);
-          for (let i = 0; i < cl.n; i++) PC.spawnUnit(c, i % 3 === 2 ? 'caballero' : 'conquistador', at);
+          for (let i = 0; i < cl.n + (real ? 2 : 0); i++) PC.spawnUnit(c, i % 3 === 2 ? 'caballero' : 'conquistador', at);
           PC.spawnUnit(c, 'colono', at);
           PC.log(`Llegan refuerzos de ultramar para ${c.name}.`, 'war', quietUnlessMet(c));
         }
         cl.waves++; cl.last = g.turn;
-      } else if ((cl.waves >= 3 || g.year >= cl.year + 100) && (!PC.civUnits(c).some(PC.isMil) || g.turn - Math.max(cl.last, cl.lost) > 25)) {
+      } else if ((cl.waves >= maxWaves || g.year >= cl.year + 100) && (!PC.civUnits(c).some(PC.isMil) || g.turn - Math.max(cl.last, cl.lost) > 25)) {
         c.alive = false; g.units = g.units.filter((u) => u.civ !== c.id);
         PC.log(`La colonia de ${c.name} fracasa: los pueblos del continente la expulsan.`, 'history');
         PC.diverge(`${c.name} no logra establecerse en el continente.`);

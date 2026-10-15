@@ -31,6 +31,8 @@ Como en Civilization, el menú va por pantallas: **pantalla principal** (Continu
 ### Gráficos
 Maqueta 3D low-poly hecha con three.js sobre un manto tejido. La interfaz usa iconos **tocapu** (pictogramas tejidos en una rejilla de 9×9) y no emojis; el sistema visual está documentado en [`DESIGN.md`](DESIGN.md).
 - **Unidades**: escuadrones con el equipo de su época (porra, honda, macana, lanza de cobre, hierro, arcabuz, fusil, casco moderno, caballería, cañón, blindado). Cada una lleva el estandarte con el emblema de su civilización y un anillo de bando: amarillo si es tuya, rojo pulsante si es enemiga en guerra.
+- **Grandes proyectos** de ciudad: *Inti Raymi* (cohesión y cultura), *Obras públicas* (producción y alimento) y *Misión científica* (investigación) convierten el oro en progreso; su coste y su efecto suben con la era.
+- **Mantenimiento proporcional**: las tropas excedentes cuestan más en cada era y los edificios nunca se llevan más del 60% del oro de las ciudades; en los mapas continentales saturados la IA licencia sus unidades obsoletas o sobrantes.
 - **Modernización**: una unidad antigua se moderniza pagando oro cuando descubres su sucesora, y cambia de modelo.
 - **Ciudades**: cambian con la era (chozas, kanchas de piedra, casas coloniales, ladrillo industrial y torres), la población y los edificios. Las maravillas (Caral, Chavín, Nasca, Chan Chan, Kuélap, Machu Picchu…) tienen modelo propio, igual que los recursos, las mejoras y la fauna.
 
@@ -57,13 +59,13 @@ La partida se guarda automáticamente en el navegador cada turno y también se p
 | Fácil | IA lenta y pacífica, invasiones pequeñas y epidemias más suaves. |
 | Medio | Equilibrado. |
 | Difícil | IA más productiva y agresiva; la conquista llega con más fuerza. |
-| **Realista** | Lo más apegado a la historia: la IA recibe las tecnologías en su fecha real; Wari, Tiwanaku, Chimú y los Incas se expanden en su ventana histórica; la viruela y la guerra civil de 1529 golpean también a la IA; hay hasta 8 oleadas españolas con más aliados indígenas. **Desviarse es muy difícil pero no imposible**: las tecnologías alternativas cuestan 1,6× y exigen el recurso en territorio propio, sin comercio. |
+| **Realista** | Lo más apegado a la historia: la IA recibe las tecnologías en su fecha real; Wari, Tiwanaku, Chimú y los Incas se expanden en su ventana histórica; la viruela y la guerra civil de 1529 golpean también a la IA; hay hasta 8 oleadas españolas con más aliados indígenas; en los mapas continentales las colonias europeas reciben más refuerzos y durante más años. **Desviarse es muy difícil pero no imposible**: las tecnologías alternativas cuestan 1,6× y exigen el recurso en territorio propio, sin comercio. |
 
 ### Fases
 1. **Perú** — completa.
-2. **Sudamérica** — jugable. Se desbloquea al controlar el 80% de las provincias. Conservas tecnologías, ciudades (reubicadas por coordenadas reales) y ejército. El continente se puebla según el año: pueblos originarios (muiscas, mapuches, guaraníes, tupíes…), virreinatos o repúblicas. Si llegas antes de 1500, los europeos desembarcan en su fecha (Brasil portugués en 1500, Nueva Granada en 1525, el Río de la Plata en 1536, Chile en 1541…), con epidemias por delante y refuerzos de ultramar; las colonias pueden afianzarse e independizarse o ser expulsadas.
-3. **América** — jugable. Se desbloquea al controlar el 75% de las regiones de Sudamérica. Un mapa de todo el continente, del Ártico a la Tierra del Fuego (≈880 hexágonos de tierra y 68 regiones, con la longitud comprimida según la latitud para que Canadá no ocupe más que Sudamérica), con tundra, bosque boreal, praderas, las Rocosas, la Sierra Madre, los Apalaches, los Grandes Lagos, el Misisipi y las Antillas. Aparecen mexicas (o toltecas antes de 1325), mayas, purépechas, zapotecas, taínos, la cultura del Misisipi, los haudenosaunee, lakotas o cheroquis; luego Nueva España, Nueva Francia y las colonias británicas, y finalmente México, Estados Unidos, Canadá, Centroamérica, Cuba o Haití.
-4. **El Mundo** — en desarrollo. Se anunciará al controlar el 70% de las regiones de América.
+2. **Sudamérica** — jugable. Se desbloquea al controlar el 60% de las provincias (desde 1600 basta el 40%). Conservas tecnologías, ciudades (reubicadas por coordenadas reales) y ejército. El continente se puebla según el año: pueblos originarios (muiscas, mapuches, guaraníes, tupíes…), virreinatos o repúblicas. Si llegas antes de 1500, los europeos desembarcan en su fecha (Brasil portugués en 1500, Nueva Granada en 1525, el Río de la Plata en 1536, Chile en 1541…), con epidemias por delante y refuerzos de ultramar; las colonias pueden afianzarse e independizarse o ser expulsadas.
+3. **América** — jugable. Se desbloquea al controlar el 60% de las regiones de Sudamérica (40% desde 1600). Un mapa de todo el continente, del Ártico a la Tierra del Fuego (≈880 hexágonos de tierra y 68 regiones, con la longitud comprimida según la latitud para que Canadá no ocupe más que Sudamérica), con tundra, bosque boreal, praderas, las Rocosas, la Sierra Madre, los Apalaches, los Grandes Lagos, el Misisipi y las Antillas. Aparecen mexicas (o toltecas antes de 1325), mayas, purépechas, zapotecas, taínos, la cultura del Misisipi, los haudenosaunee, lakotas o cheroquis; luego Nueva España, Nueva Francia y las colonias británicas, y finalmente México, Estados Unidos, Canadá, Centroamérica, Cuba o Haití.
+4. **El Mundo** — en desarrollo. Se anunciará al controlar el 60% de las regiones de América (40% desde 1600).
 
 ## Estructura
 
@@ -84,6 +86,8 @@ js/core/events.js      historia dinámica, llegada europea, eventos y divergenci
 js/core/diplomacy.js   guerra, paz y anexión por reciprocidad
 js/core/phases.js      fases de expansión: mapas continentales y traslado de tu civilización
 js/core/world.js       historia viva: sucesión de líderes, independencias, colonizaciones, iniciativas de la IA y congreso
+js/core/economy.js     mantenimiento proporcional de tropas y edificios, y licenciamiento de tropas sobrantes
+js/core/projects.js    grandes proyectos de ciudad (Inti Raymi, Obras públicas, Misión científica)
 js/ui/icons.js         iconos y emblemas tocapu
 js/ui/render3d.js      maqueta 3D (three.js)
 js/ui/ui.js            interfaz

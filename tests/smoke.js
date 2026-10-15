@@ -4,7 +4,7 @@
 const path = require('path');
 global.PC = {};
 const FILES = ['js/core/util.js', 'js/data/geo.js', 'js/data/geo_sa.js', 'js/data/geo_am.js', 'js/data/rules.js', 'js/data/civs.js', 'js/data/leaders.js', 'js/data/leaders_hist.js', 'js/core/mapgen.js',
-  'js/core/game.js', 'js/core/ai.js', 'js/core/setup.js', 'js/core/events.js', 'js/core/diplomacy.js', 'js/core/actions.js', 'js/core/phases.js', 'js/core/world.js'];
+  'js/core/game.js', 'js/core/ai.js', 'js/core/setup.js', 'js/core/events.js', 'js/core/diplomacy.js', 'js/core/actions.js', 'js/core/phases.js', 'js/core/world.js', 'js/core/economy.js', 'js/core/projects.js'];
 FILES.forEach((f) => require(path.resolve(__dirname, '..', f)));
 
 function run(seed, scenario, culture, maxTurns, difficulty, phase2At, phase3At) {

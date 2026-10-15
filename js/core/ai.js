@@ -38,15 +38,14 @@
     const bm = bestMilitary(city, opts);
     if (!garrison && bm) return pick(bm);
     // Tope global: en los mapas continentales no se satura el mapa de tropas.
-    const m = G().map;
-    if (!m.landCount) m.landCount = m.tiles.filter((t) => t && t.terrain !== 'oceano').length;
-    const crowded = G().units.length > m.landCount * 0.3;
-    if (war && opts.some((o) => o.id === 'apu') && PC.rand() < 0.5) return { kind: 'unit', id: 'apu' };
-    if (war && mil < cities.length * (crowded ? 2 : 3) && bm) return pick(bm);
-    if (mil < Math.ceil(cities.length * 1.3) && bm) return pick(bm);
+    const crowded = PC.mapCrowded(), tight = PC.mapTight();
+    const cmd = units.some((u) => PC.UNITS[u.type].commander);
+    if (war && !(tight && cmd) && opts.some((o) => o.id === 'apu') && PC.rand() < 0.5) return { kind: 'unit', id: 'apu' };
+    if (war && mil < (tight ? PC.armyCap(civ) : cities.length * (crowded ? 2 : 3)) && bm) return pick(bm);
+    if (mil < Math.ceil(cities.length * (tight ? 1 : 1.3)) && bm) return pick(bm);
     const maxCities = civ.external ? 0 : (civ.isPlayer ? 14 : 3 + PC.eraOf(civ));
-    if (city.pop >= 3 && settlers < 1 && cities.length < maxCities && opts.some((o) => o.id === 'colono') && hasSiteNear(civ)) return { kind: 'unit', id: 'colono' };
-    if (workers < Math.ceil(cities.length * 0.6) && opts.some((o) => o.id === 'trabajador')) return { kind: 'unit', id: 'trabajador' };
+    if (city.pop >= 3 && settlers < 1 && cities.length < maxCities && (!tight || cities.length < 3) && opts.some((o) => o.id === 'colono') && hasSiteNear(civ)) return { kind: 'unit', id: 'colono' };
+    if (workers < Math.ceil(cities.length * (tight ? 0.2 : 0.6)) && opts.some((o) => o.id === 'trabajador')) return { kind: 'unit', id: 'trabajador' };
     const wonders = opts.filter((o) => o.kind === 'wonder');
     if (wonders.length && PC.rand() < (civ.isPlayer ? 0.5 : 0.25) && city.pop >= 3) return pick(PC.pick(wonders));
     const blds = opts.filter((o) => o.kind === 'building').sort((a, b) => a.cost - b.cost);
