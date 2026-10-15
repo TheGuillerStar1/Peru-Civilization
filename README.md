@@ -12,7 +12,9 @@ No requiere instalación: three.js va incluido en `js/vendor/`. Abre `index.html
 python3 -m http.server 8000   # y abre http://localhost:8000
 ```
 
-**Controles:** clic para seleccionar y mover · anillo rojo = atacar · arrastrar para desplazar · botón derecho o `Q`/`E` para girar · rueda = zoom · `Enter` terminar turno · `N` siguiente unidad · `F` fortificar · `B` fundar ciudad · `Espacio` esperar · `T` tecnologías · `D` diplomacia · `P` provincias · `C` crónica. En tablet: un dedo desplaza, dos dedos acercan y giran.
+**Controles:** clic para seleccionar y mover · anillo rojo = atacar · arrastrar para desplazar · botón derecho o `Q`/`E` para girar · rueda = zoom · `Enter` terminar turno · `N` siguiente unidad · `F` fortificar · `B` fundar ciudad · `Espacio` esperar · `T` tecnologías · `D` diplomacia · `P` provincias · `C` crónica. En tablet: un dedo desplaza, dos dedos acercan y giran. Flechas o `I`/`J`/`K`/`L` desplazan el mapa (`Mayús` más rápido), `Inicio` centra la capital y `M` muestra u oculta el minimapa.
+
+**Ayudas (v0.1.2):** minimapa con terrenos, fronteras, niebla y el recuadro de la vista (un clic centra la cámara); consejero con consejos en los primeros 30 turnos y avisos de enemigos cerca de tus ciudades; resumen compacto al empezar cada turno; y fronteras con patrón para daltonismo. Todo se activa o desactiva en Opciones › Ayudas y accesibilidad.
 
 ### Menú
 Como en Civilization, el menú va por pantallas: **pantalla principal** (Continuar, Nueva partida, Cargar partida, Opciones), luego **Líder** (lista con retratos y el modelo 3D girando, con su habilidad y personalidad), **Civilización y escenario**, y **Configuración de la partida** (dificultad, punto de partida y opciones avanzadas). `Esc` vuelve a la pantalla anterior.
@@ -34,7 +36,7 @@ Maqueta 3D low-poly hecha con three.js sobre un manto tejido. La interfaz usa ic
 - **Modernización**: una unidad antigua se moderniza pagando oro cuando descubres su sucesora, y cambia de modelo.
 - **Ciudades**: cambian con la era (chozas, kanchas de piedra, casas coloniales, ladrillo industrial y torres), la población y los edificios. Las maravillas (Caral, Chavín, Nasca, Chan Chan, Kuélap, Machu Picchu…) tienen modelo propio, igual que los recursos, las mejoras y la fauna.
 
-La partida se guarda automáticamente en el navegador cada turno y también se puede exportar o importar como `.json`.
+La partida se guarda en el navegador en **3 ranuras manuales** y **2 automáticas** que se turnan al terminar cada turno; cada ranura muestra civilización, año, turno y fase. La partida guardada con versiones anteriores aparece como «Partida anterior». También se puede exportar o importar como `.json`.
 
 ## Diseño
 
@@ -68,7 +70,7 @@ La partida se guarda automáticamente en el navegador cada turno y también se p
 ## Estructura
 
 ```
-index.html, css/style.css
+index.html, css/style.css, css/experiencia.css (minimapa, consejero, resumen, ranuras)
 js/core/util.js        azar con semilla, ruido, hexágonos
 js/data/geo.js         geografía del Perú (contorno, Andes, ríos, abras, provincias, yacimientos)
 js/data/geo_sa.js      geografía de Sudamérica (Fase 2) y sus colonizaciones
@@ -86,7 +88,12 @@ js/core/phases.js      fases de expansión: mapas continentales y traslado de tu
 js/core/world.js       historia viva: sucesión de líderes, independencias, colonizaciones, iniciativas de la IA y congreso
 js/ui/icons.js         iconos y emblemas tocapu
 js/ui/render3d.js      maqueta 3D (three.js)
+js/ui/saves.js         ranuras de guardado (3 manuales, 2 automáticas rotativas)
 js/ui/ui.js            interfaz
+js/ui/advisor.js       consejero y avisos de amenazas
+js/ui/summary.js       resumen al empezar cada turno
+js/ui/minimap.js       minimapa 2D
+js/ui/a11y.js          desplazamiento con teclado y fronteras con patrón
 js/vendor/three.min.js three.js r158 (licencia MIT)
 .claude/skills/impeccable  skill de diseño de interfaces (Apache 2.0)
 tests/smoke.js         prueba que juega partidas completas en piloto automático
