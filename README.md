@@ -14,8 +14,11 @@ python3 -m http.server 8000   # y abre http://localhost:8000
 
 **Controles:** clic para seleccionar y mover · anillo rojo = atacar · arrastrar para desplazar · botón derecho o `Q`/`E` para girar · rueda = zoom · `Enter` terminar turno · `N` siguiente unidad · `F` fortificar · `B` fundar ciudad · `Espacio` esperar · `T` tecnologías · `D` diplomacia · `P` provincias · `C` crónica. En tablet: un dedo desplaza, dos dedos acercan y giran.
 
+### Menú
+Como en Civilization, el menú va por pantallas: **pantalla principal** (Continuar, Nueva partida, Cargar partida, Opciones), luego **Líder** (lista con retratos y el modelo 3D girando, con su habilidad y personalidad), **Civilización y escenario**, y **Configuración de la partida** (dificultad, punto de partida y opciones avanzadas). `Esc` vuelve a la pantalla anterior.
+
 ### Líderes, inicio y diplomacia (inspirado en Civilization VII)
-- **Líder histórico** con ventaja única, independiente de la cultura: Pachacútec, Túpac Yupanqui, Huayna Cápac, Mama Ocllo, Señor de Sipán, Taycanamo, el sumo sacerdote de Chavín, Manco Inca, Micaela Bastidas y Túpac Amaru II.
+- **Líder histórico** con modelo 3D low-poly propio (mascapaicha y orejeras de los incas, el tocado de oro del Señor de Sipán, la máscara de jaguar de Chavín, la montera de Micaela Bastidas…) y ventaja única, independiente de la cultura: Pachacútec, Túpac Yupanqui, Huayna Cápac, Mama Ocllo, Señor de Sipán, Taycanamo, el sumo sacerdote de Chavín, Manco Inca, Micaela Bastidas y Túpac Amaru II.
 - **Punto de partida**: cualquier provincia del Perú, elegida en una lista o con un clic sobre la maqueta del menú.
 - **Acciones por unidad** según su tipo y su situación: fundar, abrir ruta comercial (caravana de llamas), arengar (comandantes históricos como Rumiñahui o Quisquis, que dan +20% a las tropas cercanas), fortificar, curar hasta sanar, saquear, centinela, modernizar, esperar y disolver.
 - **Diplomacia con los líderes rivales**, cada uno con su agenda: regalos, paso libre, alianzas (los aliados entran en tus guerras y te llaman a las suyas), denuncias, tributo, vasallaje y anexión por reciprocidad. Las acciones cuestan **influencia**.

@@ -12,44 +12,82 @@
     set(v) { try { localStorage.setItem(SAVE_KEY, v); return true; } catch (e) { return false; } }
   };
 
-  // ------------------------------------------------------------------ Menú inicial
+  // ------------------------------------------------------------------ Menú (pantallas como en Civilization)
+  const OPT_KEY = 'peru-civ-opciones';
+  const prefs = (() => { try { return JSON.parse(localStorage.getItem(OPT_KEY)) || {}; } catch (e) { return {}; } })();
+  const savePrefs = () => { try { localStorage.setItem(OPT_KEY, JSON.stringify(prefs)); } catch (e) { /* sin almacenamiento */ } };
+  UI.screen = 'title';
+  function showScreen(name) {
+    UI.screen = name;
+    document.querySelectorAll('#menu .scr').forEach((el) => { el.hidden = el.id !== 'scr-' + name; });
+    $('#menu').dataset.screen = name;
+    renderMenu();
+    const first = $('#scr-' + name).querySelector('button:not(:disabled), a');
+    if (first) first.focus({ preventScroll: true });
+  }
+  // Cada líder se muestra con los colores de su propio vestuario histórico.
+  function leaderColor(id) { return (PC.LEADERS[id] && PC.LEADERS[id].color) || '#8a2232'; }
   function renderMenu() {
     const m = UI.menu;
     const sc = PC.SCENARIOS[m.scenario];
     if (!sc.playable.includes(m.culture)) m.culture = sc.playable[0];
-    $('#scenarios').innerHTML = Object.keys(PC.SCENARIOS).map((id) =>
-      `<button type="button" data-sc="${id}" aria-pressed="${id === m.scenario}">${esc(PC.SCENARIOS[id].name)}</button>`).join('');
-    $('#sc-desc').textContent = sc.desc;
-    $('#cultures').innerHTML = sc.playable.map((id) => {
-      const c = PC.CULTURES[id];
-      return `<button type="button" class="cul" data-cu="${id}" aria-pressed="${id === m.culture}">${PC.emblem(id, c.color)}<span>${esc(c.name)}</span></button>`;
-    }).join('');
-    $('#cu-desc').textContent = PC.CULTURES[m.culture].desc;
     if (!m.leader) m.leader = PC.defaultLeader(m.culture);
-    $('#leaders').innerHTML = Object.keys(PC.LEADERS).map((id) => {
-      const L = PC.LEADERS[id];
-      return `<button type="button" class="lead-card" data-ld="${id}" aria-pressed="${id === m.leader}"><b>${esc(L.name)}</b><small>${esc(L.title)}</small></button>`;
-    }).join('');
-    const L = PC.LEADERS[m.leader];
-    $('#ld-desc').innerHTML = `<b>${esc(L.name)}.</b> ${esc(L.desc)} <span class="muted">Agenda: ${esc(PC.AGENDAS[L.agenda].name.toLowerCase())}.</span>`;
-    const fixed = !!sc.playerCities;
-    const regs = PC.GEO_PERU.regions;
-    const zoneName = { costa: 'Costa', sierra: 'Sierra', selva: 'Selva' };
-    $('#opt-start').disabled = fixed;
-    $('#opt-start').innerHTML = `<option value="">Tierra histórica de la cultura</option>` +
-      ['costa', 'sierra', 'selva'].map((z) => `<optgroup label="${zoneName[z]}">${regs.filter((r) => r.zone === z).map((r) => `<option value="${r.id}" ${m.start === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}</optgroup>`).join('');
-    $('#st-desc').textContent = fixed ? 'En este escenario el imperio ya existe: empiezas en el Cusco.' :
-      m.start ? `Fundarás tu primera ciudad en ${regs.find((r) => r.id === m.start).name}. También puedes hacer clic en una provincia de la maqueta.` :
-      `Empiezas en ${regs.find((r) => r.id === PC.CULTURES[m.culture].region).name}, la tierra histórica de tu cultura. Elige otra provincia en la lista o haz clic sobre la maqueta.`;
-    if (PC.R && PC.G && PC.G.preview) {
-      const rid = m.start || PC.CULTURES[m.culture].region;
-      PC.R.sel = { regionHL: rid }; PC.R.draw();
+    // Principal
+    const save = storage.get();
+    $('#btn-continue').disabled = !save;
+    if (save) { try { const d = JSON.parse(save); const pc = d.civs.find((c) => c.isPlayer); $('#continue-info').textContent = `${pc.name} · ${PC.fmtYear(d.year)} · turno ${d.turn}`; } catch (e) { $('#continue-info').textContent = 'Retoma tu última partida'; } }
+    else $('#continue-info').textContent = 'No hay partidas guardadas';
+    if (UI.screen === 'leader') {
+      $('#leader-list').innerHTML = Object.keys(PC.LEADERS).map((id) => {
+        const L = PC.LEADERS[id];
+        const img = R.leaderThumb ? R.leaderThumb(id, leaderColor(id)) : '';
+        return `<button type="button" class="lp" role="option" data-ld="${id}" aria-selected="${id === m.leader}">${img ? `<img src="${img}" alt="">` : ''}<span><b>${esc(L.name)}</b><small>${esc(L.title)}</small></span></button>`;
+      }).join('');
+      const L = PC.LEADERS[m.leader], A = PC.AGENDAS[L.agenda];
+      $('#leader-info').innerHTML = `<h3>${esc(L.name)}</h3><p class="muted">${esc(L.title)}</p>
+        <div class="sec"><h4>Habilidad única</h4><p>${esc(L.desc)}</p></div>
+        <div class="sec"><h4>Personalidad · ${esc(A.name)}</h4><p class="small muted">Como rival en la IA: le agrada ${esc(A.likes.toLowerCase())}; le desagrada ${esc(A.dislikes.toLowerCase())}.</p></div>
+        <p class="small muted">Puedes combinar cualquier líder con cualquier civilización.</p>`;
+      if (R.mountLeader) R.mountLeader($('#leader-stage'), m.leader, leaderColor(m.leader));
     }
-    $('#difficulties').innerHTML = Object.keys(PC.DIFFICULTY).map((id) =>
-      `<button type="button" data-df="${id}" aria-pressed="${id === m.difficulty}">${esc(PC.DIFFICULTY[id].name)}</button>`).join('');
-    $('#df-desc').textContent = PC.DIFFICULTY[m.difficulty].desc;
-    $('#btn-continue').disabled = !storage.get();
-    $('#btn-start').innerHTML = `${ic('sol')}Comenzar la historia`;
+    if (UI.screen === 'civ') {
+      $('#scenarios').innerHTML = Object.keys(PC.SCENARIOS).map((id) =>
+        `<button type="button" data-sc="${id}" aria-pressed="${id === m.scenario}">${esc(PC.SCENARIOS[id].name)}</button>`).join('');
+      $('#sc-desc').textContent = sc.desc;
+      $('#cultures').innerHTML = sc.playable.map((id) => {
+        const c = PC.CULTURES[id];
+        const rec = PC.defaultLeader(id) === m.leader;
+        return `<button type="button" class="cul" data-cu="${id}" aria-pressed="${id === m.culture}">${PC.emblem(id, c.color)}<span>${esc(c.name)}${rec ? '<small>Afín a tu líder</small>' : ''}</span></button>`;
+      }).join('');
+      $('#cu-desc').textContent = PC.CULTURES[m.culture].desc;
+    }
+    if (UI.screen === 'setup') {
+      const L = PC.LEADERS[m.leader], C = PC.CULTURES[m.culture];
+      $('#setup-summary').innerHTML = `${R.leaderThumb ? `<img src="${R.leaderThumb(m.leader, leaderColor(m.leader))}" alt="">` : ''}${PC.emblem(m.culture, C.color, 'lg')}
+        <div><b>${esc(L.name)}</b> guía a <b>${esc(C.name)}</b><br><small class="muted">${esc(sc.name)}</small></div>`;
+      $('#difficulties').innerHTML = Object.keys(PC.DIFFICULTY).map((id) =>
+        `<button type="button" data-df="${id}" aria-pressed="${id === m.difficulty}">${esc(PC.DIFFICULTY[id].name)}</button>`).join('');
+      $('#df-desc').textContent = PC.DIFFICULTY[m.difficulty].desc;
+      const fixed = !!sc.playerCities;
+      const regs = PC.GEO_PERU.regions;
+      const zoneName = { costa: 'Costa', sierra: 'Sierra', selva: 'Selva' };
+      $('#opt-start').disabled = fixed;
+      $('#opt-start').innerHTML = '<option value="">Tierra histórica de la civilización</option>' +
+        ['costa', 'sierra', 'selva'].map((z) => `<optgroup label="${zoneName[z]}">${regs.filter((r) => r.zone === z).map((r) => `<option value="${r.id}" ${m.start === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}</optgroup>`).join('');
+      $('#st-desc').textContent = fixed ? 'En este escenario el imperio ya existe: empiezas en el Cusco.' :
+        m.start ? `Fundarás tu primera ciudad en ${regs.find((r) => r.id === m.start).name}. También puedes hacer clic en una provincia del mapa.` :
+        `Empiezas en ${regs.find((r) => r.id === C.region).name}, la tierra histórica de tu civilización. Elige otra provincia en la lista o haz clic en el mapa.`;
+      if (PC.G && PC.G.preview) { R.sel = { regionHL: fixed ? 'cusco' : (m.start || C.region) }; R.draw(); }
+    } else if (PC.G && PC.G.preview && R.sel && R.sel.regionHL) { R.sel = null; R.draw(); }
+    if (UI.screen === 'load') {
+      let html = '';
+      if (save) { try { const d = JSON.parse(save); const pc = d.civs.find((c) => c.isPlayer); html = `<button type="button" class="mm" data-loadslot="1"><b>${esc(pc.name)}</b><small>${PC.fmtYear(d.year)} · turno ${d.turn} · ${esc((PC.DIFFICULTY[d.difficulty] || {}).name || '')}</small></button>`; } catch (e) { html = ''; } }
+      $('#save-list').innerHTML = html || '<p class="muted">No hay partidas guardadas en este navegador.</p>';
+    }
+    if (UI.screen === 'options') {
+      $('#opt-quality').innerHTML = ['alta', 'baja'].map((q) => `<button type="button" data-q="${q}" aria-pressed="${(prefs.quality || 'alta') === q}">${q === 'alta' ? 'Alta' : 'Baja'}</button>`).join('');
+      $('#opt-regions').checked = !!prefs.regions;
+    }
   }
   function previewWorld() {
     // Maqueta de fondo del menú: una partida de muestra con el mapa revelado, girando despacio.
@@ -62,23 +100,26 @@
   }
   function bindMenu() {
     $('#menu').addEventListener('click', (e) => {
-      const b = e.target.closest('button'); if (!b) return;
-      let changed = false;
-      if (b.dataset.sc) { UI.menu.scenario = b.dataset.sc; changed = true; }
+      const b = e.target.closest('button, a'); if (!b) return;
+      if (b.dataset.go) { showScreen(b.dataset.go); return; }
+      let rebuild = false;
+      if (b.dataset.ld) { UI.menu.leader = b.dataset.ld; const pref = Object.keys(PC.DEFAULT_LEADER).find((c) => PC.DEFAULT_LEADER[c] === b.dataset.ld && PC.SCENARIOS[UI.menu.scenario].playable.includes(c)); if (pref) UI.menu.culture = pref; }
+      if (b.dataset.sc) { UI.menu.scenario = b.dataset.sc; rebuild = true; }
       if (b.dataset.cu) UI.menu.culture = b.dataset.cu;
       if (b.dataset.df) UI.menu.difficulty = b.dataset.df;
-      if (b.dataset.cu) UI.menu.leader = PC.defaultLeader(b.dataset.cu);
-      if (b.dataset.ld) UI.menu.leader = b.dataset.ld;
-      if (b.dataset.sc || b.dataset.cu || b.dataset.df || b.dataset.ld) renderMenu();
-      if (changed) previewWorld();
+      if (b.dataset.q) { prefs.quality = b.dataset.q; savePrefs(); R.setQuality(b.dataset.q); }
+      if (b.dataset.loadslot) { try { PC.load(storage.get()); startGame(false); } catch (err) { menuError('No se pudo abrir la partida guardada.'); } return; }
+      if (b.dataset.ld || b.dataset.sc || b.dataset.cu || b.dataset.df || b.dataset.q) renderMenu();
+      if (rebuild) previewWorld();
     });
+    $('#opt-regions').onchange = (e) => { prefs.regions = e.target.checked; savePrefs(); };
     $('#btn-start').onclick = () => {
       const seed = +$('#opt-seed').value || undefined;
       PC.newGame({ scenario: UI.menu.scenario, culture: UI.menu.culture, difficulty: UI.menu.difficulty, leader: UI.menu.leader, startRegion: UI.menu.start || undefined, seed, speed: $('#opt-speed').value });
       startGame(true);
     };
     $('#btn-continue').onclick = () => {
-      try { PC.load(storage.get()); startGame(false); } catch (e) { menuError('No se pudo abrir la partida guardada. Empieza una nueva o carga un archivo.'); }
+      try { PC.load(storage.get()); startGame(false); } catch (e) { showScreen('load'); menuError('No se pudo abrir la partida guardada. Empieza una nueva o carga un archivo.'); }
     };
     $('#opt-start').onchange = (e) => { UI.menu.start = e.target.value; renderMenu(); };
     $('#btn-load-file').onclick = () => $('#file-load').click();
@@ -86,16 +127,22 @@
       const f = e.target.files[0]; if (!f) return;
       f.text().then((txt) => { PC.load(txt); startGame(false); }).catch(() => menuError('Ese archivo no es una partida de Perú Civilization.'));
     };
+    document.addEventListener('keydown', (e) => {
+      if ($('#menu').hidden || e.key !== 'Escape') return;
+      const back = { leader: 'title', civ: 'leader', setup: 'civ', load: 'title', options: 'title' }[UI.screen];
+      if (back) showScreen(back);
+    });
   }
   function menuError(text) { const el = $('#menu-error'); el.textContent = text; el.hidden = false; }
   function showMenu() {
     closeModal();
     $('#hud').hidden = true; $('#menu').hidden = false;
-    renderMenu(); previewWorld();
+    showScreen('title'); previewWorld();
   }
   function startGame(fresh) {
     $('#menu').hidden = true; $('#hud').hidden = false;
     R.preview = false; PC.G.preview = false;
+    R.showRegions = !!prefs.regions;
     R.resize(); R.rebuild();
     const p = PC.player();
     const cap = PC.cityById(p.capitalId) || PC.civCities(p)[0];
@@ -138,7 +185,8 @@
   }
   function renderTop() {
     const g = PC.G, p = PC.player();
-    $('#tb-civ').innerHTML = `${PC.emblem(p.key, p.color)}<div><b>${esc(p.name)}</b><small>${esc(p.leader || '')}</small></div>`;
+    const pl = PC.leaderOf(p), pth = R.leaderThumb ? R.leaderThumb(pl.model, leaderColor(pl.model)) : '';
+    if (!$('#tb-civ')._k || $('#tb-civ')._k !== p.name + pl.model) { $('#tb-civ')._k = p.name + pl.model; $('#tb-civ').innerHTML = `${pth ? `<img class="lthumb sm" src="${pth}" alt="">` : ''}${PC.emblem(p.key, p.color)}<div><b>${esc(p.name)}</b><small>${esc(p.leader || '')}</small></div>`; }
     $('#tb-year').innerHTML = `${ic('sol')}<div><b>${PC.fmtYear(g.year)}</b> <small>${esc(PC.ERAS[PC.eraOf(p)].name)} · turno ${g.turn}</small></div>`;
     const inc = p.lastIncome === undefined ? PC.civCities(p).reduce((s, c) => s + PC.cityYields(c).g, 0) : p.lastIncome;
     $('#tb-gold').innerHTML = `${ic('oro')}<b>${Math.round(p.gold)}</b><small class="${inc < 0 ? 'bad' : ''}">${inc >= 0 ? '+' : ''}${inc}</small>`;
@@ -229,7 +277,8 @@
     const chips = [`<span class="chip st-${st}">${PC.REL_NAME[st]}</span>`, `<span class="chip">${PC.attName(att)} (${att > 0 ? '+' : ''}${att})</span>`];
     if (PC.rel(p, civ).borders) chips.push('<span class="chip">Paso libre</span>');
     if (st === 'guerra') chips.push(`<span class="chip">Puntaje de guerra ${PC.rel(p, civ).warScore || 0}</span>`);
-    return `<div class="sec"><h4>Diplomacia</h4><p class="small" style="margin:0"><b>${esc(L.name)}</b> · ${esc(L.title)}</p><div class="chips">${chips.join('')}</div>
+    const th = R.leaderThumb ? R.leaderThumb(L.model, civ.color) : '';
+    return `<div class="sec"><h4>Diplomacia</h4><div class="lrow">${th ? `<img class="lthumb" src="${th}" alt="">` : ''}<p class="small" style="margin:0"><b>${esc(L.name)}</b><br>${esc(L.title)}</p></div><div class="chips">${chips.join('')}</div>
       <div class="actions"><button class="btn" data-act="leader" data-civ="${civ.id}" type="button">${ic('diplomacia')}Hablar con ${esc(L.name)}</button></div></div>`;
   }
   function unitPanel(u) {
@@ -451,7 +500,7 @@
   }
   function clickMap(e, right) {
     if (PC.G && PC.G.preview) {
-      if ($('#menu').hidden || PC.SCENARIOS[UI.menu.scenario].playerCities) return;
+      if ($('#menu').hidden || UI.screen !== 'setup' || PC.SCENARIOS[UI.menu.scenario].playerCities) return;
       const [mx, my] = mapXY(e);
       const t = R.pick(mx, my);
       if (t && t.region) { UI.menu.start = t.region; renderMenu(); }
@@ -577,7 +626,10 @@
   function showEvent() {
     const ev = PC.currentEvent();
     if (!ev) return;
-    openModal(`<div class="event"><div class="event-head">${ic(PC.EVENT_ICON[ev.id] || 'cronica', 'xl')}<div><h2>${esc(ev.title)}</h2><p>${PC.fmtYear(PC.G.year)}</p></div></div>
+    const q = PC.G.eventQueue[0];
+    const who = q && q.data && PC.civ(q.data.from || q.data.ally);
+    const head = who && R.leaderThumb ? `<img class="lthumb lg" src="${R.leaderThumb(PC.leaderOf(who).model, who.color)}" alt="">` : ic(PC.EVENT_ICON[ev.id] || 'cronica', 'xl');
+    openModal(`<div class="event"><div class="event-head">${head}<div><h2>${esc(ev.title)}</h2><p>${PC.fmtYear(PC.G.year)}</p></div></div>
       <p>${esc(ev.text)}</p>
       <div class="choices">${ev.choices.map((c, i) => `<button class="choice" data-choice="${i}" type="button" ${c.cond === false ? 'disabled' : ''}>${esc(c.label)}${c.hint ? `<small>${esc(c.hint)}</small>` : ''}</button>`).join('')}</div></div>`, 'event');
   }
@@ -640,7 +692,7 @@
         <em>${cost ? esc(cost) : 'Sin costo'}${ch !== null ? ` · ${ch}% de aceptación` : ''}</em>${iss.length ? `<i>${esc(iss[0])}</i>` : ''}</button>`;
     }).join('');
     openModal(`<div class="leader">
-      <div class="leader-head" style="--civ:${civ.color}"><div class="leader-em">${PC.emblem(civ.key, civ.color)}</div>
+      <div class="leader-head" style="--civ:${civ.color}"><div class="leader-portrait" id="dlg-stage"><span class="lp-em">${PC.emblem(civ.key, civ.color)}</span></div>
         <div><h2>${esc(L.name)}</h2><p>${esc(L.title)} · ${esc(civ.name)}</p>
         <div class="chips">${treaties.map((x) => `<span class="chip">${esc(x)}</span>`).join('')}</div></div></div>
       <div class="leader-grid">
@@ -656,6 +708,7 @@
         </div>
         <div class="sec"><h4>Acciones diplomáticas</h4><div class="dacts">${cards}</div></div>
       </div></div>`, 'leader');
+    if (R.mountLeader) R.mountLeader($('#dlg-stage'), L.model, civ.color);
   }
   UI.openLeader = openLeader;
   function openDiplo() {
@@ -666,7 +719,8 @@
       const known = PC.civCities(c).some((ct) => PC.isExplored(ct.t)) || PC.civUnits(c).some((u) => PC.isExplored(u.t));
       if (!known) return;
       const st = PC.relState(p, c), att = Math.round(PC.rel(c, p).att), L = PC.leaderOf(c);
-      rows += `<tr><td><span class="who">${PC.emblem(c.key, c.color)}<span>${esc(c.name)}<br><small class="muted">${esc(L.name)} · ${esc(PC.AGENDAS[L.agenda].name)}</small></span></span></td>
+      const th = R.leaderThumb ? R.leaderThumb(L.model, c.color) : '';
+      rows += `<tr><td><span class="who">${th ? `<img class="lthumb" src="${th}" alt="">` : ''}${PC.emblem(c.key, c.color)}<span>${esc(c.name)}<br><small class="muted">${esc(L.name)} · ${esc(PC.AGENDAS[L.agenda].name)}</small></span></span></td>
         <td>${PC.civCities(c).length}</td><td>${PC.power(c)}</td><td class="${att < -20 ? 'bad' : att > 20 ? 'good' : ''}">${PC.attName(att)} (${att > 0 ? '+' : ''}${att})</td>
         <td><span class="chip st-${st}">${PC.REL_NAME[st]}</span></td>
         <td><button class="btn" data-leader="${c.id}" type="button">${ic('diplomacia')}Hablar</button></td></tr>`;
@@ -773,7 +827,8 @@
     try { R.init($('#stage'), $('#labels')); } catch (err) {
       document.body.insertAdjacentHTML('beforeend', '<p class="err" style="position:fixed;bottom:16px;left:16px">No se pudo iniciar el 3D en este navegador. Activa WebGL o prueba con otro navegador.</p>');
     }
+    if (prefs.quality && R.setQuality) R.setQuality(prefs.quality);
     bindMenu(); bindMap(); bindModal(); renderNav();
-    renderMenu(); previewWorld();
+    previewWorld(); showScreen('title');
   });
 })(globalThis.PC = globalThis.PC || {});

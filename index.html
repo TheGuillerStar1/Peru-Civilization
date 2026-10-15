@@ -12,35 +12,79 @@
 <body>
   <div id="stage"><div id="labels"></div></div>
 
-  <!-- Menú inicial sobre la maqueta -->
-  <section id="menu" class="menu" aria-label="Nueva partida">
-    <div class="menu-panel">
-      <header class="menu-head">
+  <!-- Menú: pantallas como en Civilization (principal → líder → civilización → partida) -->
+  <section id="menu" class="menu" aria-label="Menú principal">
+    <div id="scr-title" class="scr scr-title">
+      <div class="title-block">
         <h1>Perú <span>Civilization</span></h1>
-        <p class="tagline">Guía una cultura andina desde Caral hasta el siglo XXI. La historia real es el punto de partida; lo que pase después depende de ti.</p>
-        <ol class="phases" aria-label="Fases del juego">
-          <li class="on">Perú</li><li class="on">Sudamérica</li><li>América</li><li>El mundo</li>
-        </ol>
-      </header>
-      <div class="menu-body">
-        <fieldset class="step"><legend>Escenario</legend><div id="scenarios" class="seg"></div><p id="sc-desc" class="desc"></p></fieldset>
-        <fieldset class="step"><legend>Cultura</legend><div id="cultures" class="culgrid"></div><p id="cu-desc" class="desc"></p></fieldset>
-        <fieldset class="step"><legend>Líder</legend><div id="leaders" class="leadgrid"></div><p id="ld-desc" class="desc"></p></fieldset>
-        <fieldset class="step"><legend>Punto de partida</legend><label for="opt-start" class="sr">Provincia inicial</label><select id="opt-start"></select><p id="st-desc" class="desc"></p></fieldset>
-        <fieldset class="step"><legend>Dificultad</legend><div id="difficulties" class="seg"></div><p id="df-desc" class="desc"></p></fieldset>
-        <div class="opts">
-          <label for="opt-speed">Velocidad<select id="opt-speed"><option value="normal">Normal · unos 320 turnos</option><option value="rapida">Rápida · unos 160 turnos</option></select></label>
-          <label for="opt-seed">Semilla del mapa<input id="opt-seed" type="number" inputmode="numeric" placeholder="Aleatoria"></label>
-        </div>
+        <p class="tagline">De Caral al siglo XXI. La historia real es el punto de partida; lo que pase después depende de ti.</p>
       </div>
-      <footer class="menu-actions">
-        <button id="btn-start" class="btn primary big" type="button">Comenzar la historia</button>
-        <button id="btn-continue" class="btn" type="button">Continuar partida</button>
-        <button id="btn-load-file" class="btn ghost" type="button">Cargar archivo</button>
-        <input id="file-load" type="file" accept=".json" hidden>
+      <nav class="mainmenu" aria-label="Menú principal">
+        <button id="btn-continue" class="mm" type="button"><b>Continuar</b><small id="continue-info">Retoma tu última partida</small></button>
+        <button class="mm" data-go="leader" type="button"><b>Nueva partida</b><small>Elige líder, civilización y partida</small></button>
+        <button class="mm" data-go="load" type="button"><b>Cargar partida</b><small>Desde este navegador o un archivo</small></button>
+        <button class="mm" data-go="options" type="button"><b>Opciones</b><small>Gráficos y controles</small></button>
+        <a class="mm" id="doc-link" href="docs/INVESTIGACION_HISTORICA.md" target="_blank" rel="noopener"><b>Investigación histórica</b><small>La base documental del juego</small></a>
+      </nav>
+      <p class="version small muted">Fase 1 · Perú y Fase 2 · Sudamérica disponibles. Fases 3 y 4 en desarrollo.</p>
+    </div>
+
+    <div id="scr-leader" class="scr scr-wide" hidden>
+      <header class="scr-head"><ol class="stepper"><li class="on">Líder</li><li>Civilización</li><li>Partida</li></ol><h2>Elige a tu líder</h2></header>
+      <div class="leader-pick">
+        <div id="leader-list" class="leader-list" role="listbox" aria-label="Líderes"></div>
+        <div id="leader-stage" class="leader-stage" aria-hidden="true"></div>
+        <div id="leader-info" class="leader-info"></div>
+      </div>
+      <footer class="scr-foot"><button class="btn big" data-go="title" type="button">Atrás</button><button class="btn primary big" data-go="civ" type="button">Siguiente: civilización</button></footer>
+    </div>
+
+    <div id="scr-civ" class="scr scr-mid" hidden>
+      <header class="scr-head"><ol class="stepper"><li class="done">Líder</li><li class="on">Civilización</li><li>Partida</li></ol><h2>Escenario y civilización</h2></header>
+      <div class="scr-body">
+        <fieldset class="step"><legend>Escenario</legend><div id="scenarios" class="seg"></div><p id="sc-desc" class="desc"></p></fieldset>
+        <fieldset class="step"><legend>Civilización</legend><div id="cultures" class="culgrid"></div><p id="cu-desc" class="desc"></p></fieldset>
+      </div>
+      <footer class="scr-foot"><button class="btn big" data-go="leader" type="button">Atrás</button><button class="btn primary big" data-go="setup" type="button">Siguiente: partida</button></footer>
+    </div>
+
+    <div id="scr-setup" class="scr scr-mid" hidden>
+      <header class="scr-head"><ol class="stepper"><li class="done">Líder</li><li class="done">Civilización</li><li class="on">Partida</li></ol><h2>Configura la partida</h2></header>
+      <div class="scr-body">
+        <div id="setup-summary" class="setup-summary"></div>
+        <fieldset class="step"><legend>Dificultad</legend><div id="difficulties" class="seg"></div><p id="df-desc" class="desc"></p></fieldset>
+        <fieldset class="step"><legend>Punto de partida</legend><label for="opt-start" class="sr">Provincia inicial</label><select id="opt-start"></select><p id="st-desc" class="desc"></p></fieldset>
+        <details class="adv"><summary>Opciones avanzadas</summary>
+          <div class="opts">
+            <label for="opt-speed">Velocidad<select id="opt-speed"><option value="normal">Normal · unos 320 turnos</option><option value="rapida">Rápida · unos 160 turnos</option></select></label>
+            <label for="opt-seed">Semilla del mapa<input id="opt-seed" type="number" inputmode="numeric" placeholder="Aleatoria"></label>
+          </div>
+        </details>
+      </div>
+      <footer class="scr-foot"><button class="btn big" data-go="civ" type="button">Atrás</button><button id="btn-start" class="btn primary big" type="button">Comenzar la historia</button></footer>
+    </div>
+
+    <div id="scr-load" class="scr scr-mid" hidden>
+      <header class="scr-head"><h2>Cargar partida</h2></header>
+      <div class="scr-body"><div id="save-list"></div>
+        <p class="small muted">También puedes abrir una partida exportada a un archivo .json.</p>
+        <button id="btn-load-file" class="btn" type="button">Abrir archivo</button><input id="file-load" type="file" accept=".json" hidden>
         <p id="menu-error" class="err" hidden></p>
-        <p class="small"><a id="doc-link" href="docs/INVESTIGACION_HISTORICA.md" target="_blank" rel="noopener">Investigación histórica y demográfica</a></p>
-      </footer>
+      </div>
+      <footer class="scr-foot"><button class="btn big" data-go="title" type="button">Atrás</button></footer>
+    </div>
+
+    <div id="scr-options" class="scr scr-mid" hidden>
+      <header class="scr-head"><h2>Opciones</h2></header>
+      <div class="scr-body">
+        <fieldset class="step"><legend>Calidad gráfica</legend><div id="opt-quality" class="seg"></div><p class="desc">La calidad baja quita las sombras y la resolución alta; úsala en tablets o equipos sin tarjeta gráfica.</p></fieldset>
+        <fieldset class="step"><legend>Al empezar cada partida</legend><label class="check" for="opt-regions"><input id="opt-regions" type="checkbox"> Mostrar los límites de las provincias</label></fieldset>
+        <fieldset class="step"><legend>Controles</legend>
+          <ul class="help small"><li>Arrastrar: desplazar el mapa · rueda: acercar · botón derecho o <kbd>Q</kbd>/<kbd>E</kbd>: girar.</li>
+          <li><kbd>Enter</kbd> terminar turno · <kbd>N</kbd> siguiente unidad · <kbd>F</kbd> fortificar · <kbd>H</kbd> curar · <kbd>S</kbd> centinela · <kbd>U</kbd> modernizar · <kbd>B</kbd> fundar ciudad.</li>
+          <li><kbd>T</kbd> tecnologías · <kbd>D</kbd> diplomacia · <kbd>P</kbd> provincias · <kbd>C</kbd> crónica.</li></ul></fieldset>
+      </div>
+      <footer class="scr-foot"><button class="btn big" data-go="title" type="button">Atrás</button></footer>
     </div>
   </section>
 

@@ -11,34 +11,34 @@
   //   heal: curación extra | warStab: cohesión durante guerras contra potencias | atkVsExternal: % contra invasores
   //   selvaNoAttr: sin desgaste en selva | mountainDef: % de defensa en sierra y cordillera | influence: influencia por turno
   PC.LEADERS = {
-    pachacutec: { name: 'Pachacútec', title: 'Sapa Inca, 1438–1471', agenda: 'conquistador',
+    pachacutec: { name: 'Pachacútec', title: 'Sapa Inca, 1438–1471', agenda: 'conquistador', color: '#8a2232',
       desc: '"El que transforma el mundo". +25% de ataque contra ciudades; las ciudades conquistadas no restan cohesión.',
       bonus: { atkCity: 25, noConqPenalty: true } },
-    tupac_yupanqui: { name: 'Túpac Yupanqui', title: 'Sapa Inca, 1471–1493', agenda: 'explorador',
+    tupac_yupanqui: { name: 'Túpac Yupanqui', title: 'Sapa Inca, 1471–1493', agenda: 'explorador', color: '#2f5f8f',
       desc: 'Navegante del Pacífico. +1 movimiento a exploradores y unidades embarcadas; el viaje al poniente siempre triunfa.',
       bonus: { exploreMove: 1, voyage: true } },
-    huayna_capac: { name: 'Huayna Cápac', title: 'Sapa Inca, 1493–1525', agenda: 'expansionista',
+    huayna_capac: { name: 'Huayna Cápac', title: 'Sapa Inca, 1493–1525', agenda: 'expansionista', color: '#b07a1a',
       desc: 'Administrador del imperio en su apogeo. +3 de capacidad administrativa y +3 de producción en la capital.',
       bonus: { capacity: 3, capitalProd: 3 } },
-    mama_ocllo: { name: 'Mama Ocllo', title: 'Coya fundadora, según el mito', agenda: 'pacifico',
+    mama_ocllo: { name: 'Mama Ocllo', title: 'Coya fundadora, según el mito', agenda: 'pacifico', color: '#6a2a5a',
       desc: 'Enseñó a hilar y a sembrar. Las ciudades crecen un 20% más rápido.',
       bonus: { growth: 20 } },
-    senor_sipan: { name: 'Señor de Sipán', title: 'Gobernante moche, siglo III', agenda: 'mercader',
+    senor_sipan: { name: 'Señor de Sipán', title: 'Gobernante moche, siglo III', agenda: 'mercader', color: '#8a3a1f',
       desc: 'Orfebrería sin igual. +2 de oro en minas de oro y plata; orfebrería y metalurgia más baratas.',
       bonus: { goldMines: 2, cheap: ['orfebreria', 'metal_cobre'] } },
-    taycanamo: { name: 'Taycanamo', title: 'Fundador de Chimor, siglo X', agenda: 'mercader',
+    taycanamo: { name: 'Taycanamo', title: 'Fundador de Chimor, siglo X', agenda: 'mercader', color: '#1f6f6a',
       desc: 'Llegó por mar al valle de Moche. +1 de alimento en valles costeros; canales y puquios más baratos.',
       bonus: { valleFood: 1, cheap: ['irrigacion', 'puquios'] } },
-    sacerdote_chavin: { name: 'Sumo sacerdote de Chavín', title: 'Oráculo de Huántar, 900 a.C.', agenda: 'devoto',
+    sacerdote_chavin: { name: 'Sumo sacerdote de Chavín', title: 'Oráculo de Huántar, 900 a.C.', agenda: 'devoto', color: '#6f6a5f',
       desc: 'Peregrinos de costa, sierra y selva. +3 de influencia por turno; culto y arquitectura monumental más baratos.',
       bonus: { influence: 3, cheap: ['culto', 'arq_monumental'] } },
-    manco_inca: { name: 'Manco Inca', title: 'Inca de Vilcabamba, 1533–1544', agenda: 'conquistador',
+    manco_inca: { name: 'Manco Inca', title: 'Inca de Vilcabamba, 1533–1544', agenda: 'conquistador', color: '#3f5a2a',
       desc: 'La resistencia desde las montañas. Sin desgaste en la selva y +50% de defensa en sierra y cordillera.',
       bonus: { selvaNoAttr: true, mountainDef: 50 } },
-    micaela_bastidas: { name: 'Micaela Bastidas', title: 'Estratega de la gran rebelión, 1780', agenda: 'pacifico',
+    micaela_bastidas: { name: 'Micaela Bastidas', title: 'Estratega de la gran rebelión, 1780', agenda: 'pacifico', color: '#2a4a7a',
       desc: 'Organizó la logística de la rebelión. +25% de defensa y las unidades se curan 10 puntos más por turno.',
       bonus: { defense: 25, heal: 10 } },
-    tupac_amaru_ii: { name: 'Túpac Amaru II', title: 'Curaca de Tinta, 1780', agenda: 'conquistador',
+    tupac_amaru_ii: { name: 'Túpac Amaru II', title: 'Curaca de Tinta, 1780', agenda: 'conquistador', color: '#5a1f2a',
       desc: 'Líder de la mayor rebelión andina. +25% de ataque contra invasores y +10 de cohesión en guerras contra potencias.',
       bonus: { atkVsExternal: 25, warStab: 10 } }
   };
@@ -76,11 +76,17 @@
     matses: ['Jefe matsés', 'Pueblo del Yavarí', 'pacifico'], yine: ['Jefe yine', 'Navegantes del Urubamba', 'mercader'],
     matsigenka: ['Jefe matsigenka', 'Pueblo del Manu', 'pacifico']
   };
+  // Modelo 3D de los líderes de la IA según su arquetipo.
+  const AI_MODEL = { espana: 'conquistador', chile: 'republicano', chavin: 'sacerdote', kotosh: 'sacerdote', nasca: 'sacerdote', ychsma: 'sacerdote',
+    tiwanaku: 'sacerdote', pukara: 'sacerdote', lupaca: 'sacerdote', caral: 'sacerdote', chimu: 'senor_costa', sican: 'senor_costa', moche: 'senor_costa',
+    vicus: 'senor_costa', lima: 'senor_costa', chincha: 'senor_costa', inca: 'pachacutec' };
   PC.leaderOf = function (civ) {
-    if (civ.leaderId && PC.LEADERS[civ.leaderId]) { const L = PC.LEADERS[civ.leaderId]; return { name: L.name, title: L.title, agenda: L.agenda }; }
+    if (civ.leaderId && PC.LEADERS[civ.leaderId]) { const L = PC.LEADERS[civ.leaderId]; return { name: L.name, title: L.title, agenda: L.agenda, model: civ.leaderId }; }
+    const F = PC.FACTIONS[civ.key] || {};
+    const model = AI_MODEL[civ.key] || (F.selva || civ.selva ? 'amazonico' : 'curaca');
     const a = PC.AI_LEADERS[civ.key];
-    if (a) return { name: a[0], title: a[1], agenda: a[2] };
-    return { name: 'Curaca de ' + civ.name, title: 'Señorío independiente', agenda: ['pacifico', 'mercader', 'conquistador', 'devoto'][civ.id % 4] };
+    if (a) return { name: a[0], title: a[1], agenda: a[2], model };
+    return { name: 'Curaca de ' + civ.name, title: 'Señorío independiente', agenda: ['pacifico', 'mercader', 'conquistador', 'devoto'][civ.id % 4], model };
   };
 
   PC.COMMANDER_NAMES = {
