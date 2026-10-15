@@ -1,10 +1,13 @@
 {
   "name": "peru-civilization",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Juego de estrategia histórica no lineal sobre el Perú (estilo Civilization).",
   "private": true,
   "scripts": {
-    "test": "node tests/smoke.js"
+    "test": "node tests/smoke.js && node tests/determinism.js && node tests/save.js",
+    "test:smoke": "node tests/smoke.js",
+    "test:determinism": "node tests/determinism.js",
+    "test:save": "node tests/save.js"
   },
   "license": "UNLICENSED"
 }

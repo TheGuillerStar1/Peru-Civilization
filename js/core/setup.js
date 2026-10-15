@@ -27,7 +27,7 @@
     const sc = PC.SCENARIOS[o.scenario];
     const seed = (o.seed || Math.floor(Math.random() * 1e9)) | 0;
     const g = PC.G = {
-      v: 1, seed, rng: seed, scenario: o.scenario, speed: o.speed || 'normal', difficulty: o.difficulty || 'medio', turn: 1, year: sc.year, phase: 'peru',
+      v: 2, seed, rng: seed, scenario: o.scenario, speed: o.speed || 'normal', difficulty: o.difficulty || 'medio', turn: 1, year: sc.year, phase: 'peru',
       civs: [], cities: [], units: [], log: [], flags: {}, fired: {}, cooldown: {}, eventQueue: [], spawned: {}, wonders: {},
       notices: [], nextId: 1, autoplay: !!o.autoplay, divergences: [], revealAll: false
     };
@@ -117,9 +117,10 @@
   };
 
   // --- Guardar / cargar
-  PC.serialize = () => JSON.stringify(PC.G, (k, v) => (k === 'visible' ? undefined : v));
+  // Formato compacto y migración de guardados antiguos en js/core/save.js.
+  PC.serialize = () => JSON.stringify(PC.packSave ? PC.packSave(PC.G) : PC.G, (k, v) => (k === 'visible' ? undefined : v));
   PC.load = function (json) {
-    PC.G = JSON.parse(json);
+    PC.G = PC.migrateSave ? PC.migrateSave(JSON.parse(json)) : JSON.parse(json);
     PC.G.notices = [];
     if (PC.G.phase === 'sudamerica') Object.assign(PC.CITY_NAMES, PC.GEO_SA.cityNames);
     if (PC.G.phase === 'america') Object.assign(PC.CITY_NAMES, PC.GEO_SA.cityNames, PC.GEO_AM.cityNames);
