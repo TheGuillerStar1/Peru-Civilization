@@ -52,7 +52,8 @@
     }
     if (sc.startPhase === 'sudamerica' && PC.startPhase2) {
       PC.startPhase2();
-      g.log = [];
+      g.phaseChanged = false; // la vista se crea ya con el mapa de Sudamérica
+      g.log = []; g.notices = [];
       PC.log(`Comienza la historia de ${p.name} en ${PC.fmtYear(g.year)}, en el mapa de Sudamérica.`, 'history');
     }
     if (G().scenario === 'cajamarca') PC.log('Atahualpa ha vencido a Huáscar. En Tumbes desembarcan unos extranjeros barbados.', 'history');

@@ -22,9 +22,9 @@
 #advisor .adv-acts { display: flex; gap: 6px; flex-wrap: wrap; }
 #advisor .adv-acts .btn { padding: 4px 10px; font-size: var(--t-xs); }
 
-/* Resumen de turno: aviso compacto arriba, en el centro del área del mapa */
-#turn-summary { position: absolute; top: calc(74px + env(safe-area-inset-top, 0px)); left: calc((100% - 360px) / 2); transform: translateX(-50%);
-  width: min(400px, calc(100% - 820px)); min-width: 280px; background: #0b1022f2; border: 1px solid #2c3766; border-left: 3px solid var(--qolli); border-radius: var(--r); padding: 8px 10px; box-shadow: 0 6px 18px #0008; }
+/* Resumen de turno: aviso compacto arriba, a la derecha del área del mapa (los avisos sueltos van a la izquierda) */
+#turn-summary { position: absolute; top: calc(74px + env(safe-area-inset-top, 0px)); right: calc(372px + env(safe-area-inset-right, 0px));
+  width: min(400px, calc(100% - 820px)); min-width: 260px; background: #0b1022f2; border: 1px solid #2c3766; border-left: 3px solid var(--qolli); border-radius: var(--r); padding: 8px 10px; box-shadow: 0 6px 18px #0008; }
 #turn-summary .ts-head { display: flex; justify-content: space-between; align-items: center; font: 700 var(--t-s)/1.2 var(--f-display); color: var(--qolli-2); font-variant-numeric: tabular-nums; }
 #turn-summary .ts-x { background: none; border: 0; color: var(--algodon-2); cursor: pointer; padding: 2px; display: flex; }
 #turn-summary .ts-x .ico { width: 12px; height: 12px; }
@@ -44,7 +44,7 @@
 
 @media (max-width: 1180px) {
   #advisor { width: min(340px, calc(100% - 580px)); }
-  #turn-summary { left: calc((100% - 320px) / 2); width: min(380px, calc(100% - 700px)); }
+  #turn-summary { right: 332px; width: min(380px, calc(100% - 780px)); }
 }
 @media (max-width: 1000px) {
   #advisor { left: max(12px, env(safe-area-inset-left, 0px)); bottom: calc(290px + env(safe-area-inset-bottom, 0px)); width: min(360px, calc(100% - 400px)); }
