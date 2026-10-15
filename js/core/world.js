@@ -153,6 +153,13 @@
         land.sort((a, b) => PC.isCoastalTile(b) - PC.isCoastalTile(a));
         at = land[0];
       }
+      if (!at) {
+        // Regiones diminutas (p. ej. el Golfo de México): se desembarca en la tierra libre más cercana, mejor si es costa.
+        const rt = g.map.tiles.filter((t) => t && t.region === region);
+        const near = g.map.tiles.filter((t) => t && !['oceano', 'lago', 'cordillera'].includes(t.terrain) && !t.cityId && !g.units.some((u) => u.t === t.i));
+        const sc = (t) => Math.min(...rt.map((r) => PC.dist(t, r))) * 2 - (PC.isCoastalTile(t) ? 3 : 0);
+        at = near.filter((t) => sc(t) <= 7).sort((a, b) => sc(a) - sc(b))[0];
+      }
       if (!at) { civ.alive = false; return; }
       const host = at.owner && PC.civ(at.owner);
       // La epidemia golpea primero a los pueblos de la costa donde desembarcan.

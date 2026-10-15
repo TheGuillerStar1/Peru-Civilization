@@ -115,5 +115,59 @@ for (const mode of ['america', 'sa', 'peru']) {
   ok(JSON.stringify(PC.G.conquista) === a, 'g.conquista sobrevive al guardado y la carga');
   play(PC.G, 6);
 }
+
+// 5) Equilibrio: desenlaces razonables, ningún frente activo más de ~35 turnos, y hitos (liga espontánea, traiciones) presentes.
+{
+  // Partida sin interrupciones: resuelve los eventos y sigue aunque el jugador (piloto automático) caiga.
+  const run = (mode, diff, seeds, turns) => {
+    const r = { con: 0, res: 0, act: 0, maxAct: 0, hitos: { liga: 0, traicion: 0 } };
+    const baseLog = PC.log;
+    PC.log = function (t) { if (typeof t === 'string') { if (/sellan una liga/.test(t)) r.hitos.liga++; if (/se alía con Corona/.test(t)) r.hitos.traicion++; } return baseLog.apply(this, arguments); };
+    try {
+      for (const seed of seeds) {
+        PC.newGame({ scenario: 'tahuantinsuyo', culture: 'inca', seed, autoplay: true, difficulty: diff });
+        const g = PC.G; g.year = 1490; g.fired.mesoamerica = g.fired.tupac_viaje = true;
+        PC.startPhase2(); if (mode === 'america') PC.startPhase3();
+        const act = {};
+        for (let i = 0; i < turns; i++) {
+          while (g.eventQueue.length) PC.resolveEvent(PC.autoChoice());
+          g.gameOver = null; PC.endTurn();
+          PC.conquistaView().fronts.forEach((f) => { if (f.state === 'activo') act[f.id] = (act[f.id] || 0) + 1; });
+        }
+        PC.conquistaView().fronts.forEach((f) => {
+          if (f.silent) return;
+          if (f.state === 'conquistada') r.con++; else if (f.state === 'resistida') r.res++; else if (f.state === 'activo') r.act++;
+          r.maxAct = Math.max(r.maxAct, act[f.id] || 0);
+        });
+      }
+    } finally { PC.log = baseLog; }
+    return r;
+  };
+  const seeds = [101, 102, 103, 104, 105, 106];
+  const med = run('sa', 'medio', seeds, 70), fac = run('sa', 'facil', seeds, 70), dif = run('sa', 'dificil', seeds, 70);
+  const share = (r) => r.con / Math.max(1, r.con + r.res);
+  console.log(`[equilibrio sa] facil ${(100 * share(fac)).toFixed(0)}% medio ${(100 * share(med)).toFixed(0)}% dificil ${(100 * share(dif)).toFixed(0)}% · liga espontánea ${med.hitos.liga} · traiciones ${med.hitos.traicion}`);
+  ok(share(med) > 0.4 && share(med) < 0.92, 'Medio: la Corona gana la mayoría de los frentes pero no todos');
+  ok(share(fac) < share(dif), 'Fácil: la Corona conquista menos que en Difícil');
+  ok(share(fac) < 0.7, 'Fácil: la Corona no arrasa');
+  ok(med.maxAct <= 36 && fac.maxAct <= 36 && dif.maxAct <= 36, `ningún frente queda activo más de ~35 turnos (máx. ${Math.max(med.maxAct, fac.maxAct, dif.maxAct)})`);
+  ok(med.act + fac.act + dif.act === 0, 'tras 70 turnos no queda ningún frente activo');
+  ok(med.hitos.traicion > 0, 'hay pueblos que se alían con la Corona');
+  ok(med.hitos.liga + fac.hitos.liga + dif.hitos.liga > 0, 'la IA forma ligas espontáneas entre pueblos que resisten');
+}
+
+// 6) Robustez: el jugador muere durante la campaña, y cambio de fase con frentes abiertos.
+{
+  const g = boot(81, 'peru'); play(g, 12);
+  PC.player().alive = false;
+  let threw = null;
+  try { for (let i = 0; i < 6; i++) { PC.diplomacyTick(); } PC.conquistaView(); } catch (e) { threw = e; }
+  ok(!threw, 'con el jugador muerto la campaña no lanza errores' + (threw ? ': ' + threw.message : ''));
+  const h = boot(82, 'peru'); play(h, 14);
+  PC.startPhase2(); play(PC.G, 40);
+  const v = PC.conquistaView();
+  ok(v.fronts.every((f) => f.state !== 'pendiente' || !f.age), 'tras cambiar de fase no quedan frentes iniciados sin resolver');
+  ok(v.fronts.every((f) => f.state !== 'activo' || f.age <= 36), 'tras cambiar de fase ningún frente se eterniza');
+}
 console.log(fails ? `FALLÓ (${fails})` : 'OK');
 process.exit(fails ? 1 : 0);
