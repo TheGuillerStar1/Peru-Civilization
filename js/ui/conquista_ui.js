@@ -75,7 +75,7 @@
   }
   function pactCard(v) {
     const body = v.pact
-      ? `<p class="small">Eres aliado de la Corona desde ${PC.fmtYear(v.pact.year)}${v.pact.betrayed ? ', pero ya te ha traicionado' : ''}. Tus vecinos te desprecian y la Corona puede volverse contra ti.</p>
+      ? `<p class="small">Eres aliado de la Corona desde ${PC.fmtYear(v.pact.year).replace(/\.$/, '')}${v.pact.betrayed ? ', pero ya te ha traicionado' : ''}. Tus vecinos te desprecian y la Corona puede volverse contra ti.</p>
         <div class="cq-act"><button class="btn danger" data-cq="unpact" type="button">${ic('cerrar')}Romper el pacto</button></div>`
       : `<p class="small muted">Alianza con los invasores: 150 de oro, caballos y acero. A cambio pierdes la liga, tus vecinos te odiarán y la Corona puede traicionarte.</p>
         <div class="cq-act"><button class="btn" data-cq="pact" type="button">${ic('pacto')}Pactar con la Corona</button></div>`;

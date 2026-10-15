@@ -3,7 +3,7 @@
 .cq h2 .ico { color: var(--cinabrio); --ico-b: var(--qolli); }
 .cq-sum { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-2); margin-bottom: var(--sp-3); }
 .cq-k { background: var(--lana); border: 1px solid #2c3766; border-top: 3px solid #5a6390; border-radius: var(--r); padding: var(--sp-2) var(--sp-3); display: flex; align-items: baseline; gap: var(--sp-2); }
-.cq-k b { font: 700 var(--t-xl) var(--f-display); line-height: 1; }
+.cq-k b { font: 700 var(--t-xl) var(--f-display); line-height: 1; font-variant-numeric: lining-nums tabular-nums; }
 .cq-k span { font-size: var(--t-s); color: var(--algodon-2); }
 .cq-k.activo { border-top-color: var(--cinabrio); } .cq-k.activo b { color: var(--cinabrio); }
 .cq-k.resistida { border-top-color: var(--verde); } .cq-k.resistida b { color: var(--verde); }

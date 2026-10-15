@@ -395,6 +395,7 @@
     if (!L || !L.members.includes(civ.id)) return;
     L.members = L.members.filter((id) => id !== civ.id);
     if (civ.ligaBonus) { civ.bonus = Object.assign({}, civ.bonus, { atk: Math.max(0, (civ.bonus.atk || 0) - 10) }); civ.ligaBonus = false; }
+    frontsHere().forEach((F) => { const st = FS(F); if (st.stance[civ.id] === 'liga') st.stance[civ.id] = 'resiste'; }); // deja de figurar en la liga
   }
   function dissolveLeague(reason) {
     const c = S();
