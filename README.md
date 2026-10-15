@@ -12,7 +12,7 @@ No requiere instalación: three.js va incluido en `js/vendor/`. Abre `index.html
 python3 -m http.server 8000   # y abre http://localhost:8000
 ```
 
-**Controles:** clic para seleccionar y mover · anillo rojo = atacar · arrastrar para desplazar · botón derecho o `Q`/`E` para girar · rueda = zoom · `Enter` terminar turno · `N` siguiente unidad · `F` fortificar · `B` fundar ciudad · `Espacio` esperar · `T` tecnologías · `D` diplomacia · `P` provincias · `C` crónica. En tablet: un dedo desplaza, dos dedos acercan y giran. Flechas o `I`/`J`/`K`/`L` desplazan el mapa (`Mayús` más rápido), `Inicio` centra la capital y `M` muestra u oculta el minimapa.
+**Controles:** clic para seleccionar y mover · anillo rojo = atacar · arrastrar para desplazar · botón derecho o `Q`/`E` para girar · rueda = zoom · `Enter` terminar turno · `N` siguiente unidad · `F` fortificar · `B` fundar ciudad · `Espacio` esperar · `T` tecnologías · `D` diplomacia · `P` provincias · `C` crónica · `G` La Conquista. En tablet: un dedo desplaza, dos dedos acercan y giran. Flechas o `I`/`J`/`K`/`L` desplazan el mapa (`Mayús` más rápido), `Inicio` centra la capital y `M` muestra u oculta el minimapa.
 
 **Ayudas (v0.1.2):** minimapa con terrenos, fronteras, niebla y el recuadro de la vista (un clic centra la cámara); consejero con consejos en los primeros 30 turnos y avisos de enemigos cerca de tus ciudades; resumen compacto al empezar cada turno; y fronteras con patrón para daltonismo. Todo se activa o desactiva en Opciones › Ayudas y accesibilidad.
 
