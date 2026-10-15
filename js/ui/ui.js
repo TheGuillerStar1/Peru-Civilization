@@ -628,6 +628,7 @@
   }
   function closeModal() { UI.modal = null; $('#modal').hidden = true; if (PC.G && !PC.G.preview) refresh(); }
   UI.closeModal = closeModal;
+  UI.openModal = openModal;
 
   function showEvent() {
     const ev = PC.currentEvent();
@@ -641,6 +642,7 @@
   }
   UI.showEvent = showEvent;
   function showGameOver() {
+    if (UI.renderGameOver) { UI.renderGameOver(); return; }
     const g = PC.G, p = PC.player();
     openModal(`<h2>${g.gameOver.win ? 'Fin de la crónica' : 'Tu civilización ha caído'}</h2><p class="lead">${esc(g.gameOver.text)}</p>
       <div class="kv"><span>Puntuación</span><b>${PC.score(p)}</b></div>
@@ -789,6 +791,7 @@
       <button class="btn big" data-act2="save" type="button">Guardar la partida</button>
       <button class="btn big" data-act2="export" type="button">Exportar a un archivo</button>
       <button class="btn big" data-act2="help" type="button">Cómo se juega</button>
+      ${UI.openVictories ? '<button class="btn big" data-act2="victorias" type="button">Victorias</button>' : ''}
       ${canP2 ? `<button class="btn primary big" data-act2="fase2" type="button">${ic('mapa')}${esc(nextPhaseName())}</button>` : ''}
       <button class="btn big" data-act2="menu" type="button">Volver al menú principal</button></div>
       <p class="small muted">Semilla del mapa ${PC.G.seed} · ${esc(PC.SCENARIOS[PC.G.scenario].name)} · ${esc(PC.diff().name)}. La partida también se guarda sola al terminar cada turno.</p>`, 'menu');
@@ -839,6 +842,7 @@
           } catch (err) { toast('No se pudo exportar desde aquí.', 'warn'); }
         }
         if (act === 'help') showIntro();
+        if (act === 'victorias' && UI.openVictories) UI.openVictories();
         if (act === 'menu') showMenu();
         if (act === 'keep') { PC.G.gameOver = null; closeModal(); }
         if (act === 'fase2' && PC.canAdvancePhase()) { PC.startNextPhase(); PC.G.phaseChanged = false; closeModal(); startGame(false); }

@@ -71,6 +71,9 @@ La partida se guarda automáticamente en el navegador cada turno y también se p
 
 4. **El Mundo** — en desarrollo. Se anunciará al controlar el 60% de las regiones de América (40% desde 1600).
 
+### Victorias
+Cuatro formas de ganar, con su avance en **Menú → Victorias**: **Dominación** (60% de las regiones de América en la Fase 3), **Cultural** (6 maravillas y una cultura acumulada alta para tu era), **Diplomática** (ser sede del congreso y votar en el bando ganador de 5 resoluciones) e **Histórica** (cumplir 6 de 10 legados, como unificar los Andes antes de 1500 o resistir la conquista española). Si llegas a 2050 sin ninguna, gana la mayor puntuación. La pantalla final muestra la victoria, la clasificación y la evolución de la población y el territorio frente a los tres rivales más fuertes (una foto cada 10 turnos).
+
 ## Estructura
 
 ```
@@ -96,9 +99,11 @@ js/core/economy.js     mantenimiento proporcional de tropas y edificios, y licen
 js/core/projects.js    grandes proyectos de ciudad (Inti Raymi, Obras públicas, Misión científica)
 js/core/continent.js   maravillas por fase y región, y preparación de los escenarios nuevos
 js/core/events_continent.js eventos continentales de las Fases 2 y 3
+js/core/victory.js     condiciones de victoria, legados y fotos de la partida cada 10 turnos
 js/ui/icons.js         iconos y emblemas tocapu
 js/ui/render3d.js      maqueta 3D (three.js)
 js/ui/ui.js            interfaz
+js/ui/victory_ui.js    ventana de victorias y pantalla final con gráficos (css/victory.css)
 js/vendor/three.min.js three.js r158 (licencia MIT)
 .claude/skills/impeccable  skill de diseño de interfaces (Apache 2.0)
 tests/smoke.js         prueba que juega partidas completas en piloto automático

@@ -1,0 +1,37 @@
+/* Victorias y pantalla final (js/ui/victory_ui.js) */
+.vic-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--sp-3); }
+.vic { background: var(--lana); border: 1px solid #2c3766; border-radius: var(--r); padding: var(--sp-3); display: grid; gap: var(--sp-2); align-content: start; }
+.vic p { margin: 0; }
+.vic-h { display: flex; align-items: center; gap: var(--sp-2); }
+.vic-h h4 { flex: 1; margin: 0; font: 700 var(--t-m) var(--f-display); }
+.vic-h .ico { width: 22px; height: 22px; color: var(--qolli); --ico-b: var(--grana-2); }
+.vic-h.big { gap: var(--sp-3); margin-bottom: var(--sp-2); }
+.vic-h.big h2 { margin: 0; }
+.vic-h.big .ico { width: 48px; height: 48px; }
+.vic-bar { height: 10px; }
+.vic-bar i { background: var(--qolli); }
+.vic-parts { display: flex; flex-wrap: wrap; gap: 4px var(--sp-3); font-size: var(--t-xs); color: var(--algodon-2); }
+.vic-parts b { color: var(--algodon); }
+.vic-leg { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 4px var(--sp-3); }
+.vic-leg li { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--sp-2); padding: 4px 0; border-bottom: 1px solid #262f55; font-size: var(--t-s); color: var(--algodon-2); }
+.vic-leg li .ico { width: 16px; height: 16px; opacity: .5; }
+.vic-leg li small { display: block; font-size: var(--t-xs); opacity: .8; }
+.vic-leg li.ok { color: var(--algodon); }
+.vic-leg li.ok .ico { color: var(--qolli); opacity: 1; }
+.vic-leg li b { font-variant-numeric: tabular-nums; color: var(--verde); font-size: var(--t-xs); }
+.vic-rank { margin: 0; padding: 0 0 0 1.4em; display: grid; gap: 2px; }
+.vic-rank li { padding: 3px 0; border-bottom: 1px solid #262f55; font-size: var(--t-s); }
+.vic-rank li > * { vertical-align: middle; }
+.vic-rank li .ico { width: 16px; height: 16px; margin-right: 6px; }
+.vic-rank li b { float: right; font-variant-numeric: tabular-nums; }
+.vic-rank li.me { color: var(--qolli-2); }
+.vic-score { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0 var(--sp-4); }
+.vic-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--sp-3); }
+.vic-chart { margin: 0; background: var(--hilo); border: 1px solid #262f55; border-radius: var(--r); padding: var(--sp-2); }
+.vic-chart figcaption { font: 700 var(--t-xs) var(--f-display); letter-spacing: .05em; color: var(--qolli-2); margin-bottom: 4px; }
+.vic-chart svg { display: block; width: 100%; height: auto; }
+.vic-chart text { fill: var(--algodon-2); font: 9px var(--f-body); font-variant-numeric: tabular-nums; }
+.vic-chart .vg { stroke: #262f55; stroke-width: 1; }
+.vic-legend { display: flex; flex-wrap: wrap; gap: 4px var(--sp-3); font-size: var(--t-xs); color: var(--algodon-2); margin-bottom: var(--sp-2); }
+.vic-legend i { display: inline-block; width: 12px; height: 3px; margin-right: 5px; vertical-align: middle; }
+.vic-legend .me { color: var(--qolli-2); }
