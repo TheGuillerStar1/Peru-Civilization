@@ -42,6 +42,9 @@
     corona: ['.........', 'aaaaaaaaa', 'abbbbbbba', 'aaaaaaaaa', 'a.a.a.a.a', 'a.a.a.a.a', 'b.b.b.b.b', '.........', '.........'],
     maravilla: ['....b....', '...bbb...', '....b....', '...aaa...', '..aabaa..', '..aaaaa..', '.aabbbaa.', '.aaaaaaa.', 'aaaaaaaaa'],
     edificio: ['.........', '..aaaaa..', '.a.....a.', 'aaaaaaaaa', 'a.b.b.b.a', 'a.......a', 'a.b...b.a', 'a..aaa..a', 'aaaaaaaaa'],
+    conquista: ['aa.....bb', '.aa...bbb', '..aa.bbb.', '...aabb..', '....a....', '...aabb..', '..aa..bb.', '.aa....bb', 'aa......b'],
+    liga: ['.a..a..a.', 'aaa.a.aaa', '.a..b..a.', '.a.bbb.a.', 'aaaaaaaaa', '.a..b..a.', '.a..a..a.', '.a..a..a.', 'aaa.a.aaa'],
+    pacto: ['.aaaaaaa.', '.a.....a.', '.abbbbba.', '.a.....a.', '.abbbbba.', '.a.....a.', '.a..a..a.', '.aa.b.aa.', '..aa.aa..'],
     mapa: ['aaaaaaaaa', 'a..a....a', 'a.aaa.b.a', 'a..a.bbba', 'a....b..a', 'a.b....aa', 'abbb..aaa', 'a.b...a.a', 'aaaaaaaaa']
   };
 
@@ -53,7 +56,8 @@
     guano: 'oro', guerra_pacifico: 'guerra', caucho: 'recurso', reforma_agraria: 'alimento', bancarrota: 'alerta', revuelta: 'alerta',
     fase2: 'mapa', fase3: 'mapa', fase4: 'mapa', congreso: 'congreso', propuesta_lazos: 'diplomacia', propuesta_paso: 'diplomacia',
     guerra_conjunta: 'guerra', ultimatum: 'guerra', colonos_llegan: 'barco', propuesta_alianza: 'diplomacia', llamada_aliado: 'guerra', exigencia_tributo: 'oro',
-    doctrina_monroe: 'diplomacia', triple_alianza: 'guerra', canal_panama: 'barco', revolucion_mexicana: 'guerra', guerra_chaco: 'guerra', guerra_fria: 'alerta', crisis_petroleo: 'recurso'
+    doctrina_monroe: 'diplomacia', triple_alianza: 'guerra', canal_panama: 'barco', revolucion_mexicana: 'guerra', guerra_chaco: 'guerra', guerra_fria: 'alerta', crisis_petroleo: 'recurso',
+    conquista_inicio: 'conquista', requerimiento: 'pacto', traicion_aliado: 'alerta', corona_traiciona: 'pacto', caida_capital_conquista: 'guerra', frente_resuelto: 'liga', conquista_fin: 'conquista'
   };
   PC.unitIconKey = function (type) {
     const U = PC.UNITS[type];

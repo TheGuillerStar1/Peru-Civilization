@@ -878,6 +878,7 @@
       const rg = PC.G.map.regions.find((r) => r.id === R.sel.regionHL);
       if (rg) rg.tiles.forEach((i) => { disc(PC.tile(i), '#e2a72e', 0.35); disc(PC.tile(i), '#f3c85e', 0.95, 0.84); });
     }
+    if (R.hlRegions && PC.UI && PC.UI.modal === 'conquista') PC.G.map.regions.filter((r) => R.hlRegions.includes(r.id)).forEach((rg) => rg.tiles.forEach((i) => { disc(PC.tile(i), '#f07257', 0.3); disc(PC.tile(i), '#f07257', 0.9, 0.84); })); // frente de la Conquista bajo el puntero
     if (R.sel && R.sel.city) disc(PC.tile(R.sel.city.t), '#e2a72e', 0.9, 0.82);
     if (R.sel && R.sel.tile) disc(R.sel.tile, '#e2a72e', 0.9, 0.82);
     if (R.path && R.sel && R.sel.unit) {
