@@ -183,6 +183,8 @@
         <li>Costa: los valles son fértiles y el desierto desgasta. Sierra: las cordilleras frenan y se cruzan por las abras. Selva: niebla densa, desgaste y fauna peligrosa.</li>
         <li>Algunas tecnologías exigen recursos: sin cobre no hay bronce, sin hierro no hay hierro y sin salitre o guano no hay pólvora.</li>
         <li>Las unidades antiguas se pueden modernizar con oro cuando descubres su sucesora.</li>
+        <li>La Conquista: desde 1493 las Coronas de Castilla y Portugal abren frentes en América, cada uno con su comandante histórico. Los pueblos resisten, pactan o traicionan según su interés.</li>
+        <li>Puedes formar una liga de resistencia con tus vecinos o pactar con la Corona; la Corona también puede traicionarte. Cada frente termina resistido o conquistado y deja su legado.</li>
         <li>Controla el 60% de las provincias para pasar a la Fase 2: Sudamérica, y el 60% de las regiones del continente para la Fase 3: América (desde 1600 basta el 40%).</li>
       </ul>
       <div class="choices"><button class="btn primary big" data-close type="button">${ic('sol')}Empezar</button></div>`, 'intro');

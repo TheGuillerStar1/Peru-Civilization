@@ -41,6 +41,16 @@
       rivals: [{ id: 'chachapoyas', cities: [['chachapoyas', 'Kuélap', 3]] }].concat(selva(false)),
       fired: ['mesoamerica', 'tupac_viaje'], flags: { crisisSucesoria: true }, spawns: false
     },
+    conquista1492: {
+      name: 'La Conquista (1492)', year: 1492,
+      desc: 'Los pueblos de América frente a la Conquista, de Colón a Valdivia. Empiezas en el Tahuantinsuyo de Huayna Cápac, en el mapa de América, y las Coronas abrirán sus frentes uno tras otro.',
+      playable: ['inca'], startText: 'El imperio está en su apogeo y nadie aquí ha oído hablar de Europa. Gobiernas el Cusco; la Conquista empieza por el Caribe.',
+      playerCities: [{ region: 'cusco', name: 'Cusco', pop: 8 }, { region: 'cajamarca', name: 'Cajamarca', pop: 3 }, { region: 'moche', name: 'Chan Chan', pop: 4 },
+        { region: 'mantaro', name: 'Hatun Xauxa', pop: 3 }, { region: 'titicaca', name: 'Hatuncolla', pop: 3 }, { region: 'huanuco', name: 'Huánuco Pampa', pop: 3 },
+        { region: 'rimac', name: 'Pachacámac', pop: 3 }, { region: 'tumbes', name: 'Tumbes', pop: 2 }, { region: 'arequipa', name: 'Arequipa', pop: 3 }],
+      rivals: [{ id: 'chachapoyas', cities: [['chachapoyas', 'Kuélap', 3]] }].concat(selva(false)),
+      fired: ['mesoamerica', 'tupac_viaje'], playerName: 'Tahuantinsuyo', startPhase: 'america', spawns: false
+    },
     independencia: {
       name: 'Independencia (1820)', year: 1820,
       desc: 'La Expedición Libertadora desembarca en Paracas y el norte se pronuncia por la independencia. El virrey aún domina Lima, el Cusco y el sur. Expulsa a los realistas.',

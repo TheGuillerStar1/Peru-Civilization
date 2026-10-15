@@ -45,6 +45,18 @@
       text: () => `La crónica (${kbd('C')}) compara tu partida con la historia real y anota cada divergencia.` }
   ];
 
+  // Consejos de la Conquista (v0.1.3): no dependen del turno, sino de lo que ocurre en la campaña.
+  const chron = (g, re) => ((g.conquista && g.conquista.chronicle) || []).some((c) => re.test(c.text));
+  const conqHint = () => (PC.UI.openConquista ? ' Ábrela desde el botón Conquista de la barra superior.' : ' Consulta la crónica (' + kbd('C') + ') para seguirla.');
+  const CONQ_TIPS = [
+    { id: 'conq_inicio', when: (g) => !!(g.conquista && g.conquista.intro) && PC.conquistaActive(),
+      text: () => 'Se abrió el primer frente de la Conquista: cada frente tiene su Corona, su comandante y sus pueblos aliados o rivales. Puedes formar una liga de resistencia (cuesta influencia y une a los vecinos contra la Corona) o pactar con ella (oro y acero, pero te odiarán los demás y la Corona puede traicionarte).' + conqHint() },
+    { id: 'conq_traicion', when: (g) => chron(g, /se alía con/),
+      text: () => 'Un pueblo se ha aliado con la Corona: muchos lo hicieron para cobrarse viejas deudas con sus vecinos. Si era aliado tuyo, la alianza se rompe; puedes castigarlo, comprar su lealtad o esperar a que vuelva a la resistencia.' },
+    { id: 'conq_capital', when: (g) => Object.keys(g.fired).some((k) => k.indexOf('caida_') === 0 && k !== 'caida_capital'),
+      text: () => 'Ha caído una capital. Sin ella, el pueblo pierde cohesión y los vecinos dudan: refuerza tus plazas, une la liga o pacta antes de que el frente se decida.' }
+  ];
+
   function show(item) {
     A.cur = item;
     A.el.innerHTML = `<div class="adv-ico">${PC.icon(item.threat ? 'alerta' : 'cronica')}</div>
@@ -71,6 +83,12 @@
       st.threats[key] = g.turn;
       const n = th.foes.length;
       show({ threat: true, tile: th.tile, html: `${n === 1 ? 'Una unidad' : n + ' unidades'} de ${UI.esc(th.civ.name)} ${n === 1 ? 'se acerca' : 'se acercan'} a ${UI.esc(th.city.name)}. Refuerza la guarnición o fortifícala.` });
+      return;
+    }
+    for (const tip of CONQ_TIPS) {
+      if (st.seen[tip.id] || (st.shown[tip.id] && g.turn - st.shown[tip.id] >= 3) || !tip.when(g, p)) continue;
+      if (!st.shown[tip.id]) st.shown[tip.id] = g.turn;
+      show({ id: tip.id, html: tip.text(), still: () => tip.when(PC.G, PC.player()) });
       return;
     }
     if (g.turn > TIP_TURNS) return;

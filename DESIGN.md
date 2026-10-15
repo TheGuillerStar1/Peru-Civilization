@@ -36,6 +36,8 @@ Una sola apariencia oscura, deliberada (`color-scheme: dark`). Los colores de ca
 - **Paneles**: cabecera `.ph` (icono sobre el color de la civilización), fila de datos `.trio`, barras `.bar` y `.cen-bar`, pestañas `.tabs` y lista de producción `.bopt`.
 - **Etiquetas de ciudad**: `.citylabel`, en HTML proyectado sobre el 3D, con borde qolli si la ciudad es tuya y cinabrio si su dueño está en guerra contigo.
 
+- **Capitán general** (v0.1.3): unidad única de cada Corona en la Conquista. Sin emojis: se distingue por el estandarte de su Corona y por el nombre del comandante histórico en su etiqueta; los frentes usan `--grana` y `--cinabrio` para el bando invasor y `--qolli` para la resistencia.
+
 ## Mapa 3D
 
 `js/ui/render3d.js` (three.js r158):

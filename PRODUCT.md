@@ -29,6 +29,8 @@ La historia y la geografía andinas son la mecánica: la verticalidad costa–si
 - Prioridad PC y tablet; en teléfono funcional pero no optimizado.
 - Debe poder publicarse como página autocontenida (sin diálogos nativos ni descargas).
 
+- La Conquista (v0.1.3) es una campaña propia, no un evento suelto: 11 frentes históricos con comandantes, pueblos que resisten, pactan o traicionan, una liga de resistencia y un pacto con la Corona. El jugador decide de qué lado de la historia está; nadie queda como villano de caricatura. Hay un escenario que la sitúa en 1492.
+
 ## Brand Commitments
 Nombre: **Perú Civilization**. Idioma: español. Cuatro niveles de dificultad (Fácil, Medio, Difícil, Realista).
 

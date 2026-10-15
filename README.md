@@ -73,6 +73,17 @@ La partida se guarda en el navegador en **3 ranuras manuales** y **2 automática
 
 4. **El Mundo** — en desarrollo. Se anunciará al controlar el 60% de las regiones de América (40% desde 1600).
 
+### La Conquista (v0.1.3)
+Campaña de varios turnos que se abre en las Fases 1 a 3 cuando las Coronas de Castilla y Portugal llegan a cada región. Son **11 frentes** con fecha propia: Antillas (1493), Brasil, México, Guatemala, Nueva Granada, Venezuela, Perú, Quito, Río de la Plata, Charcas y Chile.
+- **Frentes y desenlaces**: cada frente pasa de *pendiente* a *activo* y termina **resistido** o **conquistado**, según las ciudades que conserve cada bando. Al abrirse el primero llega el evento «Comienza la Conquista»; al decidirse todos, el cierre de la campaña.
+- **Comandantes**: cada Corona manda capitanes históricos (Colón, Cortés, Alvarado, Pizarro, Valdivia…), en una unidad propia: el capitán general. Si el capitán cae, la expedición queda sin mando y se pierden oro y moral; llega otro en su lugar, con refuerzos y levas.
+- **Alianzas y traiciones**: cada pueblo resiste, pacta con la Corona o vuelve a la resistencia según su líder, su rivalidad con los vecinos y la marcha de la guerra (chankas, huancas o chachapoyas se aliaron históricamente con los invasores en el frente del Perú). Si un aliado tuyo cambia de bando, la alianza se rompe y decides: guerra, soborno o esperar.
+- **Liga de resistencia**: cuesta influencia, une a los pueblos vecinos contra la Corona y se disuelve al cambiar de fase.
+- **Pacto con la Corona**: oro, caballos y acero a cambio del odio de tus vecinos, y la Corona puede traicionarte.
+- **Caída de capitales y legados**: perder la capital obliga a resistir desde el interior o aceptar el vasallaje; la campaña suma legados nuevos a las victorias históricas.
+- **Escenario «La Conquista (1492)»**: empieza en el mapa de América con el Tahuantinsuyo de Huayna Cápac (9 ciudades, sin Atahualpa) y las Antillas se abren a los pocos turnos. Menú → Civilización y escenario.
+- El consejero explica la liga y el pacto al abrirse el primer frente y avisa de traiciones y de capitales caídas.
+
 ### Victorias
 Cuatro formas de ganar, con su avance en **Menú → Victorias**: **Dominación** (60% de las regiones de América en la Fase 3), **Cultural** (6 maravillas y una cultura acumulada alta para tu era), **Diplomática** (ser sede del congreso y votar en el bando ganador de 5 resoluciones) e **Histórica** (cumplir 6 de 10 legados, como unificar los Andes antes de 1500 o resistir la conquista española). Si llegas a 2050 sin ninguna, gana la mayor puntuación. La pantalla final muestra la victoria, la clasificación y la evolución de la población y el territorio frente a los tres rivales más fuertes (una foto cada 10 turnos).
 
@@ -86,8 +97,9 @@ js/data/geo_sa.js      geografía de Sudamérica (Fase 2) y sus colonizaciones
 js/data/geo_am.js      geografía de América (Fase 3): contorno, islas, cordilleras, ríos, regiones y facciones por época
 js/data/leaders_hist.js líderes históricos de cada país por año y nombres de los países según la época
 js/data/rules.js       terrenos, fauna, recursos, mejoras, tecnologías, unidades, edificios, maravillas, dificultad
+js/data/conquista.js   los 11 frentes de la Conquista: fechas, Coronas, comandantes, regiones y aliados históricos
 js/data/civs.js        culturas jugables, facciones, apariciones históricas, escenarios
-js/data/continent.js   maravillas continentales, la República del Perú y los escenarios de 1532, 1810, 1820 y 1879
+js/data/continent.js   maravillas continentales, la República del Perú y los escenarios de 1492, 1532, 1810, 1820 y 1879
 js/core/mapgen.js      generador del mapa del Perú (proyección por macrozonas)
 js/core/game.js        motor: ciudades, unidades, movimiento, combate, desgaste, cohesión, turnos
 js/core/ai.js          IA de las facciones
@@ -99,6 +111,7 @@ js/core/phases.js      fases de expansión: mapas continentales y traslado de tu
 js/core/world.js       historia viva: sucesión de líderes, independencias, colonizaciones, iniciativas de la IA y congreso
 js/core/economy.js     mantenimiento proporcional de tropas y edificios, y licenciamiento de tropas sobrantes
 js/core/projects.js    grandes proyectos de ciudad (Inti Raymi, Obras públicas, Misión científica)
+js/core/conquista.js   campaña de la Conquista: frentes, comandantes, alianzas, traiciones, liga, pacto y desenlaces (g.conquista)
 js/core/continent.js   maravillas por fase y región, y preparación de los escenarios nuevos
 js/core/events_continent.js eventos continentales de las Fases 2 y 3
 js/core/victory.js     condiciones de victoria, legados y fotos de la partida cada 10 turnos
@@ -113,6 +126,8 @@ js/ui/minimap.js       minimapa 2D
 js/ui/a11y.js          desplazamiento con teclado y fronteras con patrón
 js/vendor/three.min.js three.js r158 (licencia MIT)
 .claude/skills/impeccable  skill de diseño de interfaces (Apache 2.0)
+tests/engine.js        carga el motor en Node (lista FILES de smoke.js)
+tests/conquista.js     banco de pruebas de la campaña: 11 frentes en América, Sudamérica y Perú
 tests/smoke.js         prueba que juega partidas completas en piloto automático
 tests/determinism.js   misma semilla → misma partida, también guardando y cargando a mitad
 tests/save.js          guardar y cargar en cada fase, migración desde v1 y tamaño del guardado
@@ -122,10 +137,11 @@ tests/save.js          guardar y cargar en cada fase, migración desde v1 y tama
 ## Pruebas
 
 ```bash
-npm test          # humo + determinismo + guardado
+npm test          # humo + determinismo + guardado + Conquista
 node tests/smoke.js [semilla] [escenario] [cultura]
 node tests/determinism.js [semilla]
 node tests/save.js [semilla]
+node tests/conquista.js
 ```
 
-Juega 12 partidas completas y 4 partidas cortas de los escenarios nuevos, con todos los escenarios, varias culturas, las 4 dificultades y las transiciones a las Fases 2 y 3, y falla si hay algún error. Además se comprueba que la misma semilla produce la misma partida turno a turno (también tras guardar y cargar) y que el guardado funciona en las tres fases y con partidas antiguas.
+Juega 12 partidas completas y 6 partidas cortas de los escenarios nuevos, con todos los escenarios, varias culturas, las 4 dificultades y las transiciones a las Fases 2 y 3, y falla si hay algún error. Además se comprueba que la misma semilla produce la misma partida turno a turno (también tras guardar y cargar) y que el guardado funciona en las tres fases y con partidas antiguas.

@@ -56,6 +56,13 @@
       g.log = []; g.notices = [];
       PC.log(`Comienza la historia de ${p.name} en ${PC.fmtYear(g.year)}, en el mapa de Sudamérica.`, 'history');
     }
+    if (sc.startPhase === 'america' && PC.startPhase2 && PC.startPhase3) {
+      PC.startPhase2(); PC.startPhase3();
+      g.phaseChanged = false; // la vista se crea ya con el mapa de América
+      g.log = []; g.notices = [];
+      PC.log(`Comienza la historia de ${p.name} en ${PC.fmtYear(g.year)}, en el mapa de América.`, 'history');
+    }
+    if (G().scenario === 'conquista1492') PC.log('Un almirante genovés al servicio de Castilla ha cruzado el Mar Océano. Nadie en el Tahuantinsuyo lo sabe aún.', 'history');
     if (G().scenario === 'cajamarca') PC.log('Atahualpa ha vencido a Huáscar. En Tumbes desembarcan unos extranjeros barbados.', 'history');
     if (G().scenario === 'independencia') PC.log('San Martín desembarca en Paracas. El virrey resiste en Lima y en la sierra.', 'history');
     if (G().scenario === 'pacifico') PC.log('Chile ocupa Antofagasta. El tratado secreto con Bolivia arrastra al Perú a la guerra.', 'history');
