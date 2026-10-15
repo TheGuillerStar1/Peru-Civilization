@@ -182,7 +182,9 @@
     // Unidades exclusivas de facciones externas.
     conquistador: U('conquistador', 'Conquistador', { atk: 16, def: 14, moves: 3, cost: 999, icon: '', unique: true }),
     caballero:  U('caballero', 'Caballero español', { atk: 20, def: 12, moves: 4, cost: 999, icon: '', unique: true }),
-    aliado:     U('aliado', 'Auxiliar indígena', { atk: 8, def: 7, cost: 999, icon: '', unique: true })
+    aliado:     U('aliado', 'Auxiliar indígena', { atk: 8, def: 7, cost: 999, icon: '', unique: true }),
+    capitan:    U('capitan', 'Capitán general', { atk: 0, def: 6, cost: 999, icon: '', unique: true, commander: true,
+                  desc: 'Comandante de una expedición de la Corona: +20% de ataque y defensa a sus tropas en su casilla y las adyacentes.' })
   };
 
   // Líneas de mejora: una unidad antigua puede modernizarse (pagando oro) a la mejor unidad disponible de su línea.

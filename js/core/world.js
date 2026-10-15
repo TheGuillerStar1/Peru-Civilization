@@ -94,7 +94,11 @@
   const EURO_TECHS = ['metal_cobre', 'hierro', 'acero', 'quimica', 'polvora', 'arcabuz', 'equitacion', 'navegacion_oceanica'];
   PC.continentGeo = function () {
     const g = G();
-    return g.phase === 'sudamerica' ? PC.GEO_SA : g.phase === 'america' ? PC.GEO_AM : null;
+    if (g.phase === 'sudamerica') return PC.GEO_SA;
+    if (g.phase !== 'america') return null;
+    // En América se suman las colonizaciones de Sudamérica (Brasil, Nueva Granada, el Plata, Chile…).
+    if (!PC._geoAmerica) PC._geoAmerica = Object.assign({}, PC.GEO_AM, { colonize: PC.GEO_AM.colonize.concat(PC.GEO_SA.colonize.filter((c) => !PC.GEO_AM.colonize.some((k) => k[1] === c[1]))) });
+    return PC._geoAmerica;
   };
   // Lugar de desembarco: mejor costa libre de la región; si toda es ajena, se toma por la fuerza un tramo de costa.
   function coastalSite(regionIds, civ) {

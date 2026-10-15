@@ -735,6 +735,12 @@
         person(parts, -0.22, 0.12, { tunic: shadeHex(civColor, 0.8), weapon: 'lanza' });
         parts.push(['cyl12', '#efe4cc', 0.22, 0.012, 0.12, 0.12, 0.02, 0.12]);
         break;
+      case 'capitan':
+        person(parts, 0, 0, { tunic, weapon: 'espada', helmet: 'morion', armor: '#c4c8d0', feather: '#c23a50', band: '#c23a50' });
+        parts.push(['cyl12', '#c23a50', 0, 0.48, -0.02, 0.05, 0.012, 0.05, Math.PI / 2, 0, 0]);
+        person(parts, -0.22, 0.12, { tunic: shadeHex(civColor, 0.8), weapon: 'lanza', helmet: 'morion' });
+        parts.push(['cyl12', '#efe4cc', 0.22, 0.012, 0.12, 0.12, 0.02, 0.12]);
+        break;
       case 'caravana':
         person(parts, -0.2, 0.05, { tunic, weapon: 'baston', headband: CREAM });
         quadruped(CREAM, 0.05, 0.08).forEach((p) => parts.push(p)); parts.push(['box', '#a3243b', 0.05, 0.18, 0.08, 0.12, 0.05, 0.11]);
