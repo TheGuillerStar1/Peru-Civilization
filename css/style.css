@@ -98,7 +98,7 @@ kbd { font: 500 0.7rem var(--f-body); padding: 0 5px; border: 1px solid var(--la
 .scr-mid .scr-body { flex: 1; overflow-y: auto; display: grid; gap: var(--sp-4); align-content: start; padding: 0 var(--sp-2) var(--sp-4); }
 .scr-foot { display: flex; justify-content: space-between; gap: var(--sp-2); padding: var(--sp-3) var(--sp-2) 0; border-top: 1px solid #2c3766; }
 .step { border: 0; margin: 0; padding: 0; display: grid; gap: var(--sp-2); }
-.step legend { font: 700 var(--t-s) var(--f-display); letter-spacing: 0.08em; color: var(--qolli-2); padding: 0; margin-bottom: var(--sp-2); }
+.step legend { font: 700 var(--t-s) var(--f-display); letter-spacing: 0.04em; color: var(--qolli-2); padding: 0; margin-bottom: var(--sp-2); }
 .desc { margin: 0; color: var(--algodon-2); font-size: var(--t-s); min-height: 2.9em; max-width: 64ch; }
 .seg { display: flex; flex-wrap: wrap; border: 1px solid #34407a; border-radius: var(--r); overflow: hidden; background: #0b102299; }
 .seg button { flex: 1 1 0; min-width: 0; background: transparent; color: var(--algodon); border: 0; border-right: 1px solid #34407a; padding: 10px 10px; font: 500 var(--t-s) var(--f-body); cursor: pointer; }
@@ -117,18 +117,19 @@ kbd { font: 500 0.7rem var(--f-body); padding: 0 5px; border: 1px solid var(--la
 .leader-pick { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(220px, 280px) minmax(0, 1fr) minmax(240px, 340px); gap: var(--sp-4); padding: 0 var(--sp-2) var(--sp-4); }
 .leader-list { overflow-y: auto; display: grid; gap: 4px; align-content: start; padding-right: 4px; }
 .lp { display: grid; grid-template-columns: 52px 1fr; gap: 10px; align-items: center; text-align: left; padding: 5px 8px 5px 5px; cursor: pointer; background: #151c35d9; border: 1px solid #2c3766; border-radius: var(--r); color: var(--algodon); font: inherit; }
-.lp img { width: 52px; height: 52px; border-radius: 2px; background: radial-gradient(circle at 50% 35%, #33407a, #151c35); }
+.lp img { width: 52px; height: 52px; border-radius: 2px; background: var(--lana-3); }
 .lp b { display: block; font: 700 var(--t-s)/1.15 var(--f-display); } .lp small { color: var(--algodon-2); font-size: 0.7rem; }
 .lp[aria-selected="true"] { border-color: var(--qolli); background: #2a2f4a; box-shadow: inset 2px 0 0 var(--qolli); }
 .lp:hover:not([aria-selected="true"]) { border-color: #46549a; }
-.leader-stage { position: relative; min-height: 320px; background: radial-gradient(ellipse at 50% 60%, #2a3360 0%, #151c3500 65%); }
+.leader-stage { position: relative; min-height: 320px; }
+.leader-stage::after { content: ''; position: absolute; left: 15%; right: 15%; bottom: 6%; height: 8px; background: var(--cenefa) repeat-x; background-size: 16px 8px; opacity: .8; }
 .leader-stage canvas { position: absolute; inset: 0; display: block; }
 .leader-info { overflow-y: auto; display: grid; gap: var(--sp-3); align-content: start; background: #151c35e6; border: 1px solid #2c3766; border-radius: var(--r); padding: var(--sp-4); }
 .leader-info h3 { font-size: var(--t-xl); line-height: 1.05; }
 .leader-info p { margin: 0; }
-.leader-info .sec > h4 { font: 700 var(--t-xs) var(--f-display); letter-spacing: 0.1em; color: var(--qolli-2); }
+.leader-info .sec > h4 { font: 700 var(--t-xs) var(--f-display); letter-spacing: 0.05em; color: var(--qolli-2); }
 .setup-summary { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3); background: var(--lana-2); border: 1px solid #2c3766; border-radius: var(--r); }
-.setup-summary img { width: 64px; height: 64px; border-radius: 2px; background: radial-gradient(circle at 50% 35%, #33407a, #151c35); }
+.setup-summary img { width: 64px; height: 64px; border-radius: 2px; background: var(--lana-3); }
 .adv summary { cursor: pointer; color: var(--algodon-2); font-size: var(--t-s); }
 .adv[open] summary { margin-bottom: var(--sp-3); }
 .opts { display: flex; flex-wrap: wrap; gap: var(--sp-4); }
@@ -141,10 +142,10 @@ select, input[type="number"] { font: 500 var(--t-s) var(--f-body); color: var(--
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 #save-list .mm { border: 1px solid #2c3766; border-radius: var(--r); background: var(--lana-2); }
 /* Retratos en el juego */
-.lthumb { width: 44px; height: 44px; border-radius: 2px; background: radial-gradient(circle at 50% 35%, #33407a, #151c35); flex: none; }
+.lthumb { width: 44px; height: 44px; border-radius: 2px; background: var(--lana-3); flex: none; }
 .lthumb.sm { width: 34px; height: 34px; } .lthumb.lg { width: 84px; height: 84px; }
 .lrow { display: flex; gap: 10px; align-items: center; }
-.leader-portrait { position: relative; width: 150px; height: 190px; border-radius: 2px; background: radial-gradient(ellipse at 50% 60%, var(--civ), #151c35 75%); overflow: hidden; }
+.leader-portrait { position: relative; width: 150px; height: 190px; border-radius: 2px; background: var(--lana-3); box-shadow: inset 0 -40px 0 var(--civ); overflow: hidden; }
 .leader-portrait canvas { position: absolute; inset: 0; }
 .leader-portrait .lp-em { position: absolute; left: 6px; top: 6px; z-index: 2; }
 .leader-portrait .lp-em .ico { width: 26px; height: 26px; }
@@ -193,7 +194,7 @@ select, input[type="number"] { font: 500 var(--t-s) var(--f-body); color: var(--
 .ph h3 { font-size: var(--t-l); line-height: 1.1; }
 .ph p { margin: 2px 0 0; color: var(--algodon-2); font-size: var(--t-s); }
 .sec { display: grid; gap: var(--sp-2); }
-.sec > h4 { font: 700 var(--t-xs) var(--f-display); letter-spacing: 0.1em; color: var(--qolli-2); padding-top: var(--sp-2); }
+.sec > h4 { font: 700 var(--t-xs) var(--f-display); letter-spacing: 0.05em; color: var(--qolli-2); padding-top: var(--sp-2); }
 .kv { display: flex; justify-content: space-between; gap: var(--sp-2); padding: 3px 0; border-bottom: 1px solid #262f55; font-size: var(--t-s); }
 .kv span { color: var(--algodon-2); } .kv b { font-variant-numeric: tabular-nums; text-align: right; }
 .trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #262f55; border: 1px solid #262f55; border-radius: var(--r); overflow: hidden; }
