@@ -410,11 +410,11 @@ Cada punto es una **bifurcación jugable**: el juego evalúa condiciones del est
 
 ### 16.1 Escala del mapa (Fase 1: Perú)
 
-- **≈ 200 hexágonos de tierra** (rango deseado 150 – 250), agrupados en **≈ 34 provincias histórico-geográficas** (las de la §14).
-- **Proporción estratégica** (no geográfica): **costa ≈ 35 %, sierra ≈ 45 %, selva ≈ 20 %**. La selva real es el 60 % del territorio, pero tiene menos peso histórico y demográfico; el mapa usa una **proyección estratégica** que estira la costa y la sierra y comprime la Amazonía, manteniendo la forma reconocible del país.
-- **Costa:** valles fértiles (alimento, acceso al mar) separados por **desierto** que cuesta más movimiento y produce **desgaste** sin camino.
-- **Sierra:** colinas y valles interandinos; las **cordilleras son barreras** (alto costo, gran defensa), atravesables por **abras** (pasos de montaña).
-- **Selva:** **niebla de guerra densa** (visión reducida a 1, lo explorado se "cierra" de nuevo si no hay presencia) y **desgaste** (las unidades pierden vida cada turno fuera de ríos, caminos o territorio propio), mitigado con tecnologías (Conocimiento amazónico, Medicina).
+- **≈ 250 hexágonos de tierra**, agrupados en **42 provincias histórico-geográficas** (las de la §14 y otras subdivisiones amazónicas).
+- **Proporciones reales del territorio**: **costa ≈ 12 %, sierra ≈ 28 %, selva ≈ 60 %**. Cada macrozona tiene su propia escala de proyección para que los valles costeros, que son estrechos, sigan siendo jugables.
+- **Costa:** valles fértiles (alimento, acceso al mar) separados por **desierto**, que cuesta más movimiento y produce **desgaste** sin camino.
+- **Sierra:** colinas y valles interandinos. Las **cordilleras son barreras** (alto costo, gran defensa, desgaste por altura) que se atraviesan por las **abras** históricas.
+- **Selva:** la Amazonía fue históricamente casi impenetrable para incas y europeos. En el juego tiene **niebla de guerra densa** (visión 1; lo explorado se "cierra" si no hay presencia), **desgaste** y **fauna peligrosa**: otorongo (jaguar), shushupe y jergón, caimán negro, pirañas y, sobre todo, los mosquitos de la malaria y la fiebre amarilla. Los ríos son las únicas vías seguras. Los pueblos amazónicos no sufren estos efectos, y las tecnologías *Conocimiento amazónico*, *Medicina* y *Medicina moderna* los reducen.
 
 ### 16.2 Mecánicas derivadas de la investigación
 
