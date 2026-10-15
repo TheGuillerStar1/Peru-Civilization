@@ -34,11 +34,11 @@
       PC.newGame({ scenario: UI.menu.scenario, culture: UI.menu.culture, difficulty: UI.menu.difficulty, seed, speed: $('#opt-speed').value });
       startGame(true);
     };
-    $('#btn-continue').onclick = () => { try { PC.load(localStorage.getItem(SAVE_KEY)); startGame(false); } catch (e) { alert('No se pudo cargar: ' + e.message); } };
+    $('#btn-continue').onclick = () => { try { PC.load(localStorage.getItem(SAVE_KEY)); startGame(false); } catch (e) { menuError('No se pudo cargar la partida guardada: ' + e.message); } };
     $('#btn-load-file').onclick = () => $('#file-load').click();
     $('#file-load').onchange = (e) => {
       const f = e.target.files[0]; if (!f) return;
-      f.text().then((txt) => { PC.load(txt); startGame(false); }).catch((err) => alert('Archivo inválido: ' + err.message));
+      f.text().then((txt) => { PC.load(txt); startGame(false); }).catch((err) => menuError('El archivo no es una partida válida: ' + err.message));
     };
   }
   function startGame(fresh) {
@@ -222,7 +222,7 @@
     else if (act === 'fort' && u) { u.fort = true; u.moves = 0; nextUnit(); }
     else if (act === 'skip' && u) { u.skipTurn = PC.G.turn; nextUnit(); }
     else if (act === 'stop' && u) { u.path = null; UI.select({ unit: u }); }
-    else if (act === 'disband' && u) { if (confirm('¿Disolver esta unidad?')) { PC.removeUnit(u); UI.select(null); } }
+    else if (act === 'disband' && u) { ask(`¿Disolver ${PC.UNITS[u.type].name}?`, 'Disolver', () => { PC.removeUnit(u); UI.select(null); refresh(); }); }
     else if (act === 'build' && sel && sel.city) { sel.city.build = { kind: b.dataset.kind, id: b.dataset.id }; UI.select({ city: sel.city }); }
     else if (act === 'buy' && sel && sel.city) { PC.buy(sel.city); UI.select({ city: sel.city }); }
     else if (act === 'fase2') { if (PC.startPhase2) { PC.startPhase2(); startGame(false); } }
@@ -321,7 +321,7 @@
         const occupiedEnemy = PC.unitsAt(t.i).some((o) => o.civ !== su.civ) || (t.cityId && PC.cityAt(t.i).civ !== su.civ);
         if (occupiedEnemy && !PC.atWar(su.civ, (PC.unitsAt(t.i)[0] || PC.cityAt(t.i)).civ)) {
           const other = PC.civ((PC.unitsAt(t.i)[0] || PC.cityAt(t.i)).civ);
-          if (!other.isPlayer && confirm(`¿Declarar la guerra a ${other.name}?`)) { PC.declareWar(PC.player(), other); UI.select({ unit: su }); refresh(); }
+          if (!other.isPlayer) ask(`¿Declarar la guerra a ${other.name}?`, 'Declarar la guerra', () => { PC.declareWar(PC.player(), other); UI.select({ unit: su }); refresh(); });
           return;
         }
         if (right || !PC.unitsAt(t.i).some((o) => o.civ === g.playerId)) {
@@ -409,6 +409,13 @@
   }
 
   // ------------------------------------------------------------------ Modales
+  function menuError(text) { const el = $('#menu-error'); if (el) { el.textContent = text; el.hidden = false; } }
+  // Confirmación dentro del juego (los diálogos nativos no están disponibles en todas partes).
+  let askYes = null, askNo = null;
+  function ask(text, yesLabel, onYes, onNo) {
+    askYes = onYes; askNo = onNo || null;
+    openModal(`<h2>${esc(text)}</h2><div class="choices"><button class="primary" data-ask="yes">${esc(yesLabel)}</button><button data-ask="no">Cancelar</button></div>`, 'ask');
+  }
   function openModal(html, kind) {
     UI.modal = kind || 'info';
     $('#modal-body').innerHTML = html;
@@ -515,6 +522,8 @@
     $('#modal').addEventListener('click', (e) => {
       if (e.target.id === 'modal' && UI.modal !== 'event') { closeModal(); return; }
       if (e.target.closest('[data-close]')) { closeModal(); return; }
+      const ak = e.target.closest('[data-ask]');
+      if (ak) { const fn = ak.dataset.ask === 'yes' ? askYes : askNo; askYes = askNo = null; closeModal(); if (fn) fn(); return; }
       const ch = e.target.closest('[data-choice]');
       if (ch && !ch.disabled) {
         const res = PC.resolveEvent(+ch.dataset.choice);
@@ -529,7 +538,7 @@
       const d = e.target.closest('[data-diplo]');
       if (d && !d.disabled) {
         const p = PC.player(), c = PC.civ(+d.dataset.civ);
-        if (d.dataset.diplo === 'war' && confirm(`¿Declarar la guerra a ${c.name}?`)) PC.declareWar(p, c);
+        if (d.dataset.diplo === 'war') { ask(`¿Declarar la guerra a ${c.name}?`, 'Declarar la guerra', () => { PC.declareWar(p, c); openDiplo(); refresh(); }, openDiplo); return; }
         if (d.dataset.diplo === 'peace') PC.proposePeace(p, c);
         if (d.dataset.diplo === 'annex') PC.annex(p, c);
         openDiplo(); refresh(); return;
