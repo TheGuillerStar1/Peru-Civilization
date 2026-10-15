@@ -65,6 +65,9 @@ La partida se guarda automáticamente en el navegador cada turno y también se p
 3. **América** — jugable. Se desbloquea al controlar el 75% de las regiones de Sudamérica. Un mapa de todo el continente, del Ártico a la Tierra del Fuego (≈880 hexágonos de tierra y 68 regiones, con la longitud comprimida según la latitud para que Canadá no ocupe más que Sudamérica), con tundra, bosque boreal, praderas, las Rocosas, la Sierra Madre, los Apalaches, los Grandes Lagos, el Misisipi y las Antillas. Aparecen mexicas (o toltecas antes de 1325), mayas, purépechas, zapotecas, taínos, la cultura del Misisipi, los haudenosaunee, lakotas o cheroquis; luego Nueva España, Nueva Francia y las colonias británicas, y finalmente México, Estados Unidos, Canadá, Centroamérica, Cuba o Haití.
 4. **El Mundo** — en desarrollo. Se anunciará al controlar el 70% de las regiones de América.
 
+### Victorias
+Cuatro formas de ganar, con su avance en **Menú → Victorias**: **Dominación** (60% de las regiones de América en la Fase 3), **Cultural** (6 maravillas y una cultura acumulada alta para tu era), **Diplomática** (ser sede del congreso y votar en el bando ganador de 5 resoluciones) e **Histórica** (cumplir 6 de 10 legados, como unificar los Andes antes de 1500 o resistir la conquista española). Si llegas a 2050 sin ninguna, gana la mayor puntuación. La pantalla final muestra la victoria, la clasificación y la evolución de la población y el territorio frente a los tres rivales más fuertes (una foto cada 10 turnos).
+
 ## Estructura
 
 ```
@@ -84,9 +87,11 @@ js/core/events.js      historia dinámica, llegada europea, eventos y divergenci
 js/core/diplomacy.js   guerra, paz y anexión por reciprocidad
 js/core/phases.js      fases de expansión: mapas continentales y traslado de tu civilización
 js/core/world.js       historia viva: sucesión de líderes, independencias, colonizaciones, iniciativas de la IA y congreso
+js/core/victory.js     condiciones de victoria, legados y fotos de la partida cada 10 turnos
 js/ui/icons.js         iconos y emblemas tocapu
 js/ui/render3d.js      maqueta 3D (three.js)
 js/ui/ui.js            interfaz
+js/ui/victory_ui.js    ventana de victorias y pantalla final con gráficos (css/victory.css)
 js/vendor/three.min.js three.js r158 (licencia MIT)
 .claude/skills/impeccable  skill de diseño de interfaces (Apache 2.0)
 tests/smoke.js         prueba que juega partidas completas en piloto automático
