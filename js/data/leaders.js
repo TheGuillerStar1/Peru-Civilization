@@ -83,6 +83,8 @@
   PC.leaderOf = function (civ) {
     if (civ.leaderId && PC.LEADERS[civ.leaderId]) { const L = PC.LEADERS[civ.leaderId]; return { name: L.name, title: L.title, agenda: L.agenda, model: civ.leaderId }; }
     const F = PC.FACTIONS[civ.key] || {};
+    const H = PC.historicalLeader && PC.G && !civ.isPlayer ? PC.historicalLeader(civ.key, PC.G.year, civ.name) : null;
+    if (H) return H;
     const model = AI_MODEL[civ.key] || (F.selva || civ.selva ? 'amazonico' : 'curaca');
     const a = PC.AI_LEADERS[civ.key];
     if (a) return { name: a[0], title: a[1], agenda: a[2], model };

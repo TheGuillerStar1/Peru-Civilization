@@ -122,6 +122,7 @@
     PC.G = JSON.parse(json);
     PC.G.notices = [];
     if (PC.G.phase === 'sudamerica') Object.assign(PC.CITY_NAMES, PC.GEO_SA.cityNames);
+    if (PC.G.phase === 'america') Object.assign(PC.CITY_NAMES, PC.GEO_SA.cityNames, PC.GEO_AM.cityNames);
     PC.updateVisibility();
     return PC.G;
   };

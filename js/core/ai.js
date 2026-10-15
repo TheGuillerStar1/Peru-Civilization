@@ -37,8 +37,12 @@
     const pick = (o) => (o ? { kind: o.kind, id: o.id } : null);
     const bm = bestMilitary(city, opts);
     if (!garrison && bm) return pick(bm);
+    // Tope global: en los mapas continentales no se satura el mapa de tropas.
+    const m = G().map;
+    if (!m.landCount) m.landCount = m.tiles.filter((t) => t && t.terrain !== 'oceano').length;
+    const crowded = G().units.length > m.landCount * 0.3;
     if (war && opts.some((o) => o.id === 'apu') && PC.rand() < 0.5) return { kind: 'unit', id: 'apu' };
-    if (war && mil < cities.length * 3 && bm) return pick(bm);
+    if (war && mil < cities.length * (crowded ? 2 : 3) && bm) return pick(bm);
     if (mil < Math.ceil(cities.length * 1.3) && bm) return pick(bm);
     const maxCities = civ.external ? 0 : (civ.isPlayer ? 14 : 3 + PC.eraOf(civ));
     if (city.pop >= 3 && settlers < 1 && cities.length < maxCities && opts.some((o) => o.id === 'colono') && hasSiteNear(civ)) return { kind: 'unit', id: 'colono' };
@@ -47,7 +51,7 @@
     if (wonders.length && PC.rand() < (civ.isPlayer ? 0.5 : 0.25) && city.pop >= 3) return pick(PC.pick(wonders));
     const blds = opts.filter((o) => o.kind === 'building').sort((a, b) => a.cost - b.cost);
     if (blds.length) return pick(blds[0]);
-    if (bm && mil < cities.length * 2) return pick(bm);
+    if (bm && !crowded && mil < cities.length * 2) return pick(bm);
     return { kind: 'riqueza', id: 'riqueza' };
   };
 
@@ -68,8 +72,9 @@
       const theirPow = PC.power(o);
       if (!r.war) {
         const aggressive = (PC.eraOf(civ) >= 3 ? 0.08 : 0.04) * PC.diff().aiAggr;
-        if (!PC.isAlly(civ.id, o.id) && border && offensive === 0 && r.att < -20 && myPow > theirPow * 1.4 && g.turn - r.since > 10 && PC.rand() < aggressive) {
+        if (!PC.isAlly(civ.id, o.id) && !(PC.truceBlocks && PC.truceBlocks(civ, o)) && border && offensive === 0 && r.att < -20 && myPow > theirPow * 1.4 && g.turn - r.since > 10 && PC.rand() < aggressive) {
           PC.declareWar(civ, o); r.aggressor = true; offensive++;
+          civ.invade = o.id;
         }
       } else if (g.turn - r.since > 8) {
         const losing = myPow < theirPow * 0.8;
@@ -192,9 +197,12 @@
     // Guarnición: no abandonar una ciudad vacía.
     if (t.cityId && g.units.filter((x) => x.t === u.t && x.civ === civ.id && PC.isMil(x)).length === 1 && !civ.external) return;
     if (enemies.length) {
-      let best = null, bd = civ.external ? 99 : 7;
+      if (civ.invade && !PC.atWar(civ.id, civ.invade)) civ.invade = null;
+      let best = null, bd = civ.external || civ.colonial ? 99 : 7;
       enemies.forEach((e) => {
-        PC.civCities(e).forEach((c) => { const d = PC.dist(t, PC.tile(c.t)) - (e.isPlayer && civ.external ? 3 : 0); if (d < bd) { bd = d; best = c.t; } });
+        // Una invasión declarada busca las ciudades del enemigo aunque estén lejos.
+        const reach = civ.invade === e.id ? 12 : 0;
+        PC.civCities(e).forEach((c) => { const d = PC.dist(t, PC.tile(c.t)) - (e.isPlayer && civ.external ? 3 : 0) - reach; if (d < bd) { bd = d; best = c.t; } });
         PC.civUnits(e).forEach((x) => { const d = PC.dist(t, PC.tile(x.t)) + 1; if (d < bd && PC.tile(x.t).terrain !== 'oceano') { bd = d; best = x.t; } });
       });
       if (best !== null) {

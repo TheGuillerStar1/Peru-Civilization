@@ -43,6 +43,15 @@
       { id: 'fuego', name: 'Tierra del Fuego', lon: -69.5, lat: -52.5 }, { id: 'atacama', name: 'Atacama', lon: -69.8, lat: -23.5 },
       { id: 'chile_central', name: 'Chile Central', lon: -71.0, lat: -33.5 }, { id: 'araucania', name: 'Araucanía', lon: -72.5, lat: -39.5 }
     ],
+    // Macrorregiones de Sudamérica (para agrupar las provincias)
+    macro: {
+      peru_norte: 'andes', peru_centro: 'andes', peru_sur: 'andes', ecuador: 'andes', colombia: 'andes', altiplano: 'andes', atacama: 'andes',
+      caribe: 'caribe', venezuela: 'caribe', llanos: 'caribe', guayanas: 'caribe',
+      amazonia_peruana: 'amazonia', amazonas_oeste: 'amazonia', amazonas_este: 'amazonia', oriente: 'amazonia',
+      nordeste: 'brasil', bahia: 'brasil', centro_oeste: 'brasil', sudeste: 'brasil', sur_brasil: 'brasil',
+      chaco: 'cono_sur', paraguay: 'cono_sur', uruguay: 'cono_sur', noroeste: 'cono_sur', cuyo: 'cono_sur', pampa: 'cono_sur', patagonia: 'cono_sur',
+      fuego: 'cono_sur', chile_central: 'cono_sur', araucania: 'cono_sur'
+    },
     hotspots: [
       ['plata', -65.75, -19.6, 1], ['estano', -66.5, -18.0, 1], ['oro', -44.0, -19.5, 1], ['oro', -74.5, 6.0, 1], ['cobre', -69.0, -23.0, 1],
       ['cobre', -70.5, -33.5, 1], ['salitre', -69.8, -21.0, 1], ['petroleo', -71.5, 10.0, 1], ['petroleo', -64.0, -22.0, 1],
@@ -62,6 +71,13 @@
       pampa: ['Buenos Aires', 'Córdoba', 'Santa Fe', 'Rosario', 'La Plata'], patagonia: ['Carmen de Patagones', 'Rawson', 'Neuquén'], fuego: ['Punta Arenas', 'Ushuaia'],
       atacama: ['Atacama', 'Copiapó', 'Antofagasta', 'Iquique'], chile_central: ['Santiago', 'Valparaíso', 'La Serena', 'Talca'], araucania: ['Concepción', 'Temuco', 'Valdivia', 'Osorno']
     },
+    // Colonizaciones europeas cuando la Fase 2 empieza antes de 1500: [año, clave, nombre, color, región, tropas, corona]
+    colonize: [
+      [1500, 'brasil', 'Brasil portugués', '#27ae60', 'bahia', 4, 'pt'], [1525, 'nueva_granada', 'Nuevo Reino de Granada', '#f1c40f', 'caribe', 4, 'es'],
+      [1527, 'venezuela', 'Provincia de Venezuela', '#e67e22', 'venezuela', 3, 'es'], [1534, 'quito', 'Real Audiencia de Quito', '#d4ac0d', 'ecuador', 3, 'es'],
+      [1536, 'rio_plata', 'Gobernación del Río de la Plata', '#85c1e9', 'pampa', 3, 'es'], [1538, 'charcas', 'Audiencia de Charcas', '#b9770e', 'altiplano', 3, 'es'],
+      [1541, 'chile', 'Capitanía de Chile', '#e8e8e8', 'chile_central', 3, 'es'], [1600, 'guayana', 'Guayanas europeas', '#a569bd', 'guayanas', 2, 'nl']
+    ],
     // Facciones según la época: [clave, nombre, color, región, nº de ciudades]
     natives: [
       ['muisca', 'Muiscas', '#c0a040', 'colombia', 3], ['tairona', 'Taironas', '#7aa85a', 'caribe', 2], ['quitu', 'Quitu-Cara', '#a05a2c', 'ecuador', 2],

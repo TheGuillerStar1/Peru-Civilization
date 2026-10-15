@@ -17,8 +17,9 @@ La historia y la geografía andinas son la mecánica: la verticalidad costa–si
 
 ## Operating Context
 - Partidas de cientos de turnos; el jugador vuelve a la misma partida (guardado automático en el navegador).
-- Pantallas de trabajo: mapa (seleccionar, mover, atacar), ciudad (producción), tecnologías, diplomacia, provincias, crónica, eventos con decisiones, menú inicial (escenario, cultura, dificultad).
-- Fases: Perú (completa), Sudamérica (jugable), América y el Mundo (pendientes).
+- Pantallas de trabajo: mapa (seleccionar, mover, atacar), ciudad (producción), tecnologías, diplomacia (con el congreso), provincias, crónica, eventos con decisiones, menú inicial (escenario, cultura, dificultad).
+- Fases: Perú (completa), Sudamérica y América (jugables), el Mundo (pendiente).
+- Rivales con líderes históricos que se suceden con los años, iniciativas diplomáticas propias y un congreso que vota resoluciones.
 
 ## Capabilities and Constraints
 - Sitio estático sin compilación (HTML/CSS/JS); motor del juego en `js/core` independiente de la interfaz y probado en Node (`npm test`).

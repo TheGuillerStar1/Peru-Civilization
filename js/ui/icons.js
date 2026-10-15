@@ -4,6 +4,7 @@
   'use strict';
 
   const I = PC.ICONS = {
+    congreso: ['....a....', '...aba...', '....a....', 'aaaaaaaaa', 'a.......a', 'a.bbbbb.a', 'a.......a', 'a.bbbbb.a', 'aaaaaaaaa'],
     sol: ['....a....', '.a..a..a.', '..aaaaa..', '..abbba..', 'aaabbbaaa', '..abbba..', '..aaaaa..', '.a..a..a.', '....a....'],
     oro: ['....a....', '...aaa...', '..aabaa..', '.aabbbaa.', 'aabbbbbaa', '.aabbbaa.', '..aabaa..', '...aaa...', '....a....'],
     ciencia: ['....a....', '....aa...', '...aaa...', '...aaaa..', '..aaaaa..', '..aaaaaa.', '.aaaaaaa.', 'aaaaaaaaa', 'bbbbbbbbb'],
@@ -50,7 +51,8 @@
     epidemia: 'alerta', llegada_espanoles: 'barco', caida_capital: 'guerra', corona_desiste: 'paz', embajada_europea: 'diplomacia',
     contacto_inverso: 'barco', florecimiento: 'cultura', propuesta_paz: 'paz', tupac_amaru: 'guerra', independencia: 'sol',
     guano: 'oro', guerra_pacifico: 'guerra', caucho: 'recurso', reforma_agraria: 'alimento', bancarrota: 'alerta', revuelta: 'alerta',
-    fase2: 'mapa', fase3: 'mapa', propuesta_alianza: 'diplomacia', llamada_aliado: 'guerra', exigencia_tributo: 'oro'
+    fase2: 'mapa', fase3: 'mapa', fase4: 'mapa', congreso: 'congreso', propuesta_lazos: 'diplomacia', propuesta_paso: 'diplomacia',
+    guerra_conjunta: 'guerra', ultimatum: 'guerra', colonos_llegan: 'barco', propuesta_alianza: 'diplomacia', llamada_aliado: 'guerra', exigencia_tributo: 'oro'
   };
   PC.unitIconKey = function (type) {
     const U = PC.UNITS[type];

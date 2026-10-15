@@ -168,7 +168,7 @@
         <li>Costa: los valles son fértiles y el desierto desgasta. Sierra: las cordilleras frenan y se cruzan por las abras. Selva: niebla densa, desgaste y fauna peligrosa.</li>
         <li>Algunas tecnologías exigen recursos: sin cobre no hay bronce, sin hierro no hay hierro y sin salitre o guano no hay pólvora.</li>
         <li>Las unidades antiguas se pueden modernizar con oro cuando descubres su sucesora.</li>
-        <li>Controla el 80% de las provincias para pasar a la Fase 2: Sudamérica.</li>
+        <li>Controla el 80% de las provincias para pasar a la Fase 2: Sudamérica, y el 75% de las regiones del continente para la Fase 3: América.</li>
       </ul>
       <div class="choices"><button class="btn primary big" data-close type="button">${ic('sol')}Empezar</button></div>`, 'intro');
   }
@@ -246,7 +246,7 @@
     if (t.road) rows.push('Camino');
     if (t.fauna) rows.push(`Peligro: ${PC.FAUNA[t.fauna].name}`);
     if (T.move !== Infinity) rows.push(`Movimiento ${T.move}${T.def ? `, defensa +${Math.round(T.def * 100)}%` : ''}${T.attr ? `, desgaste ${T.attr}` : ''}`);
-    return `<div class="sec"><h4>${esc(T.name)}${t.name ? ' · ' + esc(t.name) : ''}</h4>
+    return `<div class="sec"><h4>${esc(PC.terrainName(t))}${t.name ? ' · ' + esc(t.name) : ''}</h4>
       <p class="small muted" style="margin:0">${PC.ZONE_NAME[T.zone] || ''}${rg ? ' · ' + esc(rg.name) : ''}${t.owner ? ' · ' + esc(PC.civ(t.owner).name) : ''}</p>
       ${t.terrain !== 'oceano' ? `<div class="yrow">${Y(PC.tileYield(p, t))}</div>` : ''}
       ${rows.map((r) => `<div class="kv"><span>${esc(r)}</span></div>`).join('')}</div>`;
@@ -261,13 +261,17 @@
     else h = civPanel(PC.player());
     $('#panel').innerHTML = h;
   }
+  function nextPhaseName() {
+    const n = PC.phaseInfo(PC.phaseInfo().next);
+    return n ? n.name.replace(' · ', ': ') : '';
+  }
   function civPanel(p) {
     const st = PC.stabilityTarget(p);
     return `<div class="ph" style="--civ:${p.color}"><div class="tile-ico">${PC.emblem(p.key, p.color)}</div><div><h3>${esc(p.name)}</h3><p>${esc(p.leader || '')}</p></div></div>
       <div class="trio"><div><span>${ic('ciudad')}Ciudades</span><b>${PC.civCities(p).length}/${PC.capacity(p)}</b></div><div><span>${ic('poder')}Poder</span><b>${PC.power(p)}</b></div><div><span>${ic('tecnologia')}Tecnologías</span><b>${Object.keys(p.techs).length}</b></div></div>
       <div class="sec"><h4>Cohesión ${Math.round(p.stability)}, tiende a ${st.value}</h4>
       <ul class="parts">${st.parts.map(([n, v]) => `<li><span>${esc(n)}</span><b class="${v < 0 ? 'bad' : 'good'}">${v > 0 ? '+' : ''}${v}</b></li>`).join('')}</ul></div>
-      ${PC.G.flags.fase2Disponible ? `<button class="btn primary" data-act="fase2" type="button">${ic('mapa')}Avanzar a la Fase 2: Sudamérica</button>` : ''}
+      ${PC.canAdvancePhase() ? `<button class="btn primary" data-act="fase2" type="button">${ic('mapa')}Avanzar a la ${esc(nextPhaseName())}</button>` : ''}
       <p class="small muted">Elige una unidad o una ciudad en el mapa. Pasa el puntero sobre una casilla para ver qué hay en ella.</p>`;
   }
   function diploBox(civ) {
@@ -373,7 +377,7 @@
     else if (act === 'disband' && u) { ask(`¿Disolver ${PC.UNITS[u.type].name}?`, 'Disolver', () => { PC.removeUnit(u); UI.select(null); refresh(); }); }
     else if (act === 'build' && sel && sel.city) { sel.city.build = { kind: b.dataset.kind, id: b.dataset.id }; UI.select({ city: sel.city }); }
     else if (act === 'buy' && sel && sel.city) { PC.buy(sel.city); UI.select({ city: sel.city }); }
-    else if (act === 'fase2' && PC.startPhase2) { PC.startPhase2(); startGame(false); }
+    else if (act === 'fase2' && PC.canAdvancePhase()) { PC.startNextPhase(); PC.G.phaseChanged = false; startGame(false); }
     refresh();
   }
 
@@ -484,7 +488,7 @@
     const rg = PC.G.map.regions.find((r) => r.id === t.region);
     const city = t.cityId ? PC.cityAt(t.i) : null;
     const us = PC.isVisible(t.i) ? PC.unitsAt(t.i) : [];
-    let html = `<b>${esc(city ? city.name : T.name)}</b>${rg ? `<br>${esc(rg.name)}` : ''}`;
+    let html = `<b>${esc(city ? city.name : PC.terrainName(t))}</b>${rg ? `<br>${esc(rg.name)}` : ''}`;
     if (t.owner) html += `<br><span class="swatch" style="background:${PC.civ(t.owner).color}"></span>${esc(PC.civ(t.owner).name)}`;
     us.forEach((u) => { html += `<br>${esc(PC.UNITS[u.type].name)} · ${esc(PC.civ(u.civ).name)} · vida ${u.hp}`; });
     if (t.res && PC.resVisible(PC.player(), t.res)) html += `<br>Recurso: ${esc(PC.RESOURCES[t.res].name)}`;
@@ -672,6 +676,7 @@
     const meter = PC.clamp((att + 100) / 2, 0, 100);
     const treaties = [PC.REL_NAME[st]];
     if (PC.rel(p, civ).borders) treaties.push('Paso libre');
+    if (PC.rel(p, civ).embassy) treaties.push('Embajadas');
     if (PC.rel(p, civ).denounced) treaties.push('Denunciado por ti');
     if (PC.rel(civ, p).denounced) treaties.push('Te ha denunciado');
     const routes = (PC.G.routes || []).filter((r) => (r.a === p.id && r.b === civ.id) || (r.a === civ.id && r.b === p.id)).length;
@@ -705,6 +710,7 @@
           <div class="kv"><span>Poder militar</span><b>${PC.power(civ)} (tú ${PC.power(p)})</b></div>
           ${st === 'guerra' ? `<div class="kv"><span>Puntaje de guerra</span><b class="${(PC.rel(p, civ).warScore || 0) >= 0 ? 'good' : 'bad'}">${PC.rel(p, civ).warScore || 0}</b></div>` : ''}
           <div class="kv"><span>Tu influencia</span><b>${Math.round(p.influence || 0)}</b></div>
+          ${(civ.reigns || []).length ? `<h4>Gobernantes anteriores</h4>${civ.reigns.slice().reverse().slice(0, 5).map((r) => `<div class="kv"><span>${esc(r.name)}</span><b>hasta ${PC.fmtYear(r.until)}</b></div>`).join('')}` : ''}
         </div>
         <div class="sec"><h4>Acciones diplomáticas</h4><div class="dacts">${cards}</div></div>
       </div></div>`, 'leader');
@@ -726,18 +732,39 @@
         <td><button class="btn" data-leader="${c.id}" type="button">${ic('diplomacia')}Hablar</button></td></tr>`;
     });
     openModal(`<h2>Diplomacia</h2><p class="lead">Tienes ${Math.round(p.influence || 0)} de influencia (+${PC.influenceIncome(p)} por turno), ${PC.civRoutes(p.id).length} de ${PC.maxRoutes(p)} rutas comerciales y un poder militar de ${PC.power(p)}. Habla con cada líder para proponer tratados, exigir tributo o negociar la paz.</p>
-      <div class="tablewrap"><table class="diplo"><thead><tr><th>Civilización y líder</th><th>Ciudades</th><th>Poder</th><th>Actitud</th><th>Estado</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="6" class="muted">Aún no has encontrado a otras civilizaciones. Explora el mapa.</td></tr>'}</tbody></table></div>`, 'diplo');
+      <div class="tablewrap"><table class="diplo"><thead><tr><th>Civilización y líder</th><th>Ciudades</th><th>Poder</th><th>Actitud</th><th>Estado</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="6" class="muted">Aún no has encontrado a otras civilizaciones. Explora el mapa.</td></tr>'}</tbody></table></div>
+      ${congressBox()}`, 'diplo');
+  }
+  function congressBox() {
+    const g = PC.G, cg = g.congress;
+    const members = PC.congressMembers();
+    let h = `<h3>${ic('congreso')} ${esc(PC.congressName())}</h3>`;
+    if (!cg || cg.next === null) {
+      h += `<p class="small muted">El congreso se reúne cada ${PC.CONGRESS_EVERY} turnos cuando conoces al menos a dos pueblos (ahora: ${Math.max(0, members.length - 1)}). Allí se votan condenas, embargos, treguas y otras resoluciones.</p>`;
+      return h;
+    }
+    const left = Math.max(0, cg.next - g.turn);
+    h += `<p class="small muted">${members.length} miembros · próxima sesión ${left ? `en ${left} turno${left > 1 ? 's' : ''}` : 'este turno'} · tienes ${PC.congressVotes(PC.player())} voto${PC.congressVotes(PC.player()) > 1 ? 's' : ''}${cg.host ? ` · sede: ${esc(PC.civ(cg.host).name)}` : ''}.</p>`;
+    const act = (cg.active || []).filter((a) => a.until > g.turn);
+    if (act.length || cg.truce > g.turn) {
+      h += '<ul class="parts">' + act.map((a) => `<li><span>${esc(PC.RESOLUTIONS[a.id].name)}${a.target ? ' · ' + esc(PC.civ(a.target).name) : ''}</span><b>${a.until - g.turn} turnos</b></li>`).join('') +
+        (cg.truce > g.turn && !act.some((a) => a.id === 'tregua') ? `<li><span>Tregua general</span><b>${cg.truce - g.turn} turnos</b></li>` : '') + '</ul>';
+    }
+    const hist = (cg.history || []).slice(-5).reverse();
+    if (hist.length) h += `<ul class="log">${hist.map((x) => `<li class="${x.pass ? 'history' : 'info'}"><b>${PC.fmtYear(x.year)}</b><span>${esc(PC.RESOLUTIONS[x.res].name)}${x.target ? ' · ' + esc(x.target) : ''}: ${x.pass ? 'aprobada' : 'rechazada'} (${x.yes}–${x.no})</span></li>`).join('')}</ul>`;
+    return h;
   }
   function openRegions() {
     const g = PC.G, rc = PC.regionControl();
-    const total = g.map.regions.length, mine = PC.playerRegionCount(), need = Math.ceil(total * 0.8);
+    const total = g.map.regions.length, mine = PC.playerRegionCount(), need = PC.phaseNeed();
+    const info = PC.phaseInfo(), next = info.next && PC.phaseInfo(info.next);
     const zones = [...new Set(g.map.regions.map((r) => r.zone))];
-    let h = `<h2>Provincias</h2><p class="lead">Controlas ${mine} de ${total}. Necesitas ${need} (el 80%) para la siguiente fase.</p>
+    let h = `<h2>Provincias</h2><p class="lead">Controlas ${mine} de ${total}. ${next ? `Necesitas ${need} (el ${Math.round(info.need * 100)}%) para pasar a la ${esc(next.name.replace(' · ', ': '))}${next.ready ? '' : ' (en desarrollo)'}.` : ''}</p>
       <div class="bar"><i style="width:${Math.min(100, mine / need * 100)}%"></i><span>${mine} de ${need}</span></div>`;
     if (g.map.kind === 'peru') h += `<p class="small muted">El mapa tiene ${g.map.counts.costa} hexágonos de costa, ${g.map.counts.sierra} de sierra y ${g.map.counts.selva} de selva, en las proporciones reales del Perú.</p>`;
     h += '<div class="regcols">';
     zones.forEach((z) => {
-      h += `<div><h3>${esc(PC.ZONE_NAME[z] || 'Regiones')}</h3><ul class="reglist">`;
+      h += `<div><h3>${esc(PC.ZONE_NAME[z] || PC.MACRO_NAME[z] || 'Regiones')}</h3><ul class="reglist">`;
       g.map.regions.filter((r) => r.zone === z).forEach((r) => {
         const c = rc[r.id] ? PC.civ(rc[r.id]) : null;
         h += `<li><span>${esc(r.name)}</span>${c ? `<b><span class="swatch" style="background:${c.color}"></span>${esc(c.name)}</b>` : '<span class="muted">Sin dueño</span>'}</li>`;
@@ -755,12 +782,12 @@
       <h3>Registro</h3><ul class="log">${log.slice(0, 250).map((l) => `<li class="${l.type}"><b>${PC.fmtYear(l.year)}</b><span>${esc(l.text)}</span></li>`).join('')}</ul>`, 'chronicle');
   }
   function openMenu() {
-    const canP2 = PC.G.phase === 'peru' && (PC.G.flags.fase2Disponible || PC.playerRegionCount() >= Math.ceil(PC.G.map.regions.length * 0.8));
+    const canP2 = PC.canAdvancePhase();
     openModal(`<h2>Menú</h2><div class="choices col">
       <button class="btn big" data-act2="save" type="button">Guardar la partida</button>
       <button class="btn big" data-act2="export" type="button">Exportar a un archivo</button>
       <button class="btn big" data-act2="help" type="button">Cómo se juega</button>
-      ${canP2 ? `<button class="btn primary big" data-act2="fase2" type="button">${ic('mapa')}Fase 2: Sudamérica</button>` : ''}
+      ${canP2 ? `<button class="btn primary big" data-act2="fase2" type="button">${ic('mapa')}${esc(nextPhaseName())}</button>` : ''}
       <button class="btn big" data-act2="menu" type="button">Volver al menú principal</button></div>
       <p class="small muted">Semilla del mapa ${PC.G.seed} · ${esc(PC.SCENARIOS[PC.G.scenario].name)} · ${esc(PC.diff().name)}. La partida también se guarda sola al terminar cada turno.</p>`, 'menu');
   }
@@ -812,7 +839,7 @@
         if (act === 'help') showIntro();
         if (act === 'menu') showMenu();
         if (act === 'keep') { PC.G.gameOver = null; closeModal(); }
-        if (act === 'fase2' && PC.startPhase2) { PC.startPhase2(); closeModal(); startGame(false); }
+        if (act === 'fase2' && PC.canAdvancePhase()) { PC.startNextPhase(); PC.G.phaseChanged = false; closeModal(); startGame(false); }
       }
     });
     document.querySelectorAll('[data-modal]').forEach((b) => {

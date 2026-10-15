@@ -18,9 +18,26 @@
     llanura:   { name: 'Llanura', zone: 'llano', f: 2, p: 1, g: 0, move: 1, def: 0, attr: 0, color: '#9cb86a' },
     pampa:     { name: 'Pampa', zone: 'llano', f: 3, p: 1, g: 0, move: 1, def: 0, attr: 0, color: '#b4c77a' },
     estepa:    { name: 'Estepa', zone: 'llano', f: 1, p: 1, g: 0, move: 1, def: 0, attr: 5, color: '#c4b98e' },
-    bosque:    { name: 'Bosque templado', zone: 'selva', f: 1, p: 2, g: 0, move: 2, def: 0.25, attr: 5, color: '#3f7a55' }
+    bosque:    { name: 'Bosque templado', zone: 'selva', f: 1, p: 2, g: 0, move: 2, def: 0.25, attr: 5, color: '#3f7a55' },
+    // Norteamérica (Fase 3)
+    pradera:   { name: 'Pradera', zone: 'llano', f: 3, p: 1, g: 0, move: 1, def: 0, attr: 0, color: '#a8bf6a' },
+    taiga:     { name: 'Bosque boreal', zone: 'selva', f: 1, p: 2, g: 0, move: 2, def: 0.25, attr: 10, color: '#2f5f4a' },
+    tundra:    { name: 'Tundra', zone: 'llano', f: 0, p: 1, g: 0, move: 1, def: 0, attr: 15, color: '#a7ae9c' }
+  };
+  // En los mapas continentales el mar y el desierto no son los del Perú.
+  PC.terrainName = function (t) {
+    const T = PC.TERRAIN[t.terrain];
+    if (!PC.G || PC.G.phase === 'peru') return T.name;
+    if (t.terrain === 'oceano') return 'Océano';
+    if (t.terrain === 'desierto') return 'Desierto';
+    if (t.terrain === 'valle') return 'Valle fértil';
+    if (t.terrain === 'sierra') return 'Tierras altas';
+    return T.name;
   };
   PC.ZONE_NAME = { costa: 'Costa', sierra: 'Sierra', selva: 'Selva', mar: 'Mar', llano: 'Llanos' };
+  // Grandes regiones de los mapas continentales (para agrupar las provincias).
+  PC.MACRO_NAME = { andes: 'Andes', caribe: 'Caribe y Orinoco', amazonia: 'Amazonía', brasil: 'Brasil', cono_sur: 'Cono Sur',
+    norteamerica: 'Norteamérica', mesoamerica: 'Mesoamérica y Centroamérica', antillas: 'Antillas' };
 
   // reveal: tecnología necesaria para ver el recurso. kind: estrategico | lujo | alimento
   PC.RESOURCES = {

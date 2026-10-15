@@ -19,7 +19,7 @@
 
   // ---------------------------------------------------------------- utilidades
   const HEIGHT = { oceano: 0.04, lago: 0.1, desierto: 0.24, valle: 0.2, sierra: 0.55, puna: 0.78, cordillera: 0.95, ceja: 0.42, selva: 0.28,
-    llanura: 0.22, pampa: 0.2, estepa: 0.26, bosque: 0.32 };
+    llanura: 0.22, pampa: 0.2, estepa: 0.26, bosque: 0.32, pradera: 0.2, taiga: 0.3, tundra: 0.22 };
   R.tileXZ = (t) => [(t.c + 0.5 * (t.r & 1)) * SQ3, t.r * 1.5];
   R.tileTop = (t) => HEIGHT[t.terrain] + (t.terrain === 'oceano' ? 0 : (PC.hash2(t.c, t.r, 11) - 0.5) * 0.06);
   const C = (hex) => new THREE.Color(hex);
@@ -273,7 +273,8 @@
   const DECO_RULES = {
     selva: [['arbol', 4], ['palmera', 1]], ceja: [['arbol_ceja', 3]], bosque: [['arbol', 3]],
     cordillera: [['nevado', 2]], sierra: [['colina', 2], ['pasto', 2]], puna: [['ichu', 4]], estepa: [['ichu', 3]],
-    desierto: [['duna', 2]], valle: [['surco', 1], ['arbol_ceja', 1]], llanura: [['pasto', 3]], pampa: [['pasto', 4]]
+    desierto: [['duna', 2]], valle: [['surco', 1], ['arbol_ceja', 1]], llanura: [['pasto', 3]], pampa: [['pasto', 4]],
+    pradera: [['pasto', 4]], taiga: [['arbol_ceja', 4]], tundra: [['ichu', 2]]
   };
   let decoBase = []; // {mesh, items:[{tile, matrix}]}
   function buildDeco() {
@@ -1046,7 +1047,53 @@
       P.push(['box', SILVER, 0, 0.98, 0.02, 0.48, 0.42, 0.38]); P.push(['cone', SILVER, 0, 1.62, 0, 0.17, 0.22, 0.17]); P.push(['cyl12', SILVER, 0, 1.5, 0, 0.3, 0.02, 0.24]);
       P.push(['box', SILVER, 0.42, 0.8, 0.1, 0.03, 0.6, 0.05]); P.push(['box', '#6a5a3a', 0.42, 0.5, 0.1, 0.14, 0.03, 0.03]); return P; },
     republicano: (c) => { const P = []; leaderBody(P, { tunic: '#1f2433', tocapu: false, sleeve: '#1f2433', skin: '#d8a888', beard: '#4a3a2a' });
-      P.push(['box', WHITE, 0, 1.08, 0.17, 0.12, 0.2, 0.02]); P.push(['box', c, 0, 0.9, 0.2, 0.5, 0.06, 0.02, 0, 0, 0.5]); return P; }
+      P.push(['box', WHITE, 0, 1.08, 0.17, 0.12, 0.2, 0.02]); P.push(['box', c, 0, 0.9, 0.2, 0.5, 0.06, 0.02, 0, 0, 0.5]); return P; },
+    // Mesoamérica: corona de turquesa (xiuhuitzolli) y penacho de quetzal
+    tlatoani: (c) => { const P = []; leaderBody(P, { tunic: c, tocapu: false, cloak: TURQ, skin: '#9a6440' });
+      P.push(['box', WHITE, 0, 0.82, 0.2, 0.3, 0.42, 0.02]);
+      P.push(['cyl', TURQ, 0, 1.5, 0, 0.18, 0.08, 0.18]); P.push(['prism', TURQ, 0, 1.6, 0.1, 0.08, 0.14, 0.04, 0, 0, 0]);
+      for (let k = -5; k <= 5; k++) P.push(['box', k % 2 ? '#2f8f4f' : '#3fbf6f', k * 0.05, 1.78, -0.1, 0.035, 0.42, 0.01, -0.25, 0, k * 0.11]);
+      P.push(['cyl12', GOLD, -0.17, 1.37, 0, 0.05, 0.02, 0.05, 0, 0, Math.PI / 2]); P.push(['cyl12', GOLD, 0.17, 1.37, 0, 0.05, 0.02, 0.05, 0, 0, Math.PI / 2]);
+      P.push(['cyl12', '#c8743a', -0.42, 0.85, 0.12, 0.16, 0.03, 0.16, Math.PI / 2, 0, 0]); P.push(['cyl12', TURQ, -0.42, 0.85, 0.14, 0.1, 0.02, 0.1, Math.PI / 2, 0, 0]);
+      P.push(['box', '#6b4a2f', 0.42, 0.8, 0.1, 0.04, 0.6, 0.06]); for (let k = 0; k < 4; k++) P.push(['box', BLACK, 0.45, 0.6 + k * 0.12, 0.1, 0.03, 0.06, 0.04]); return P; },
+    maya: (c) => { const P = []; leaderBody(P, { tunic: c, tocapu: false, cloak: '#2f6b3a', tocapuColors: [TURQ, GOLD, RED] });
+      P.push(['torus', '#2fa39a', 0, 1.15, 0, 0.2, 0.2, 0.2, Math.PI / 2, 0, 0]);
+      P.push(['box', '#8a3a1f', 0, 1.62, 0, 0.3, 0.22, 0.28]); P.push(['box', GOLD, 0, 1.64, 0.15, 0.22, 0.14, 0.02]);
+      for (let k = -4; k <= 4; k++) P.push(['box', k % 2 ? '#2f8f4f' : '#1f6f6a', k * 0.045, 1.95, -0.08, 0.03, 0.5, 0.01, -0.4, 0, k * 0.1]);
+      staff(P, 0.42, 'sol', TURQ, 1.3); return P; },
+    // Norteamérica: tocado de plumas de águila
+    jefe_plumas: (c) => { const P = []; leaderBody(P, { tunic: '#9a7a52', tocapu: false, cloak: false, sleeve: '#9a7a52', skin: '#9a6440' });
+      P.push(['box', c, 0, 0.8, 0.2, 0.36, 0.06, 0.02]); P.push(['box', c, 0, 0.98, 0.2, 0.36, 0.06, 0.02]);
+      P.push(['cyl', c, 0, 1.47, 0, 0.18, 0.05, 0.18]);
+      for (let k = 0; k < 11; k++) { const a = -1.3 + k * 0.26; P.push(['box', WHITE, Math.sin(a) * 0.2, 1.62 + Math.cos(a) * 0.14, -0.05, 0.035, 0.3, 0.01, -0.2, 0, -a]); P.push(['box', BLACK, Math.sin(a) * 0.32, 1.62 + Math.cos(a) * 0.24, -0.06, 0.035, 0.07, 0.012, -0.2, 0, -a]); }
+      P.push(['cyl', BLACK, -0.17, 1.1, 0.06, 0.03, 0.42, 0.03]); P.push(['cyl', BLACK, 0.17, 1.1, 0.06, 0.03, 0.42, 0.03]);
+      P.push(['cyl', '#6b4a2f', 0.42, 0.75, 0.08, 0.02, 1.2, 0.02]); P.push(['box', RED, 0.42, 1.22, 0.08, 0.06, 0.18, 0.02]); return P; },
+    lonko: (c) => { const P = []; leaderBody(P, { tunic: '#2a2a3a', tocapu: false, cloak: false, sleeve: '#2a2a3a' });
+      P.push(['prism', c, 0, 0.98, 0, 0.62, 0.3, 0.46, 0, 0, 0]); for (let k = -2; k <= 2; k++) P.push(['box', k % 2 ? RED : WHITE, k * 0.1, 0.95, 0.2, 0.06, 0.05, 0.02]);
+      P.push(['cyl', SILVER, 0, 1.47, 0, 0.18, 0.04, 0.18]); P.push(['box', SILVER, 0, 1.47, 0.18, 0.06, 0.06, 0.01]);
+      P.push(['cyl', '#6b4a2f', 0.42, 0.85, 0.08, 0.015, 1.7, 0.015]); P.push(['cone', SILVER, 0.42, 1.75, 0.08, 0.03, 0.12, 0.03]); return P; },
+    // Colonia: sombrero de ala ancha, golilla y bastón de mando
+    virrey: (c) => { const P = []; leaderBody(P, { tunic: BLACK, tocapu: false, sleeve: BLACK, skin: '#d8a888', beard: '#5a4030', cloak: c });
+      P.push(['cyl12', WHITE, 0, 1.2, 0, 0.17, 0.05, 0.17]); P.push(['box', GOLD, 0, 0.9, 0.2, 0.06, 0.06, 0.02]);
+      P.push(['cyl12', BLACK, 0, 1.56, 0, 0.3, 0.02, 0.3]); P.push(['cyl', BLACK, 0, 1.63, 0, 0.15, 0.14, 0.15]); P.push(['box', WHITE, 0.12, 1.7, -0.05, 0.04, 0.16, 0.02, 0, 0, -0.4]);
+      P.push(['cyl', BLACK, 0.42, 0.65, 0.08, 0.02, 1.3, 0.02]); P.push(['sph', GOLD, 0.42, 1.32, 0.08, 0.04, 0.04, 0.04]); return P; },
+    monarca: (c) => { const P = []; leaderBody(P, { tunic: '#1f2433', tocapu: false, sleeve: '#1f2433', skin: '#d8a888', beard: '#4a3a2a', cloak: '#8a1f2a' });
+      P.push(['box', WHITE, 0, 0.82, -0.18, 0.64, 0.12, 0.05]); P.push(['box', c, 0, 0.95, 0.2, 0.5, 0.06, 0.02, 0, 0, 0.5]);
+      P.push(['cyl', GOLD, 0, 1.53, 0, 0.16, 0.08, 0.16]); for (let k = 0; k < 5; k++) P.push(['cone', GOLD, Math.cos(k * 1.256) * 0.14, 1.62, Math.sin(k * 1.256) * 0.14, 0.03, 0.08, 0.03]);
+      P.push(['sph', RED, 0, 1.53, 0.16, 0.03, 0.03, 0.02]);
+      P.push(['cyl', GOLD, 0.42, 0.75, 0.08, 0.02, 1.0, 0.02]); P.push(['ico', GOLD, 0.42, 1.28, 0.08, 0.06, 0.06, 0.06]); return P; },
+    // Independencia y república: uniforme con charreteras y bicornio
+    militar: (c) => { const P = []; leaderBody(P, { tunic: '#1f2a4a', tocapu: false, sleeve: '#1f2a4a', skin: '#c89070', beard: false, belt: WHITE });
+      P.push(['box', GOLD, -0.27, 1.17, 0, 0.14, 0.03, 0.14]); P.push(['box', GOLD, 0.27, 1.17, 0, 0.14, 0.03, 0.14]);
+      for (let k = 0; k < 3; k++) P.push(['sph', GOLD, 0, 0.8 + k * 0.12, 0.215, 0.02, 0.02, 0.01]);
+      P.push(['box', c, 0, 0.98, 0.2, 0.5, 0.06, 0.02, 0, 0, -0.5]);
+      P.push(['prism', BLACK, 0, 1.6, 0, 0.42, 0.14, 0.14, 0, Math.PI / 2, 0]); P.push(['sph', c, 0.1, 1.62, 0.07, 0.04, 0.04, 0.02]);
+      P.push(['box', SILVER, 0.4, 0.62, 0.1, 0.03, 0.55, 0.04, 0, 0, 0.15]); return P; },
+    moderno: (c) => { const P = []; leaderBody(P, { tunic: '#2a2f3a', tocapu: false, sleeve: '#2a2f3a', skin: '#c89070', hair: '#3a2a20' });
+      P.push(['box', WHITE, 0, 1.08, 0.17, 0.12, 0.2, 0.02]); P.push(['box', c, 0, 1.02, 0.18, 0.04, 0.2, 0.02]);
+      P.push(['box', c, 0, 0.9, 0.2, 0.5, 0.06, 0.02, 0, 0, 0.5]); return P; },
+    presidenta: (c) => { const P = []; leaderBody(P, { tunic: '#2a2f3a', longDress: true, tocapu: false, sleeve: '#2a2f3a', skin: '#c89070', hair: '#3a2a20', belt: '#2a2f3a' });
+      P.push(['sph', '#3a2a20', 0, 1.32, -0.08, 0.17, 0.2, 0.12]); P.push(['box', c, 0, 0.98, 0.2, 0.5, 0.06, 0.02, 0, 0, 0.5]); return P; }
   };
   function leaderGeo(model, color) {
     const build = PC.LEADER_MODELS[model] || PC.LEADER_MODELS.curaca;

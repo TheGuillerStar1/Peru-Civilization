@@ -21,7 +21,10 @@ Como en Civilization, el menú va por pantallas: **pantalla principal** (Continu
 - **Líder histórico** con modelo 3D low-poly propio (mascapaicha y orejeras de los incas, el tocado de oro del Señor de Sipán, la máscara de jaguar de Chavín, la montera de Micaela Bastidas…) y ventaja única, independiente de la cultura: Pachacútec, Túpac Yupanqui, Huayna Cápac, Mama Ocllo, Señor de Sipán, Taycanamo, el sumo sacerdote de Chavín, Manco Inca, Micaela Bastidas y Túpac Amaru II.
 - **Punto de partida**: cualquier provincia del Perú, elegida en una lista o con un clic sobre la maqueta del menú.
 - **Acciones por unidad** según su tipo y su situación: fundar, abrir ruta comercial (caravana de llamas), arengar (comandantes históricos como Rumiñahui o Quisquis, que dan +20% a las tropas cercanas), fortificar, curar hasta sanar, saquear, centinela, modernizar, esperar y disolver.
-- **Diplomacia con los líderes rivales**, cada uno con su agenda: regalos, paso libre, alianzas (los aliados entran en tus guerras y te llaman a las suyas), denuncias, tributo, vasallaje y anexión por reciprocidad. Las acciones cuestan **influencia**.
+- **Diplomacia con los líderes rivales**, cada uno con su agenda: regalos, paso libre, **embajadas**, alianzas (los aliados entran en tus guerras y te llaman a las suyas), pedir ayuda en una guerra, denuncias, tributo, vasallaje y anexión por reciprocidad. Las acciones cuestan **influencia**.
+- **Líderes históricos para cada país, que se suceden con los años**: los Sapa Inca de Manco Cápac a Túpac Amaru I (o, si la conquista fracasa, una dinastía inca soberana), los virreyes del Perú, los tlatoanis mexicas de Tenoch a Cuauhtémoc, los ajaw mayas, los toquis mapuches, y los gobernantes de cada república: de Bolívar y Santander a Uribe en Colombia, de O'Higgins a Bachelet en Chile, de Washington a Obama, de Juárez a Sheinbaum… Cada sucesión aparece en la crónica y suaviza las viejas rencillas. Los rivales también cambian de nombre al independizarse (Virreinato del Río de la Plata → Provincias Unidas → Argentina).
+- **La IA toma la iniciativa**: te propone embajadas, paso libre, alianzas y guerras conjuntas contra un enemigo común; te exige tributo o te lanza **ultimátums** (paga, cede una ciudad o te invade); se denuncian y se alían entre ellos, y quien declara una guerra lanza una invasión real contra tus ciudades.
+- **Congreso de los pueblos** (Asamblea del oráculo de Pachacámac, Junta de los pueblos, Congreso Anfictiónico, Conferencia Panamericana, OEA según la época): cada 20 turnos se vota una resolución (condena del agresor, embargo, tregua general, fomento del comercio, patrimonio de los pueblos, limitación de armamentos o sede permanente). Cada miembro vota según su agenda y sus relaciones; puedes gastar influencia para sumar votos, y los demás recuerdan cómo votaste.
 - **Guerras**: formales (tras denunciar) o sorpresa (con penalización). La paz se negocia según el **puntaje de guerra**: paz blanca, reparaciones en oro o cesión de una ciudad.
 - **Embarcaciones según la época**: caballito de totora, balsa con vela, galeón, vapor y buque moderno.
 
@@ -58,8 +61,9 @@ La partida se guarda automáticamente en el navegador cada turno y también se p
 
 ### Fases
 1. **Perú** — completa.
-2. **Sudamérica** — jugable. Se desbloquea al controlar el 80% de las provincias. Conservas tecnologías, ciudades (reubicadas por coordenadas reales) y ejército. El continente se puebla según el año: pueblos originarios (muiscas, mapuches, guaraníes, tupíes…), virreinatos o repúblicas.
-3. **América** y 4. **El Mundo** — en desarrollo. La arquitectura de fases (`js/core/phases.js`) ya está preparada.
+2. **Sudamérica** — jugable. Se desbloquea al controlar el 80% de las provincias. Conservas tecnologías, ciudades (reubicadas por coordenadas reales) y ejército. El continente se puebla según el año: pueblos originarios (muiscas, mapuches, guaraníes, tupíes…), virreinatos o repúblicas. Si llegas antes de 1500, los europeos desembarcan en su fecha (Brasil portugués en 1500, Nueva Granada en 1525, el Río de la Plata en 1536, Chile en 1541…), con epidemias por delante y refuerzos de ultramar; las colonias pueden afianzarse e independizarse o ser expulsadas.
+3. **América** — jugable. Se desbloquea al controlar el 75% de las regiones de Sudamérica. Un mapa de todo el continente, del Ártico a la Tierra del Fuego (≈880 hexágonos de tierra y 68 regiones, con la longitud comprimida según la latitud para que Canadá no ocupe más que Sudamérica), con tundra, bosque boreal, praderas, las Rocosas, la Sierra Madre, los Apalaches, los Grandes Lagos, el Misisipi y las Antillas. Aparecen mexicas (o toltecas antes de 1325), mayas, purépechas, zapotecas, taínos, la cultura del Misisipi, los haudenosaunee, lakotas o cheroquis; luego Nueva España, Nueva Francia y las colonias británicas, y finalmente México, Estados Unidos, Canadá, Centroamérica, Cuba o Haití.
+4. **El Mundo** — en desarrollo. Se anunciará al controlar el 70% de las regiones de América.
 
 ## Estructura
 
@@ -67,7 +71,9 @@ La partida se guarda automáticamente en el navegador cada turno y también se p
 index.html, css/style.css
 js/core/util.js        azar con semilla, ruido, hexágonos
 js/data/geo.js         geografía del Perú (contorno, Andes, ríos, abras, provincias, yacimientos)
-js/data/geo_sa.js      geografía de Sudamérica (Fase 2)
+js/data/geo_sa.js      geografía de Sudamérica (Fase 2) y sus colonizaciones
+js/data/geo_am.js      geografía de América (Fase 3): contorno, islas, cordilleras, ríos, regiones y facciones por época
+js/data/leaders_hist.js líderes históricos de cada país por año y nombres de los países según la época
 js/data/rules.js       terrenos, fauna, recursos, mejoras, tecnologías, unidades, edificios, maravillas, dificultad
 js/data/civs.js        culturas jugables, facciones, apariciones históricas, escenarios
 js/core/mapgen.js      generador del mapa del Perú (proyección por macrozonas)
@@ -76,7 +82,8 @@ js/core/ai.js          IA de las facciones
 js/core/setup.js       creación, guardado y carga de partidas
 js/core/events.js      historia dinámica, llegada europea, eventos y divergencias
 js/core/diplomacy.js   guerra, paz y anexión por reciprocidad
-js/core/phases.js      fases de expansión (Sudamérica)
+js/core/phases.js      fases de expansión: mapas continentales y traslado de tu civilización
+js/core/world.js       historia viva: sucesión de líderes, independencias, colonizaciones, iniciativas de la IA y congreso
 js/ui/icons.js         iconos y emblemas tocapu
 js/ui/render3d.js      maqueta 3D (three.js)
 js/ui/ui.js            interfaz
@@ -91,4 +98,4 @@ tests/smoke.js         prueba que juega partidas completas en piloto automático
 npm test          # o: node tests/smoke.js [semilla] [escenario] [cultura]
 ```
 
-Juega 10 partidas completas, con todos los escenarios, varias culturas, las 4 dificultades y la transición a la Fase 2, y falla si hay algún error.
+Juega 12 partidas completas, con todos los escenarios, varias culturas, las 4 dificultades y las transiciones a las Fases 2 y 3, y falla si hay algún error.

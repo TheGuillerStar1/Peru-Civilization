@@ -795,7 +795,7 @@
           u.hp -= a;
           if (u.hp <= 0) {
             PC.removeUnit(u);
-            PC.log(`${PC.UNITS[u.type].name} de ${civ.name} perece por desgaste en ${PC.TERRAIN[t.terrain].name.toLowerCase()}.`, 'war', [civ.id]);
+            PC.log(`${PC.UNITS[u.type].name} de ${civ.name} perece por desgaste en ${(PC.terrainName ? PC.terrainName(t) : PC.TERRAIN[t.terrain].name).toLowerCase()}.`, 'war', [civ.id]);
             return;
           }
         }
