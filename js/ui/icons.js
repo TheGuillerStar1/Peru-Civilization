@@ -50,10 +50,12 @@
     epidemia: 'alerta', llegada_espanoles: 'barco', caida_capital: 'guerra', corona_desiste: 'paz', embajada_europea: 'diplomacia',
     contacto_inverso: 'barco', florecimiento: 'cultura', propuesta_paz: 'paz', tupac_amaru: 'guerra', independencia: 'sol',
     guano: 'oro', guerra_pacifico: 'guerra', caucho: 'recurso', reforma_agraria: 'alimento', bancarrota: 'alerta', revuelta: 'alerta',
-    fase2: 'mapa', fase3: 'mapa'
+    fase2: 'mapa', fase3: 'mapa', propuesta_alianza: 'diplomacia', llamada_aliado: 'guerra', exigencia_tributo: 'oro'
   };
   PC.unitIconKey = function (type) {
     const U = PC.UNITS[type];
+    if (U.commander) return 'corona';
+    if (type === 'caravana') return 'oro';
     if (U.cat === 'civil') return 'civil';
     if (type === 'canon') return 'artilleria';
     if (U.ranged) return 'distancia';

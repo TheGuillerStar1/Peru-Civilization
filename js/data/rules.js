@@ -158,6 +158,10 @@
     fusilero:   U('fusilero', 'Fusilero', { atk: 26, def: 24, cost: 130, tech: 'fusil', icon: '' }),
     infanteria: U('infanteria', 'Infantería moderna', { atk: 36, def: 34, cost: 180, tech: 'radio', icon: '' }),
     blindado:   U('blindado', 'Blindado', { atk: 48, def: 38, moves: 3, cost: 240, tech: 'motor', needs: ['petroleo'], icon: '' }),
+    apu:        U('apu', 'Apu (comandante)', { atk: 0, def: 4, cost: 50, tech: 'guerra', commander: true, icon: '',
+                  desc: 'Comandante histórico: +20% de ataque y defensa a tus unidades en su casilla y en las adyacentes. Puede arengarlas para curarlas.' }),
+    caravana:   U('caravana', 'Caravana de llamas', { cat: 'civil', cost: 45, tech: 'camelidos', icon: '',
+                  desc: 'Llévala a una ciudad extranjera en paz para abrir una ruta comercial: oro para ambos y mejores relaciones.' }),
     // Unidades exclusivas de facciones externas.
     conquistador: U('conquistador', 'Conquistador', { atk: 16, def: 14, moves: 3, cost: 999, icon: '', unique: true }),
     caballero:  U('caballero', 'Caballero español', { atk: 20, def: 12, moves: 4, cost: 999, icon: '', unique: true }),

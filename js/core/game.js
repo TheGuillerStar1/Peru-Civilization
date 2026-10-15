@@ -39,13 +39,22 @@
     PC.rel(a, b).war = true; PC.rel(b, a).war = true;
     PC.rel(a, b).since = PC.rel(b, a).since = G().turn;
     PC.rel(b, a).att -= 40;
+    PC.rel(a, b).warScore = 0; PC.rel(b, a).warScore = 0;
+    PC.cancelRoutes && PC.cancelRoutes(a.id, b.id);
     if (!quiet) PC.log(`${a.name} declara la guerra a ${b.name}.`, 'war', [a.id, b.id]);
+    if (PC.onWarDeclared) PC.onWarDeclared(a, b);
+  };
+  PC.addWarScore = function (aId, bId, v) {
+    if (aId === bId) return;
+    PC.rel(aId, bId).warScore = (PC.rel(aId, bId).warScore || 0) + v;
+    PC.rel(bId, aId).warScore = (PC.rel(bId, aId).warScore || 0) - v;
   };
   PC.makePeace = function (a, b) {
     if (!PC.atWar(a.id, b.id)) return;
     PC.rel(a, b).war = false; PC.rel(b, a).war = false;
     PC.rel(a, b).since = PC.rel(b, a).since = G().turn;
     PC.rel(a, b).att += 15; PC.rel(b, a).att += 15;
+    PC.rel(a, b).warScore = 0; PC.rel(b, a).warScore = 0;
     PC.log(`${a.name} y ${b.name} firman la paz.`, 'war', [a.id, b.id]);
   };
 
@@ -145,6 +154,8 @@
       if (t.terrain === 'oceano' && civ.techs.pesca) f += 1;
       if (t.terrain === 'puna' && civ.techs.camelidos) p += 1;
       if (t.terrain === 'valle' && civ.techs.puquios) f += 1;
+      if (t.terrain === 'valle' && civ.bonus.valleFood) f += civ.bonus.valleFood;
+      if (t.imp === 'mina' && (t.res === 'oro' || t.res === 'plata') && civ.bonus.goldMines) g += civ.bonus.goldMines;
       if ((t.terrain === 'valle' || t.imp === 'chacra') && civ.techs.fertilizantes) f += 1;
       if (t.imp === 'mina' && civ.techs.vapor) p += 1;
       const zy = civ.bonus.zoneYield && civ.bonus.zoneYield[t.zone];
@@ -168,7 +179,8 @@
     worked.forEach((w) => { f += w.y.f; p += w.y.p; g += w.y.g; });
     PC.cityBuildings(city).forEach((b) => { if (b.y) { f += b.y.f || 0; p += b.y.p || 0; g += b.y.g || 0; s += b.y.s || 0; c += b.y.c || 0; } });
     c += civ.bonus.culture || 0; g += civ.bonus.gold || 0; p += civ.bonus.prod || 0;
-    if (civ.capitalId === city.id) { p += 2; g += 2; s += 1; c += 1; }
+    if (civ.capitalId === city.id) { p += 2 + (civ.bonus.capitalProd || 0); g += 2; s += 1; c += 1; }
+    G().routes && G().routes.forEach((r) => { if (r.from === city.id || r.to === city.id) g += 2 + Math.floor(PC.eraOf(civ) / 2); });
     let mult = 1;
     if (civ.stability >= 70) mult = 1.1; else if (civ.stability < 35) mult = 0.85;
     if (!civ.isPlayer) mult *= PC.diff().aiYield;
@@ -177,7 +189,7 @@
   };
   PC.growthNeeded = (city) => {
     const civ = PC.civ(city.civ);
-    return Math.floor((12 + 8 * city.pop + city.pop * city.pop * 0.6) * (civ.techs.ceramica ? 0.85 : 1));
+    return Math.floor((12 + 8 * city.pop + city.pop * city.pop * 0.6) * (civ.techs.ceramica ? 0.85 : 1) * (1 - (civ.bonus.growth || 0) / 100));
   };
 
   // --- Ciudades
@@ -261,6 +273,7 @@
       if (U.tech && !civ.techs[U.tech]) return false;
       if (U.needs && !U.needs.some((r) => PC.civHasRes(civ, r))) return false;
       if (id === 'colono' && city.pop < 2) return false;
+      if (U.commander && PC.civUnits(civ).filter((x) => PC.UNITS[x.type].commander).length >= 1 + Math.floor(PC.civCities(civ).length / 4)) return false;
       return true;
     }
     if (kind === 'building') {
@@ -312,6 +325,7 @@
   PC.maxMoves = function (u) {
     const U = PC.utype(u), civ = PC.civ(u.civ);
     let m = U.moves;
+    if (civ.bonus.exploreMove && (u.type === 'explorador' || PC.tile(u.t).terrain === 'oceano')) m += civ.bonus.exploreMove;
     if (U.cat === 'military' || u.type === 'colono' || u.type === 'trabajador') {
       Object.keys(G().wonders).forEach((w) => { if (G().wonders[w] === civ.id && PC.WONDERS[w].gmove) m += PC.WONDERS[w].gmove; });
     }
@@ -332,6 +346,11 @@
     }
     if (!spot) return null;
     const u = { id: PC.uid(), type, civ: civ.id, t: spot.i, hp: 100, moves: U.moves, fort: false, moved: false, path: null, task: null, auto: false };
+    if (U.commander) {
+      const pool = PC.COMMANDER_NAMES[civ.key === 'espana' ? 'espana' : PC.eraOf(civ) >= 7 ? 'moderno' : 'andino'];
+      const used = new Set(g.units.filter((x) => x.name).map((x) => x.name));
+      u.name = pool.find((n) => !used.has(n)) || pool[g.units.length % pool.length];
+    }
     g.units.push(u);
     return u;
   };
@@ -518,7 +537,14 @@
       if (city) mult *= 1.25 + PC.cityDefBonus(city);
     }
     if (civ.selva && PC.TERRAIN[t.terrain].zone === 'selva') mult *= 1.25;
+    if (role === 'def' && civ.bonus.defense) mult *= 1 + civ.bonus.defense / 100;
+    if (role === 'def' && civ.bonus.mountainDef && (t.terrain === 'sierra' || t.terrain === 'cordillera' || t.terrain === 'puna')) mult *= 1 + civ.bonus.mountainDef / 100;
+    if (!U.commander && PC.commanderNear(u)) mult *= 1.2;
     return Math.max(0.5, base * mult * (0.5 + 0.5 * u.hp / 100));
+  };
+  PC.commanderNear = function (u) {
+    const t = PC.tile(u.t);
+    return G().units.some((o) => o.civ === u.civ && o !== u && PC.UNITS[o.type].commander && PC.dist(PC.tile(o.t), t) <= 1);
   };
   PC.cityDefBonus = function (city) {
     const civ = PC.civ(city.civ);
@@ -543,7 +569,12 @@
     const d = PC.bestDefender(ti, u.civ);
     const city = t.cityId ? PC.cityAt(ti) : null;
     const D = d ? PC.unitStrength(d, 'def', t) : city ? PC.cityStrength(city) : 0.5;
-    return { A, D, ratio: A / D };
+    const civ = PC.civ(u.civ);
+    let a = A;
+    if (city && civ.bonus.atkCity) a *= 1 + civ.bonus.atkCity / 100;
+    const foe = d ? PC.civ(d.civ) : city ? PC.civ(city.civ) : null;
+    if (foe && foe.external && civ.bonus.atkVsExternal) a *= 1 + civ.bonus.atkVsExternal / 100;
+    return { A: a, D, ratio: a / D };
   };
   PC.attack = function (u, ti) {
     const g = G();
@@ -564,6 +595,7 @@
       const dn = PC.UNITS[def.type].name, dc = PC.civ(def.civ);
       if (def.hp <= 0) {
         PC.removeUnit(def);
+        PC.addWarScore(u.civ, def.civ, 5);
         text = `${atkCiv.name} (${U.name}) destruye a ${dn} de ${dc.name}.`;
         if (!U.ranged && u.hp > 0 && !PC.bestDefender(ti, u.civ) && !city) PC.relocate(u, ti, 0);
       } else text = `${U.name} de ${atkCiv.name} ataca a ${dn} de ${dc.name} (−${dmgD} / −${dmgA}).`;
@@ -571,6 +603,7 @@
     } else if (city) {
       city.hp -= Math.round(dmgD * 0.8); u.hp -= dmgA;
       if (city.hp <= 0 && !U.ranged && u.hp > 0) {
+        PC.addWarScore(u.civ, city.civ, 25);
         PC.captureCity(city, u.civ);
         PC.relocate(u, ti, 0);
       } else {
@@ -659,10 +692,10 @@
     const over = cities.length - PC.capacity(civ);
     if (over > 0) { t -= over * 4; parts.push(['Exceso de ciudades', -over * 4]); }
     const conq = cities.filter((c) => c.conquered).length;
-    if (conq) { const v = conq * (civ.techs.mitmaq ? 1 : 3); t -= v; parts.push(['Pueblos conquistados', -v]); }
+    if (conq && !civ.bonus.noConqPenalty) { const v = conq * (civ.techs.mitmaq ? 1 : 3); t -= v; parts.push(['Pueblos conquistados', -v]); }
     if (civ.gold < 0) { t -= 12; parts.push(['Bancarrota', -12]); }
     const wars = G().civs.filter((o) => o.alive && PC.atWar(civ.id, o.id) && PC.power(o) > PC.power(civ)).length;
-    if (wars) { t -= wars * 5; parts.push(['Guerra contra potencias', -wars * 5]); }
+    if (wars) { const v = Math.min(0, -wars * 5 + (civ.bonus.warStab || 0)); t += v; parts.push(['Guerra contra potencias', v]); }
     civ.stabMods.forEach((m) => { t += m.v; parts.push([m.name, m.v]); });
     return { value: PC.clamp(Math.round(t), 0, 100), parts };
   };
@@ -746,12 +779,14 @@
         let h = 10;
         if (t.owner === civ.id) h = 15;
         if (inCity) { h = 25; if (PC.cityAt(t.i).buildings.includes('tambo')) h += 15; }
+        h += civ.bonus.heal || 0;
+        if (u.heal) h += 5;
         u.hp = Math.min(100, u.hp + h);
       }
       if (PC.faunaRisk(u, t) > 0 && PC.rand() < PC.faunaRisk(u, t)) {
         const F = PC.FAUNA[t.fauna];
         u.hp -= F.dmg;
-        if (civ.isPlayer) PC.log(`${F.icon} ${F.text} tu ${PC.UNITS[u.type].name}${u.hp <= 0 ? ', que no sobrevive' : ''} (−${F.dmg}).`, 'war', [civ.id]);
+        if (civ.isPlayer) PC.log(`${F.text} tu ${PC.UNITS[u.type].name}${u.hp <= 0 ? ', que no sobrevive' : ''} (−${F.dmg}).`, 'war', [civ.id]);
         if (u.hp <= 0) { PC.removeUnit(u); return; }
       }
       if (PC.isMil(u)) {
@@ -765,6 +800,7 @@
           }
         }
       }
+      if (u.heal && u.hp >= 100) { u.heal = false; if (civ.isPlayer) PC.log(`${PC.UNITS[u.type].name} terminó de curarse.`, 'city', [civ.id]); }
       u.fort = !u.moved && PC.isMil(u) ? true : u.fort;
       u.moved = false;
       u.moves = PC.maxMoves(u);
@@ -791,7 +827,7 @@
     if (!T.attr || t.cityId || t.owner === u.civ || t.road || t.feature === 'abra') return 0;
     if (t.feature === 'rio' && T.zone === 'selva') return 0;
     if (t.imp && PC.IMPROVEMENTS[t.imp].noAttr) return 0;
-    if (T.zone === 'selva' && (civ.bonus.selvaNative || (U.noAttrIn && U.noAttrIn.includes('selva')))) return 0;
+    if (T.zone === 'selva' && (civ.bonus.selvaNative || civ.bonus.selvaNoAttr || (U.noAttrIn && U.noAttrIn.includes('selva')))) return 0;
     let a = T.attr;
     if (T.zone === 'selva' && civ.techs.amazonia) a *= 0.5;
     if (t.terrain === 'cordillera' && civ.techs.puentes) a *= 0.5;
@@ -866,6 +902,8 @@
     g.map.tiles.forEach((t) => {
       if (t && PC.TERRAIN[t.terrain].zone === 'selva' && g.explored[t.i] >= 0 && g.turn - g.explored[t.i] > 8) g.explored[t.i] = -1;
     });
+    if (PC.wakeSentries) PC.wakeSentries();
+    if (PC.diplomacyTick) PC.diplomacyTick();
     if (PC.historyTick) PC.historyTick();
     if (PC.checkEvents) PC.checkEvents();
     const player = PC.player();

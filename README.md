@@ -14,6 +14,14 @@ python3 -m http.server 8000   # y abre http://localhost:8000
 
 **Controles:** clic para seleccionar y mover · anillo rojo = atacar · arrastrar para desplazar · botón derecho o `Q`/`E` para girar · rueda = zoom · `Enter` terminar turno · `N` siguiente unidad · `F` fortificar · `B` fundar ciudad · `Espacio` esperar · `T` tecnologías · `D` diplomacia · `P` provincias · `C` crónica. En tablet: un dedo desplaza, dos dedos acercan y giran.
 
+### Líderes, inicio y diplomacia (inspirado en Civilization VII)
+- **Líder histórico** con ventaja única, independiente de la cultura: Pachacútec, Túpac Yupanqui, Huayna Cápac, Mama Ocllo, Señor de Sipán, Taycanamo, el sumo sacerdote de Chavín, Manco Inca, Micaela Bastidas y Túpac Amaru II.
+- **Punto de partida**: cualquier provincia del Perú, elegida en una lista o con un clic sobre la maqueta del menú.
+- **Acciones por unidad** según su tipo y su situación: fundar, abrir ruta comercial (caravana de llamas), arengar (comandantes históricos como Rumiñahui o Quisquis, que dan +20% a las tropas cercanas), fortificar, curar hasta sanar, saquear, centinela, modernizar, esperar y disolver.
+- **Diplomacia con los líderes rivales**, cada uno con su agenda: regalos, paso libre, alianzas (los aliados entran en tus guerras y te llaman a las suyas), denuncias, tributo, vasallaje y anexión por reciprocidad. Las acciones cuestan **influencia**.
+- **Guerras**: formales (tras denunciar) o sorpresa (con penalización). La paz se negocia según el **puntaje de guerra**: paz blanca, reparaciones en oro o cesión de una ciudad.
+- **Embarcaciones según la época**: caballito de totora, balsa con vela, galeón, vapor y buque moderno.
+
 ### Gráficos
 Maqueta 3D low-poly hecha con three.js sobre un manto tejido. La interfaz usa iconos **tocapu** (pictogramas tejidos en una rejilla de 9×9) y no emojis; el sistema visual está documentado en [`DESIGN.md`](DESIGN.md).
 - **Unidades**: escuadrones con el equipo de su época (porra, honda, macana, lanza de cobre, hierro, arcabuz, fusil, casco moderno, caballería, cañón, blindado). Cada una lleva el estandarte con el emblema de su civilización y un anillo de bando: amarillo si es tuya, rojo pulsante si es enemiga en guerra.

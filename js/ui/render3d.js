@@ -299,11 +299,7 @@
           (per[kind] = per[kind] || []).push({ tile: t, matrix: m4.clone() });
         }
       });
-      // Nube sobre lo inexplorado
-      e.set(0, PC.hash2(t.c, t.r, 31) * 6.28, 0); q.setFromEuler(e);
-      vp.set(cx, 0.75 + PC.hash2(t.c, t.r, 32) * 0.2, cz); vs.set(1.25, 1.1, 1.25);
-      m4.compose(vp, q, vs);
-      (per.nube = per.nube || []).push({ tile: t, matrix: m4.clone(), cloud: true });
+
     });
     Object.keys(per).forEach((kind) => {
       const items = per[kind];
@@ -319,11 +315,73 @@
     decoBase.forEach(({ mesh, items, kind }) => {
       items.forEach((it, k) => {
         const ex = PC.isExplored(it.tile.i);
-        const show = kind === 'nube' ? !ex : ex && !(it.tile.cityId && ['arbol', 'arbol_ceja', 'palmera', 'surco', 'colina'].includes(kind));
+        const show = ex && !(it.tile.cityId && ['arbol', 'arbol_ceja', 'palmera', 'surco', 'colina'].includes(kind));
         mesh.setMatrixAt(k, show ? it.matrix : ZERO);
       });
       mesh.instanceMatrix.needsUpdate = true;
     });
+  }
+
+  // Niebla de guerra: un manto continuo (no piezas sueltas) cuya máscara se pinta en un canvas
+  // con las casillas inexploradas y se difumina; una textura de nubes se desliza despacio encima.
+  let fog = null;
+  function noiseTexture() {
+    if (texCache.noise) return texCache.noise;
+    const n = 128, cv = document.createElement('canvas'); cv.width = cv.height = n;
+    const x = cv.getContext('2d');
+    const img = x.createImageData(n, n);
+    for (let yy = 0; yy < n; yy++) for (let xx = 0; xx < n; xx++) {
+      let v = 0, amp = 1, tot = 0;
+      for (let o = 0; o < 4; o++) { const f = 4 << o; v += amp * (PC.noise2(xx * f / n, yy * f / n, 77 + o) * 0.5 + PC.noise2(((xx + n / 2) % n) * f / n, yy * f / n, 77 + o) * 0.5); tot += amp; amp *= 0.5; }
+      v /= tot;
+      const c = 150 + v * 105;
+      const k = (yy * n + xx) * 4;
+      img.data[k] = c * 0.86; img.data[k + 1] = c * 0.85; img.data[k + 2] = c; img.data[k + 3] = 255;
+    }
+    x.putImageData(img, 0, 0);
+    const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace;
+    texCache.noise = t;
+    return t;
+  }
+  function buildFog() {
+    if (fog) { fog.layers.forEach((m) => { scene.remove(m); m.geometry.dispose(); }); }
+    let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity;
+    tileList.forEach((t) => { const [x, z] = R.tileXZ(t); x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, z); z1 = Math.max(z1, z); });
+    x0 -= 3; x1 += 3; z0 -= 3; z1 += 3;
+    const scale = 12;
+    const cv = document.createElement('canvas'); cv.width = Math.ceil((x1 - x0) * scale); cv.height = Math.ceil((z1 - z0) * scale);
+    const work = document.createElement('canvas'); work.width = cv.width; work.height = cv.height;
+    const mask = new THREE.CanvasTexture(cv);
+    const layers = [0, 1].map((k) => {
+      const tex = noiseTexture().clone(); tex.needsUpdate = true; tex.repeat.set((x1 - x0) / (k ? 9 : 14), (z1 - z0) / (k ? 9 : 14));
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), new THREE.MeshStandardMaterial({
+        color: k ? 0xc9c4e0 : 0x8e8ab0, map: tex, alphaMap: mask, transparent: true, depthWrite: false, roughness: 1, opacity: k ? 0.55 : 1 }));
+      m.rotation.x = -Math.PI / 2; m.position.set((x0 + x1) / 2, k ? 1.32 : 1.12, (z0 + z1) / 2); m.renderOrder = 6 + k;
+      scene.add(m);
+      return m;
+    });
+    fog = { cv, work, mask, layers, x0, z0, scale };
+  }
+  function updateFog() {
+    if (!fog) return;
+    const { cv, work, scale, x0, z0 } = fog;
+    const w = work.getContext('2d');
+    w.clearRect(0, 0, work.width, work.height);
+    w.fillStyle = '#fff';
+    tileList.forEach((t) => {
+      if (PC.isExplored(t.i)) return;
+      const [cx, cz] = R.tileXZ(t);
+      w.beginPath();
+      for (let k = 0; k < 6; k++) { const [a, b] = hexCorner(cx, cz, k, 1.12); const px = (a - x0) * scale, py = (b - z0) * scale; if (k) w.lineTo(px, py); else w.moveTo(px, py); }
+      w.closePath(); w.fill();
+    });
+    const c = cv.getContext('2d');
+    c.clearRect(0, 0, cv.width, cv.height);
+    c.filter = 'blur(7px)';
+    c.drawImage(work, 0, 0);
+    c.filter = 'none';
+    fog.mask.needsUpdate = true;
+    fog.layers.forEach((m) => { m.visible = !PC.G.revealAll; });
   }
 
   // Ríos, abras y lagos: piezas fijas por casilla.
@@ -652,20 +710,81 @@
       case 'colono': person(parts, -0.12, 0, { tunic, weapon: 'baston' }); quadruped(CREAM, 0.12, 0.02).forEach((p) => parts.push(p)); parts.push(['box', civColor, 0.12, 0.18, 0.02, 0.12, 0.05, 0.12]); break;
       case 'trabajador': person(parts, 0, 0, { tunic, weapon: 'taclla', headband: CREAM }); parts.push(['cyl', '#b8913e', -0.1, 0.25, -0.05, 0.05, 0.08, 0.05]); break;
       case 'explorador': person(parts, 0, 0, { tunic, weapon: 'baston', feather: '#e2a72e' }); break;
+      case 'apu':
+        person(parts, 0, 0, { tunic, weapon: 'estrella', helmet: 'cobre', band: '#e2a72e', armor: shadeHex(civColor, 0.5), feather: '#c23a50' });
+        parts.push(['cyl12', '#e2a72e', 0, 0.48, -0.02, 0.05, 0.012, 0.05, Math.PI / 2, 0, 0]);
+        person(parts, -0.22, 0.12, { tunic: shadeHex(civColor, 0.8), weapon: 'lanza' });
+        parts.push(['cyl12', '#efe4cc', 0.22, 0.012, 0.12, 0.12, 0.02, 0.12]);
+        break;
+      case 'caravana':
+        person(parts, -0.2, 0.05, { tunic, weapon: 'baston', headband: CREAM });
+        quadruped(CREAM, 0.05, 0.08).forEach((p) => parts.push(p)); parts.push(['box', '#a3243b', 0.05, 0.18, 0.08, 0.12, 0.05, 0.11]);
+        quadruped('#8a6040', 0.22, -0.1).forEach((p) => parts.push(p)); parts.push(['box', '#e2a72e', 0.22, 0.18, -0.1, 0.12, 0.05, 0.11]);
+        break;
       default: many(1, { weapon: 'porra' });
     }
     // Asta del estandarte
     parts.push(['cyl', '#2a1f18', 0.0, 0.42, -0.3, 0.012, 0.84, 0.012]);
     return parts;
   }
+  // Embarcaciones según la época del dueño: caballito de totora, balsa con vela, galeón, vapor y buque moderno.
+  function boatKind(u) {
+    const civ = PC.civ(u.civ);
+    if (civ.key === 'espana') return 'galeon';
+    const e = PC.eraOf(civ);
+    return e <= 2 ? 'totora' : e <= 4 ? 'balsa' : e <= 6 ? 'galeon' : e <= 7 ? 'vapor' : 'moderno';
+  }
+  function boatParts(kind, civColor) {
+    const parts = [];
+    const crew = (n, dx) => { for (let k = 0; k < n; k++) { const sub = []; person(sub, 0, 0, { tunic: civColor }); sub.forEach((p) => { p[2] = p[2] * 0.7 + dx + k * 0.14; p[3] = p[3] * 0.7 + 0.1; p[4] *= 0.7; p[5] *= 0.7; p[6] *= 0.7; p[7] *= 0.7; parts.push(p); }); } };
+    if (kind === 'totora') {
+      parts.push(['cyl', '#c9b46a', 0, 0.06, 0, 0.07, 0.62, 0.07, 0, 0, Math.PI / 2]);
+      parts.push(['cyl', '#b8a35a', 0, 0.06, 0.09, 0.06, 0.56, 0.06, 0, 0, Math.PI / 2]);
+      parts.push(['cone', '#c9b46a', 0.36, 0.12, 0.045, 0.06, 0.2, 0.06, 0, 0, -0.9]);
+      parts.push(['cone', '#c9b46a', -0.34, 0.11, 0.045, 0.05, 0.16, 0.05, 0, 0, 0.9]);
+      crew(1, -0.05);
+      parts.push(['cyl', WOOD, 0.1, 0.18, 0.05, 0.008, 0.36, 0.008, 0.6, 0, 0]);
+    } else if (kind === 'balsa') {
+      for (let k = -2; k <= 2; k++) parts.push(['cyl', '#8a6a44', 0, 0.04, k * 0.07, 0.035, 0.7 - Math.abs(k) * 0.08, 0.035, 0, 0, Math.PI / 2]);
+      parts.push(['cyl', WOOD, 0, 0.4, 0, 0.015, 0.7, 0.015]);
+      parts.push(['box', CREAM, 0, 0.45, 0.01, 0.02, 0.4, 0.38]);
+      parts.push(['box', civColor, 0, 0.32, 0.011, 0.021, 0.06, 0.38]);
+      crew(2, -0.24);
+    } else if (kind === 'galeon') {
+      parts.push(['box', '#6a4a2f', 0, 0.1, 0, 0.7, 0.14, 0.24]);
+      parts.push(['box', '#5a3a22', -0.28, 0.22, 0, 0.16, 0.12, 0.22]);
+      parts.push(['prism', '#6a4a2f', 0.4, 0.1, 0, 0.12, 0.24, 0.14, Math.PI / 2, 0, -Math.PI / 2]);
+      [[-0.05, 0.75], [0.2, 0.6]].forEach(([x, h]) => { parts.push(['cyl', WOOD, x, 0.17 + h / 2, 0, 0.015, h, 0.015]); parts.push(['box', '#efe9dc', x + 0.01, 0.2 + h * 0.6, 0, 0.02, h * 0.5, 0.3]); });
+      parts.push(['box', '#a3243b', -0.05, 0.62, 0.0, 0.021, 0.05, 0.3]);
+      crew(2, -0.1);
+    } else if (kind === 'vapor') {
+      parts.push(['box', '#2f3236', 0, 0.09, 0, 0.72, 0.13, 0.24]);
+      parts.push(['box', '#b5452b', 0, 0.035, 0, 0.73, 0.03, 0.245]);
+      parts.push(['box', '#e8e4da', -0.08, 0.2, 0, 0.26, 0.1, 0.18]);
+      parts.push(['cyl', '#1a1a1a', 0.06, 0.34, 0, 0.045, 0.24, 0.045]); parts.push(['cyl', '#b5452b', 0.06, 0.44, 0, 0.047, 0.04, 0.047]);
+      parts.push(['cyl', WOOD, -0.26, 0.4, 0, 0.012, 0.5, 0.012]);
+      crew(1, 0.2);
+    } else {
+      parts.push(['box', '#7d868f', 0, 0.09, 0, 0.78, 0.13, 0.24]);
+      parts.push(['prism', '#7d868f', 0.44, 0.09, 0, 0.12, 0.2, 0.13, Math.PI / 2, 0, -Math.PI / 2]);
+      parts.push(['box', '#9aa3ab', -0.06, 0.21, 0, 0.3, 0.12, 0.17]); parts.push(['box', '#9aa3ab', -0.08, 0.31, 0, 0.14, 0.1, 0.12]);
+      parts.push(['cyl', '#5a6168', 0.18, 0.2, 0, 0.03, 0.12, 0.03, 0, 0, Math.PI / 2]);
+      parts.push(['cyl', '#3a3f45', -0.12, 0.48, 0, 0.008, 0.3, 0.008]);
+      parts.push(['box', civColor, 0, 0.16, 0.121, 0.4, 0.03, 0.005]);
+    }
+    return parts;
+  }
+  const BOAT_FLAG = { totora: [0.1, 0.42, 0.18], balsa: [0.17, 0.82, 0.02], galeon: [-0.05, 1.0, 0], vapor: [-0.26, 0.72, 0], moderno: [-0.12, 0.66, 0] };
   function makeUnitView(u) {
     const civ = PC.civ(u.civ);
     const group = new THREE.Group();
-    const body = new THREE.Mesh(cachedGeo('unit_' + u.type + civ.color, () => unitParts(u.type, civ.color)), mat);
+    const boat = PC.tile(u.t).terrain === 'oceano' ? boatKind(u) : null;
+    const body = new THREE.Mesh(boat ? cachedGeo('boat_' + boat + civ.color, () => boatParts(boat, civ.color)) : cachedGeo('unit_' + u.type + civ.color, () => unitParts(u.type, civ.color)), mat);
     body.castShadow = true;
     group.add(body);
     const flag = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.255), new THREE.MeshStandardMaterial({ map: emblemTexture(civ), side: THREE.DoubleSide, roughness: 1 }));
     flag.position.set(0.17, 0.72, -0.3);
+    if (boat) { const fp = BOAT_FLAG[boat]; flag.position.set(fp[0] + 0.17, fp[1], fp[2]); }
     flag.castShadow = true;
     group.add(flag);
     const ring = new THREE.Mesh(new THREE.RingGeometry(0.4, 0.48, 24), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9, depthWrite: false }));
@@ -677,7 +796,8 @@
     hp.position.set(0, 0.98, -0.3); hp.renderOrder = 10; hpBg.renderOrder = 10; hpFg.renderOrder = 11;
     group.add(hp);
     unitGroup.add(group);
-    return { group, body, flag, ring, hp, hpFg, type: u.type, civ: u.civ, pos: null };
+    if (boat) { ring.scale.set(1.25, 1.25, 1.25); hp.position.y = 1.2; }
+    return { group, body, flag, ring, hp, hpFg, type: u.type, civ: u.civ, boat, pos: null };
   }
   function unitSpot(u) {
     const t = PC.tile(u.t);
@@ -696,7 +816,8 @@
       if (!PC.isVisible(u.t)) return;
       seen.add(u.id);
       let v = unitViews.get(u.id);
-      if (v && (v.type !== u.type || v.civ !== u.civ)) { unitGroup.remove(v.group); v = null; }
+      const boatNow = PC.tile(u.t).terrain === 'oceano' ? boatKind(u) : null;
+      if (v && (v.type !== u.type || v.civ !== u.civ || v.boat !== boatNow)) { const keep = v.group.position.clone(); unitGroup.remove(v.group); v = makeUnitView(u); unitViews.set(u.id, v); v.group.position.copy(keep); }
       if (!v) { v = makeUnitView(u); unitViews.set(u.id, v); v.group.position.copy(unitSpot(u)); }
       v.target = unitSpot(u);
       if (!v.pos) v.pos = v.group.position.clone();
@@ -728,6 +849,10 @@
     };
     if (R.reach) R.reach.forEach((left, i) => disc(PC.tile(i), '#efe4cc', 0.2));
     if (R.targets) R.targets.forEach((i) => disc(PC.tile(i), '#e0533a', 0.85, 0.72));
+    if (R.sel && R.sel.regionHL) {
+      const rg = PC.G.map.regions.find((r) => r.id === R.sel.regionHL);
+      if (rg) rg.tiles.forEach((i) => { disc(PC.tile(i), '#e2a72e', 0.35); disc(PC.tile(i), '#f3c85e', 0.95, 0.84); });
+    }
     if (R.sel && R.sel.city) disc(PC.tile(R.sel.city.t), '#e2a72e', 0.9, 0.82);
     if (R.sel && R.sel.tile) disc(R.sel.tile, '#e2a72e', 0.9, 0.82);
     if (R.path && R.sel && R.sel.unit) {
@@ -794,6 +919,7 @@
     const dt = Math.min(0.05, clock.getDelta());
     const time = clock.elapsedTime;
     if (R.preview) cam.az += dt * 0.05;
+    if (fog) { fog.layers[0].material.map.offset.x += dt * 0.004; fog.layers[1].material.map.offset.x -= dt * 0.007; fog.layers[1].material.map.offset.y += dt * 0.003; }
     updateCamera();
     unitViews.forEach((v) => {
       if (v.target) {
@@ -825,13 +951,13 @@
     cityViews.forEach((v) => cityGroup.remove(v.mesh)); cityViews.clear();
     labels.forEach((el) => el.remove()); labels.clear();
     Object.keys(geoCache).forEach((k) => { if (k.startsWith('city_')) { geoCache[k].dispose(); delete geoCache[k]; } });
-    buildTiles(); buildDeco(); buildFeatures();
+    buildTiles(); buildDeco(); buildFeatures(); buildFog();
     R.refresh();
   };
   R.refresh = function () {
     if (!R.ready || !PC.G) return;
     if (mapRef !== PC.G.map) return R.rebuild();
-    tileColors(); decoVisibility(); buildBorders(); buildRoads(); buildFeatViews(); syncCities(); syncUnits(); syncLabels(); buildOverlays();
+    tileColors(); decoVisibility(); updateFog(); buildBorders(); buildRoads(); buildFeatViews(); syncCities(); syncUnits(); syncLabels(); buildOverlays();
   };
   R.setHover = function (t) { if (t !== R.hover) { R.hover = t; buildOverlays(); } };
   R.screenOf = function (t) {

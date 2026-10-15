@@ -5,7 +5,7 @@
   const $ = (s) => document.querySelector(s);
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const ic = (n, cls) => PC.icon(n, cls);
-  const UI = PC.UI = { menu: { scenario: 'origenes', culture: 'caral', difficulty: 'medio' }, modal: null, buildTab: 'unit' };
+  const UI = PC.UI = { menu: { scenario: 'origenes', culture: 'caral', difficulty: 'medio', leader: null, start: '' }, modal: null, buildTab: 'unit' };
   const SAVE_KEY = 'peru-civ-save';
   const storage = {
     get() { try { return localStorage.getItem(SAVE_KEY); } catch (e) { return null; } },
@@ -25,6 +25,26 @@
       return `<button type="button" class="cul" data-cu="${id}" aria-pressed="${id === m.culture}">${PC.emblem(id, c.color)}<span>${esc(c.name)}</span></button>`;
     }).join('');
     $('#cu-desc').textContent = PC.CULTURES[m.culture].desc;
+    if (!m.leader) m.leader = PC.defaultLeader(m.culture);
+    $('#leaders').innerHTML = Object.keys(PC.LEADERS).map((id) => {
+      const L = PC.LEADERS[id];
+      return `<button type="button" class="lead-card" data-ld="${id}" aria-pressed="${id === m.leader}"><b>${esc(L.name)}</b><small>${esc(L.title)}</small></button>`;
+    }).join('');
+    const L = PC.LEADERS[m.leader];
+    $('#ld-desc').innerHTML = `<b>${esc(L.name)}.</b> ${esc(L.desc)} <span class="muted">Agenda: ${esc(PC.AGENDAS[L.agenda].name.toLowerCase())}.</span>`;
+    const fixed = !!sc.playerCities;
+    const regs = PC.GEO_PERU.regions;
+    const zoneName = { costa: 'Costa', sierra: 'Sierra', selva: 'Selva' };
+    $('#opt-start').disabled = fixed;
+    $('#opt-start').innerHTML = `<option value="">Tierra histórica de la cultura</option>` +
+      ['costa', 'sierra', 'selva'].map((z) => `<optgroup label="${zoneName[z]}">${regs.filter((r) => r.zone === z).map((r) => `<option value="${r.id}" ${m.start === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}</optgroup>`).join('');
+    $('#st-desc').textContent = fixed ? 'En este escenario el imperio ya existe: empiezas en el Cusco.' :
+      m.start ? `Fundarás tu primera ciudad en ${regs.find((r) => r.id === m.start).name}. También puedes hacer clic en una provincia de la maqueta.` :
+      `Empiezas en ${regs.find((r) => r.id === PC.CULTURES[m.culture].region).name}, la tierra histórica de tu cultura. Elige otra provincia en la lista o haz clic sobre la maqueta.`;
+    if (PC.R && PC.G && PC.G.preview) {
+      const rid = m.start || PC.CULTURES[m.culture].region;
+      PC.R.sel = { regionHL: rid }; PC.R.draw();
+    }
     $('#difficulties').innerHTML = Object.keys(PC.DIFFICULTY).map((id) =>
       `<button type="button" data-df="${id}" aria-pressed="${id === m.difficulty}">${esc(PC.DIFFICULTY[id].name)}</button>`).join('');
     $('#df-desc').textContent = PC.DIFFICULTY[m.difficulty].desc;
@@ -38,6 +58,7 @@
     R.preview = true;
     R.rebuild();
     R.overview();
+    renderMenu();
   }
   function bindMenu() {
     $('#menu').addEventListener('click', (e) => {
@@ -46,17 +67,20 @@
       if (b.dataset.sc) { UI.menu.scenario = b.dataset.sc; changed = true; }
       if (b.dataset.cu) UI.menu.culture = b.dataset.cu;
       if (b.dataset.df) UI.menu.difficulty = b.dataset.df;
-      if (b.dataset.sc || b.dataset.cu || b.dataset.df) renderMenu();
+      if (b.dataset.cu) UI.menu.leader = PC.defaultLeader(b.dataset.cu);
+      if (b.dataset.ld) UI.menu.leader = b.dataset.ld;
+      if (b.dataset.sc || b.dataset.cu || b.dataset.df || b.dataset.ld) renderMenu();
       if (changed) previewWorld();
     });
     $('#btn-start').onclick = () => {
       const seed = +$('#opt-seed').value || undefined;
-      PC.newGame({ scenario: UI.menu.scenario, culture: UI.menu.culture, difficulty: UI.menu.difficulty, seed, speed: $('#opt-speed').value });
+      PC.newGame({ scenario: UI.menu.scenario, culture: UI.menu.culture, difficulty: UI.menu.difficulty, leader: UI.menu.leader, startRegion: UI.menu.start || undefined, seed, speed: $('#opt-speed').value });
       startGame(true);
     };
     $('#btn-continue').onclick = () => {
       try { PC.load(storage.get()); startGame(false); } catch (e) { menuError('No se pudo abrir la partida guardada. Empieza una nueva o carga un archivo.'); }
     };
+    $('#opt-start').onchange = (e) => { UI.menu.start = e.target.value; renderMenu(); };
     $('#btn-load-file').onclick = () => $('#file-load').click();
     $('#file-load').onchange = (e) => {
       const f = e.target.files[0]; if (!f) return;
@@ -126,6 +150,8 @@
       $('#tb-sci').innerHTML = `${ic('ciencia')}<div class="sci-col"><span><b>${esc(PC.TECH[p.research].name)}</b> <small>+${sci} · ${turns} t</small></span><span class="cen-bar"><i style="width:${pct * 100}%"></i></span></div>`;
     } else $('#tb-sci').innerHTML = `${ic('ciencia')}<button class="btn" data-open="techs" type="button">Elegir investigación</button>`;
     $('#tb-cult').innerHTML = `${ic('cultura')}<b>${Math.round(p.culture)}</b><small>cultura</small>`;
+    $('#tb-inf').innerHTML = `${ic('diplomacia')}<b>${Math.round(p.influence || 0)}</b><small>+${PC.influenceIncome(p)} influencia</small>`;
+    $('#tb-inf').title = 'Influencia: se gasta en acciones diplomáticas';
     const st = Math.round(p.stability);
     $('#tb-stab').innerHTML = `${ic('cohesion')}<b class="${st < 35 ? 'bad' : st >= 70 ? 'good' : ''}">${st}</b><small>cohesión</small>`;
     $('#tb-reg').innerHTML = `${ic('provincias')}<b>${PC.playerRegionCount()}</b><small>/ ${g.map.regions.length} provincias</small>`;
@@ -196,39 +222,45 @@
       ${PC.G.flags.fase2Disponible ? `<button class="btn primary" data-act="fase2" type="button">${ic('mapa')}Avanzar a la Fase 2: Sudamérica</button>` : ''}
       <p class="small muted">Elige una unidad o una ciudad en el mapa. Pasa el puntero sobre una casilla para ver qué hay en ella.</p>`;
   }
+  function diploBox(civ) {
+    const p = PC.player();
+    if (civ.isPlayer) return '';
+    const L = PC.leaderOf(civ), st = PC.relState(p, civ), att = Math.round(PC.rel(civ, p).att);
+    const chips = [`<span class="chip st-${st}">${PC.REL_NAME[st]}</span>`, `<span class="chip">${PC.attName(att)} (${att > 0 ? '+' : ''}${att})</span>`];
+    if (PC.rel(p, civ).borders) chips.push('<span class="chip">Paso libre</span>');
+    if (st === 'guerra') chips.push(`<span class="chip">Puntaje de guerra ${PC.rel(p, civ).warScore || 0}</span>`);
+    return `<div class="sec"><h4>Diplomacia</h4><p class="small" style="margin:0"><b>${esc(L.name)}</b> · ${esc(L.title)}</p><div class="chips">${chips.join('')}</div>
+      <div class="actions"><button class="btn" data-act="leader" data-civ="${civ.id}" type="button">${ic('diplomacia')}Hablar con ${esc(L.name)}</button></div></div>`;
+  }
   function unitPanel(u) {
     const U = PC.utype(u), civ = PC.civ(u.civ), t = PC.tile(u.t);
     const own = u.civ === PC.G.playerId;
     const war = !own && PC.atWar(PC.G.playerId, u.civ);
-    let h = `<div class="ph" style="--civ:${civ.color}"><div class="tile-ico">${ic(PC.unitIconKey(u.type))}</div><div><h3>${esc(U.name)}</h3>
-      <p>${esc(civ.name)}${own ? '' : war ? ' · <span class="bad">en guerra contigo</span>' : ' · en paz'}</p></div></div>`;
+    const title = u.name ? `${esc(u.name)}<small class="muted"> · ${esc(U.name)}</small>` : esc(U.name);
+    let h = `<div class="ph" style="--civ:${civ.color}"><div class="tile-ico">${ic(PC.unitIconKey(u.type))}</div><div><h3>${title}</h3>
+      <p>${esc(civ.name)}${own ? '' : war ? ' · <span class="bad">en guerra contigo</span>' : ' · en paz'}${t.terrain === 'oceano' ? ' · embarcada' : ''}</p></div></div>`;
     h += `<div class="trio"><div><span>${ic('salud')}Vida</span><b>${u.hp}</b></div><div><span>${ic('movimiento')}Movimiento</span><b>${+u.moves.toFixed(1)}/${PC.maxMoves(u)}</b></div>
-      <div><span>${ic('poder')}${U.ranged ? 'Distancia' : 'Ataque'}</span><b>${U.cat === 'military' ? `${U.atk}/${U.def}` : '—'}</b></div></div>`;
+      <div><span>${ic('poder')}${U.ranged ? 'Distancia' : 'Ataque'}</span><b>${U.cat === 'military' && !U.commander ? `${U.atk}/${U.def}` : U.commander ? 'Aura' : '—'}</b></div></div>`;
     if (U.desc) h += `<p class="small muted" style="margin:0">${esc(U.desc)}</p>`;
-    if (own) {
-      const a = PC.attrition(u, t), fr = PC.faunaRisk(u, t);
-      if (a > 0 && U.cat === 'military') h += `<p class="note">${ic('alerta')}Desgaste aquí: pierde ${a} de vida por turno.</p>`;
-      if (fr > 0) h += `<p class="note">${ic('alerta')}${esc(PC.FAUNA[t.fauna].name)}: ${Math.round(fr * 100)}% de riesgo por turno (−${PC.FAUNA[t.fauna].dmg} de vida).</p>`;
-      if (u.task) h += `<p class="note info">${ic('produccion')}Trabajando en ${u.task.id === 'camino' ? 'un camino' : PC.IMPROVEMENTS[u.task.id].name.toLowerCase()}: faltan ${u.task.left} turnos.</p>`;
-      const up = PC.upgradeTarget(u);
-      let acts = '';
-      if (u.type === 'colono') acts += `<button class="btn primary" data-act="found" type="button" ${PC.validCitySite(t, civ) ? '' : 'disabled'}>${ic('ciudad')}Fundar ciudad <kbd>B</kbd></button>`;
-      if (u.type === 'trabajador') {
-        PC.improvementOptions(u).forEach((o) => { acts += `<button class="btn" data-act="work" data-id="${o.id}" type="button">${ic('produccion')}${esc(o.name)} · ${o.turns} t</button>`; });
-        acts += `<button class="btn" data-act="auto" type="button">${ic('auto')}${u.auto ? 'Detener el trabajo automático' : 'Trabajar automáticamente'}</button>`;
-      }
-      if (u.type === 'explorador') acts += `<button class="btn" data-act="auto" type="button">${ic('auto')}${u.auto ? 'Detener la exploración' : 'Explorar automáticamente'}</button>`;
-      if (up) { const cost = PC.upgradeCost(u); acts += `<button class="btn primary" data-act="upgrade" type="button" ${civ.gold >= cost && u.moves > 0 ? '' : 'disabled'}>${ic('mejorar')}Modernizar a ${esc(PC.UNITS[up].name)} · ${cost} oro</button>`; }
-      if (U.cat === 'military') acts += `<button class="btn" data-act="fort" type="button">${ic('fortificar')}Fortificar <kbd>F</kbd></button>`;
-      acts += `<button class="btn" data-act="skip" type="button">${ic('saltar')}Esperar <kbd>Espacio</kbd></button>`;
-      if (u.path) acts += `<button class="btn" data-act="stop" type="button">${ic('detener')}Cancelar ruta</button>`;
-      acts += `<button class="btn danger" data-act="disband" type="button">${ic('cerrar')}Disolver</button>`;
-      h += `<div class="actions">${acts}</div>`;
-      if (!up && U.cat === 'military') {
-        const line = Object.values(PC.UNIT_LINES).find((l) => l.includes(u.type));
-        const next = line && line[line.indexOf(u.type) + 1];
-        if (next) h += `<p class="small muted" style="margin:0">Siguiente modernización: ${esc(PC.UNITS[next].name)} (requiere ${esc(PC.TECH[PC.UNITS[next].tech].name)}${PC.UNITS[next].needs ? ' y ' + PC.UNITS[next].needs.map((r) => PC.RESOURCES[r].name).join(' o ') : ''}).</p>`;
-      }
+    if (!own) return h + diploBox(civ) + tileInfo(t);
+    const a = PC.attrition(u, t), fr = PC.faunaRisk(u, t);
+    const states = [];
+    if (u.fort) states.push('Fortificada'); if (u.heal) states.push('Curándose'); if (u.sentry) states.push('De centinela'); if (u.auto) states.push('Automática'); if (u.path) states.push('En ruta');
+    if (!U.commander && PC.commanderNear(u)) states.push('Bajo el mando de un comandante (+20%)');
+    if (states.length) h += `<div class="chips">${states.map((x) => `<span class="chip">${esc(x)}</span>`).join('')}</div>`;
+    if (a > 0 && U.cat === 'military') h += `<p class="note">${ic('alerta')}Desgaste aquí: pierde ${a} de vida por turno.</p>`;
+    if (fr > 0) h += `<p class="note">${ic('alerta')}${esc(PC.FAUNA[t.fauna].name)}: ${Math.round(fr * 100)}% de riesgo por turno (−${PC.FAUNA[t.fauna].dmg} de vida).</p>`;
+    if (u.task) h += `<p class="note info">${ic('produccion')}Trabajando en ${u.task.id === 'camino' ? 'un camino' : PC.IMPROVEMENTS[u.task.id].name.toLowerCase()}: faltan ${u.task.left} turnos.</p>`;
+    const acts = PC.unitActions(u);
+    h += `<div class="sec"><h4>Acciones</h4><div class="actgrid">${acts.map((x) => `<button type="button" class="act ${x.primary ? 'primary' : ''} ${x.id === 'disolver' ? 'danger' : ''}" data-uact="${x.id}" ${x.ok ? '' : 'disabled'} title="${esc(x.reason || x.name)}">${ic(x.icon)}<span>${esc(x.name)}</span>${x.key ? `<kbd>${x.key}</kbd>` : ''}${!x.ok && x.reason ? `<small>${esc(x.reason)}</small>` : ''}</button>`).join('')}</div></div>`;
+    if (u.type === 'trabajador') {
+      const imps = PC.improvementOptions(u);
+      h += `<div class="sec"><h4>Construir aquí</h4>${imps.length ? `<div class="actgrid">${imps.map((o) => `<button type="button" class="act" data-act="work" data-id="${o.id}">${ic('produccion')}<span>${esc(o.name)}</span><small>${o.turns} turnos</small></button>`).join('')}</div>` : '<p class="small muted" style="margin:0">Nada que construir en esta casilla. Lleva al ayllu a una casilla propia sin mejorar.</p>'}</div>`;
+    }
+    if (!PC.upgradeTarget(u) && U.cat === 'military' && !U.commander) {
+      const line = Object.values(PC.UNIT_LINES).find((l) => l.includes(u.type));
+      const next = line && line[line.indexOf(u.type) + 1];
+      if (next) h += `<p class="small muted" style="margin:0">Siguiente modernización: ${esc(PC.UNITS[next].name)} (requiere ${esc(PC.TECH[PC.UNITS[next].tech].name)}${PC.UNITS[next].needs ? ' y ' + PC.UNITS[next].needs.map((r) => PC.RESOURCES[r].name).join(' o ') : ''}).</p>`;
     }
     return h + tileInfo(t);
   }
@@ -238,7 +270,7 @@
     let h = `<div class="ph" style="--civ:${civ.color}"><div class="tile-ico">${PC.emblem(civ.key, civ.color)}</div><div><h3>${esc(city.name)}</h3>
       <p>${esc(civ.name)}${civ.capitalId === city.id ? ' · capital' : ''} · fundada en ${PC.fmtYear(city.founded)}${city.conquered ? ' · conquistada' : ''}</p></div></div>`;
     h += `<div class="trio"><div><span>${ic('ciudad')}Población</span><b>${city.pop}</b></div><div><span>${ic('fortificar')}Defensa</span><b>${Math.round(PC.cityStrength(city))}</b></div><div><span>${ic('salud')}Murallas</span><b>${city.hp}</b></div></div>`;
-    if (!own) return h + (city.buildings.length ? `<div class="sec"><h4>Construido</h4><div class="chips">${city.buildings.map((b) => `<span class="chip">${esc((PC.BUILDINGS[b] || PC.WONDERS[b]).name)}</span>`).join('')}</div></div>` : '');
+    if (!own) return h + diploBox(civ) + (city.buildings.length ? `<div class="sec"><h4>Construido</h4><div class="chips">${city.buildings.map((b) => `<span class="chip">${esc((PC.BUILDINGS[b] || PC.WONDERS[b]).name)}</span>`).join('')}</div></div>` : '');
     const need = PC.growthNeeded(city), surplus = y.f - city.pop * 2;
     h += `<div class="yrow">${Y(y)}<span>${ic('ciencia')}${y.s}</span><span>${ic('cultura')}${y.c}</span></div>`;
     h += `<div class="bar"><i style="width:${PC.clamp(city.food / need * 100, 0, 100)}%"></i><span>Crecimiento ${city.food}/${need} (${surplus >= 0 ? '+' : ''}${surplus} por turno)</span></div>`;
@@ -276,9 +308,12 @@
   function onPanelClick(e) {
     const tab = e.target.closest('[data-tab]');
     if (tab) { UI.buildTab = tab.dataset.tab; renderPanel(); return; }
+    const ua = e.target.closest('[data-uact]');
+    if (ua && !ua.disabled) { runUnitAction(R.sel && R.sel.unit, ua.dataset.uact); return; }
     const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
     const sel = R.sel, act = b.dataset.act;
     const u = sel && sel.unit;
+    if (act === 'leader') { openLeader(PC.civ(+b.dataset.civ)); return; }
     if (act === 'found' && u) { const t = PC.tile(u.t); PC.foundCity(PC.player(), t); PC.removeUnit(u); UI.select({ city: PC.cityAt(t.i) }); }
     else if (act === 'work' && u) { PC.startWork(u, b.dataset.id); nextUnit(); }
     else if (act === 'auto' && u) { u.auto = !u.auto; if (u.auto) { PC.autoUnit(u); nextUnit(); } else UI.select({ unit: u }); }
@@ -293,8 +328,19 @@
     refresh();
   }
 
+  function runUnitAction(u, id) {
+    if (!u || !PC.G.units.includes(u)) return;
+    if (id === 'disolver') { ask(`¿Disolver ${PC.UNITS[u.type].name}?`, 'Disolver', () => { PC.removeUnit(u); UI.select(null); refresh(); }); return; }
+    const t = PC.tile(u.t);
+    const res = PC.doUnitAction(u, id);
+    if (res === 'city') { UI.select({ city: PC.cityAt(t.i) }); refresh(); return; }
+    if (!PC.G.units.includes(u)) { UI.select(null); refresh(); setTimeout(() => { if (!UI.modal) nextUnit(); }, 150); return; }
+    if (['fortificar', 'curar', 'centinela', 'esperar', 'saquear', 'arengar'].includes(id) || (id === 'auto' && u.auto)) { nextUnit(); return; }
+    UI.select({ unit: u }); refresh();
+  }
+
   // ------------------------------------------------------------------ Ciclo de unidades
-  function needsOrders(u) { return u.moves > 0 && !u.fort && !u.task && !u.auto && !u.path && u.skipTurn !== PC.G.turn; }
+  function needsOrders(u) { return u.moves > 0 && !u.fort && !u.task && !u.auto && !u.path && !u.heal && !u.sentry && u.skipTurn !== PC.G.turn; }
   function nextUnit() {
     const list = PC.civUnits(PC.player()).filter(needsOrders);
     if (!list.length) { UI.select(null); refresh(); return; }
@@ -404,7 +450,14 @@
     tip.hidden = false;
   }
   function clickMap(e, right) {
-    if (!PC.G || PC.G.preview) return;
+    if (PC.G && PC.G.preview) {
+      if ($('#menu').hidden || PC.SCENARIOS[UI.menu.scenario].playerCities) return;
+      const [mx, my] = mapXY(e);
+      const t = R.pick(mx, my);
+      if (t && t.region) { UI.menu.start = t.region; renderMenu(); }
+      return;
+    }
+    if (!PC.G) return;
     const [mx, my] = mapXY(e);
     const t = R.pick(mx, my);
     if (!t) return;
@@ -450,7 +503,11 @@
     if (k === 'enter') { endTurn(); e.preventDefault(); }
     else if (k === 'n' || k === 'tab') { nextUnit(); e.preventDefault(); }
     else if (k === 'escape') { UI.select(null); refresh(); }
-    else if (k === 'f' && u && PC.isMil(u) && u.civ === PC.G.playerId) { u.fort = true; u.moves = 0; nextUnit(); }
+    else if (u && u.civ === PC.G.playerId && ['f', 'h', 's', 'u'].includes(k)) {
+      const id = { f: 'fortificar', h: 'curar', s: 'centinela', u: 'modernizar' }[k];
+      const a = PC.unitActions(u).find((x) => x.id === id);
+      if (a && a.ok) runUnitAction(u, id);
+    }
     else if (k === ' ' && u && u.civ === PC.G.playerId) { u.skipTurn = PC.G.turn; nextUnit(); e.preventDefault(); }
     else if (k === 'b' && u && u.type === 'colono' && u.civ === PC.G.playerId && PC.validCitySite(PC.tile(u.t), PC.player())) { const t = PC.tile(u.t); PC.foundCity(PC.player(), t); PC.removeUnit(u); UI.select({ city: PC.cityAt(t.i) }); refresh(); }
     else if (k === 't') openTechs(); else if (k === 'd') openDiplo(); else if (k === 'p') openRegions(); else if (k === 'c') openChronicle();
@@ -556,6 +613,51 @@
     });
     openModal(h + '</div>', 'techs');
   }
+  function openLeader(civ) {
+    const p = PC.player();
+    const L = PC.leaderOf(civ), A = PC.AGENDAS[L.agenda];
+    const st = PC.relState(p, civ), att = Math.round(PC.rel(civ, p).att);
+    const meter = PC.clamp((att + 100) / 2, 0, 100);
+    const treaties = [PC.REL_NAME[st]];
+    if (PC.rel(p, civ).borders) treaties.push('Paso libre');
+    if (PC.rel(p, civ).denounced) treaties.push('Denunciado por ti');
+    if (PC.rel(civ, p).denounced) treaties.push('Te ha denunciado');
+    const routes = (PC.G.routes || []).filter((r) => (r.a === p.id && r.b === civ.id) || (r.a === civ.id && r.b === p.id)).length;
+    if (routes) treaties.push(`${routes} ruta${routes > 1 ? 's' : ''} comercial${routes > 1 ? 'es' : ''}`);
+    const acts = PC.DIPLO_ACTIONS.filter((a) => {
+      const w = PC.atWar(p.id, civ.id);
+      if (['paz', 'paz_oro', 'paz_ciudad'].includes(a.id)) return w;
+      if (a.id === 'romper') return PC.rel(p, civ).ally;
+      if (a.id === 'anexar' || a.id === 'vasallaje') return !w && !civ.external;
+      return !w || a.id === 'guerra' ? !w : true;
+    });
+    const cards = acts.map((a) => {
+      const iss = PC.diploIssues(p, civ, a.id);
+      const ch = a.chance && !iss.length ? Math.round(a.chance(p, civ) * 100) : null;
+      const cost = [a.inf ? `${a.inf} de influencia` : '', a.gold ? `${a.gold} de oro` : '', a.id === 'anexar' ? `${PC.annexCost(p, civ)} de oro` : ''].filter(Boolean).join(' y ');
+      return `<button type="button" class="dact ${a.id === 'guerra' ? 'danger' : ''}" data-dact="${a.id}" data-civ="${civ.id}" ${iss.length ? 'disabled' : ''}>
+        <b>${esc(a.name)}</b><small>${esc(a.desc)}</small>
+        <em>${cost ? esc(cost) : 'Sin costo'}${ch !== null ? ` · ${ch}% de aceptación` : ''}</em>${iss.length ? `<i>${esc(iss[0])}</i>` : ''}</button>`;
+    }).join('');
+    openModal(`<div class="leader">
+      <div class="leader-head" style="--civ:${civ.color}"><div class="leader-em">${PC.emblem(civ.key, civ.color)}</div>
+        <div><h2>${esc(L.name)}</h2><p>${esc(L.title)} · ${esc(civ.name)}</p>
+        <div class="chips">${treaties.map((x) => `<span class="chip">${esc(x)}</span>`).join('')}</div></div></div>
+      <div class="leader-grid">
+        <div class="sec"><h4>Actitud hacia ti · ${PC.attName(att)}</h4>
+          <div class="attbar"><i style="left:${meter}%"></i></div><p class="small muted" style="margin:0">${att > 0 ? '+' : ''}${att} de −100 a +100</p>
+          <h4>Agenda: ${esc(A.name)}</h4>
+          <div class="kv"><span>Le agrada</span><b>${esc(A.likes)}</b></div>
+          <div class="kv"><span>Le desagrada</span><b>${esc(A.dislikes)}</b></div>
+          <div class="kv"><span>Ciudades</span><b>${PC.civCities(civ).length}</b></div>
+          <div class="kv"><span>Poder militar</span><b>${PC.power(civ)} (tú ${PC.power(p)})</b></div>
+          ${st === 'guerra' ? `<div class="kv"><span>Puntaje de guerra</span><b class="${(PC.rel(p, civ).warScore || 0) >= 0 ? 'good' : 'bad'}">${PC.rel(p, civ).warScore || 0}</b></div>` : ''}
+          <div class="kv"><span>Tu influencia</span><b>${Math.round(p.influence || 0)}</b></div>
+        </div>
+        <div class="sec"><h4>Acciones diplomáticas</h4><div class="dacts">${cards}</div></div>
+      </div></div>`, 'leader');
+  }
+  UI.openLeader = openLeader;
   function openDiplo() {
     const p = PC.player(), g = PC.G;
     const others = g.civs.filter((c) => c.alive && !c.isPlayer && (PC.civCities(c).length || PC.civUnits(c).length));
@@ -563,17 +665,14 @@
     others.forEach((c) => {
       const known = PC.civCities(c).some((ct) => PC.isExplored(ct.t)) || PC.civUnits(c).some((u) => PC.isExplored(u.t));
       if (!known) return;
-      const war = PC.atWar(p.id, c.id);
-      const att = Math.round(PC.rel(c, p).att);
-      const issues = PC.annexIssues(p, c);
-      rows += `<tr><td><span class="who">${PC.emblem(c.key, c.color)}${esc(c.name)}</span></td><td>${PC.civCities(c).length}</td><td>${PC.power(c)}</td>
-        <td class="${att < -20 ? 'bad' : att > 20 ? 'good' : ''}">${att > 0 ? '+' : ''}${att}</td><td>${war ? '<b class="bad">Guerra</b>' : 'Paz'}</td><td><div class="acts">
-        ${war ? `<button class="btn" data-diplo="peace" data-civ="${c.id}" type="button">${ic('paz')}Proponer la paz · ${Math.round(PC.peaceChance(p, c) * 100)}%</button>` : `<button class="btn danger" data-diplo="war" data-civ="${c.id}" type="button">${ic('guerra')}Declarar la guerra</button>`}
-        ${!war && !c.external ? `<button class="btn" data-diplo="annex" data-civ="${c.id}" type="button" ${issues.length ? 'disabled' : ''} title="${esc(issues.join(' · '))}">${ic('diplomacia')}Anexar · ${PC.annexCost(p, c)} oro</button>` : ''}
-        </div></td></tr>`;
+      const st = PC.relState(p, c), att = Math.round(PC.rel(c, p).att), L = PC.leaderOf(c);
+      rows += `<tr><td><span class="who">${PC.emblem(c.key, c.color)}<span>${esc(c.name)}<br><small class="muted">${esc(L.name)} · ${esc(PC.AGENDAS[L.agenda].name)}</small></span></span></td>
+        <td>${PC.civCities(c).length}</td><td>${PC.power(c)}</td><td class="${att < -20 ? 'bad' : att > 20 ? 'good' : ''}">${PC.attName(att)} (${att > 0 ? '+' : ''}${att})</td>
+        <td><span class="chip st-${st}">${PC.REL_NAME[st]}</span></td>
+        <td><button class="btn" data-leader="${c.id}" type="button">${ic('diplomacia')}Hablar</button></td></tr>`;
     });
-    openModal(`<h2>Diplomacia</h2><p class="lead">Tu poder militar es ${PC.power(p)} y tu cultura ${Math.round(p.culture)}. Con la reciprocidad andina puedes incorporar señoríos pequeños mediante regalos, como hacían los incas: necesitas paz, 2,5 veces su poder y más cultura que ellos.</p>
-      <div class="tablewrap"><table class="diplo"><thead><tr><th>Civilización</th><th>Ciudades</th><th>Poder</th><th>Actitud</th><th>Estado</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="6" class="muted">Aún no has encontrado a otras civilizaciones. Explora el mapa.</td></tr>'}</tbody></table></div>`, 'diplo');
+    openModal(`<h2>Diplomacia</h2><p class="lead">Tienes ${Math.round(p.influence || 0)} de influencia (+${PC.influenceIncome(p)} por turno), ${PC.civRoutes(p.id).length} de ${PC.maxRoutes(p)} rutas comerciales y un poder militar de ${PC.power(p)}. Habla con cada líder para proponer tratados, exigir tributo o negociar la paz.</p>
+      <div class="tablewrap"><table class="diplo"><thead><tr><th>Civilización y líder</th><th>Ciudades</th><th>Poder</th><th>Actitud</th><th>Estado</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="6" class="muted">Aún no has encontrado a otras civilizaciones. Explora el mapa.</td></tr>'}</tbody></table></div>`, 'diplo');
   }
   function openRegions() {
     const g = PC.G, rc = PC.regionControl();
@@ -628,6 +727,16 @@
       }
       const tech = e.target.closest('[data-tech]');
       if (tech && !tech.disabled) { PC.player().research = tech.dataset.tech; closeModal(); return; }
+      const lb = e.target.closest('[data-leader]');
+      if (lb) { openLeader(PC.civ(+lb.dataset.leader)); return; }
+      const da = e.target.closest('[data-dact]');
+      if (da && !da.disabled) {
+        const p = PC.player(), c = PC.civ(+da.dataset.civ);
+        const go = () => { const r = PC.diploDo(p, c, da.dataset.dact); refresh(); if (r.text) toast(r.text, r.ok ? 'event' : 'warn'); openLeader(c); };
+        if (da.dataset.dact === 'guerra') ask(`¿Declarar la guerra a ${c.name}?`, 'Declarar la guerra', go, () => openLeader(c));
+        else go();
+        return;
+      }
       const d = e.target.closest('[data-diplo]');
       if (d && !d.disabled) {
         const p = PC.player(), c = PC.civ(+d.dataset.civ);

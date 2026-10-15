@@ -35,7 +35,11 @@
     g.explored = new Array(g.map.tiles.length).fill(-1);
 
     const cul = PC.CULTURES[o.culture];
-    const player = PC.addCiv({ key: o.culture, name: cul.name, color: cul.color, leader: cul.leader, isPlayer: true, bonus: cul.bonus });
+    const leaderId = o.leader && PC.LEADERS[o.leader] ? o.leader : PC.defaultLeader(o.culture);
+    const L = PC.LEADERS[leaderId];
+    const player = PC.addCiv({ key: o.culture, name: cul.name, color: cul.color, leader: `${L.name} · ${L.title}`, isPlayer: true, bonus: PC.mergeBonus(cul.bonus, L.bonus) });
+    player.leaderId = leaderId;
+    player.influence = 10;
     if (o.culture === 'amazonia') player.selva = true;
     g.playerId = player.id;
     const techList = cul.techs || PC.baselineTechs(sc.year);
@@ -52,7 +56,9 @@
       PC.civCities(player).slice(1).forEach((c) => PC.spawnUnit(player, 'macanero', PC.tile(c.t)));
       player.gold = 120;
     } else {
-      const t = PC.bestSiteInRegion(cul.region, player);
+      const startRegion = o.startRegion && g.map.regions.some((r) => r.id === o.startRegion) ? o.startRegion : cul.region;
+      g.startRegion = startRegion;
+      const t = PC.bestSiteInRegion(startRegion, player) || PC.bestSiteInRegion(cul.region, player);
       PC.foundCity(player, t, null, 1);
       PC.startingUnits(player, t, ['guerrero', 'explorador', 'trabajador', 'colono']);
     }
@@ -89,6 +95,21 @@
     return g;
   };
   PC.civs = () => PC.G.civs;
+
+  // Líder sugerido para cada cultura (el jugador puede elegir cualquiera, como en Civilization VII).
+  PC.DEFAULT_LEADER = { caral: 'sacerdote_chavin', sechin: 'pachacutec', kotosh: 'sacerdote_chavin', paracas: 'taycanamo', titicaca: 'mama_ocllo',
+    cusco: 'huayna_capac', amazonia: 'manco_inca', inca: 'pachacutec' };
+  PC.defaultLeader = (culture) => PC.DEFAULT_LEADER[culture] || Object.keys(PC.LEADERS)[0];
+  PC.mergeBonus = function (a, b) {
+    const out = Object.assign({}, a || {});
+    Object.entries(b || {}).forEach(([k, v]) => {
+      if (Array.isArray(v)) out[k] = (out[k] || []).concat(v);
+      else if (typeof v === 'number') out[k] = (out[k] || 0) + v;
+      else if (v && typeof v === 'object') out[k] = Object.assign({}, out[k] || {}, v);
+      else out[k] = out[k] || v;
+    });
+    return out;
+  };
 
   PC.aiBestUnit = function (civ) {
     const ok = Object.values(PC.UNITS).filter((U) => U.cat === 'military' && !U.unique && U.id !== 'explorador' && (!U.tech || civ.techs[U.tech]) && !U.needs);

@@ -16,7 +16,7 @@
   };
 
   function bestMilitary(city, opts) {
-    const mil = opts.filter((o) => o.kind === 'unit' && PC.UNITS[o.id].cat === 'military' && o.id !== 'explorador');
+    const mil = opts.filter((o) => o.kind === 'unit' && PC.UNITS[o.id].cat === 'military' && o.id !== 'explorador' && !PC.UNITS[o.id].commander);
     if (!mil.length) return null;
     return mil.sort((a, b) => (PC.UNITS[b.id].atk + PC.UNITS[b.id].def) - (PC.UNITS[a.id].atk + PC.UNITS[a.id].def))[0];
   }
@@ -37,6 +37,7 @@
     const pick = (o) => (o ? { kind: o.kind, id: o.id } : null);
     const bm = bestMilitary(city, opts);
     if (!garrison && bm) return pick(bm);
+    if (war && opts.some((o) => o.id === 'apu') && PC.rand() < 0.5) return { kind: 'unit', id: 'apu' };
     if (war && mil < cities.length * 3 && bm) return pick(bm);
     if (mil < Math.ceil(cities.length * 1.3) && bm) return pick(bm);
     const maxCities = civ.external ? 0 : (civ.isPlayer ? 14 : 3 + PC.eraOf(civ));
@@ -67,7 +68,7 @@
       const theirPow = PC.power(o);
       if (!r.war) {
         const aggressive = (PC.eraOf(civ) >= 3 ? 0.08 : 0.04) * PC.diff().aiAggr;
-        if (border && offensive === 0 && r.att < -20 && myPow > theirPow * 1.4 && g.turn - r.since > 10 && PC.rand() < aggressive) {
+        if (!PC.isAlly(civ.id, o.id) && border && offensive === 0 && r.att < -20 && myPow > theirPow * 1.4 && g.turn - r.since > 10 && PC.rand() < aggressive) {
           PC.declareWar(civ, o); r.aggressor = true; offensive++;
         }
       } else if (g.turn - r.since > 8) {
@@ -142,10 +143,30 @@
     const opts = [...PC.reachable(u).keys()];
     if (opts.length) PC.relocate(u, PC.pick(opts), 0);
   }
+  function aiCommander(civ, u) {
+    const g = G();
+    if (PC.canRally(u).ok) { PC.rally(u); return; }
+    // Acompaña a la unidad propia más cercana al enemigo.
+    const enemies = g.civs.filter((o) => o.alive && PC.atWar(civ.id, o.id));
+    const troops = PC.civUnits(civ).filter((x) => PC.isMil(x) && !PC.UNITS[x.type].commander);
+    if (!troops.length) return;
+    let lead = troops[0];
+    if (enemies.length) {
+      const foes = g.units.filter((x) => enemies.some((e) => e.id === x.civ));
+      if (foes.length) lead = troops.slice().sort((a, b) => Math.min(...foes.map((f) => PC.dist(PC.tile(f.t), PC.tile(a.t)))) - Math.min(...foes.map((f) => PC.dist(PC.tile(f.t), PC.tile(b.t)))))[0];
+    }
+    if (PC.dist(PC.tile(lead.t), PC.tile(u.t)) <= 1) return;
+    const spot = PC.neighbors(PC.tile(lead.t)).filter((n) => PC.moveCost(u, n, n) !== Infinity && n.terrain !== 'oceano' && !g.units.some((x) => x.t === n.i)).sort((a, b) => PC.dist(a, PC.tile(u.t)) - PC.dist(b, PC.tile(u.t)))[0];
+    if (spot) stepToward(u, spot.i);
+  }
   function aiMilitary(civ, u) {
     const g = G();
     const t = PC.tile(u.t);
     const U = PC.utype(u);
+    if (U.commander) { aiCommander(civ, u); return; }
+    if (PC.canPillage(u).ok && PC.rand() < 0.35) { PC.pillage(u); return; }
+    if (u.hp < 35 && !t.cityId && u.civ !== g.playerId && PC.rand() < 0.3) { u.heal = true; u.fort = true; u.moves = 0; return; }
+    if (u.heal) { if (u.hp >= 90) u.heal = false; else return; }
     // Atacar si es favorable.
     const targets = PC.attackTargets(u);
     if (targets.length) {
@@ -197,11 +218,19 @@
     if (isPlayerAuto) {
       PC.civCities(civ).forEach((c) => { if (!c.build) c.build = PC.aiChooseBuild(c); });
       if (!civ.research) civ.research = PC.aiChooseTech(civ);
+      // Piloto automático: ejercita la diplomacia de vez en cuando (para las pruebas).
+      if (PC.DIPLO_ACTIONS && PC.rand() < 0.15) {
+        const others = G().civs.filter((o) => o.alive && !o.isPlayer);
+        const ai = others.length && PC.pick(others);
+        const act = PC.pick(PC.DIPLO_ACTIONS.filter((a) => a.id !== 'guerra' || PC.rand() < 0.1));
+        if (ai && act && !PC.diploIssues(civ, ai, act.id).length) PC.diploDo(civ, ai, act.id);
+      }
     }
     PC.civUnits(civ).slice().forEach((u) => {
       if (!G().units.includes(u) || u.moves <= 0) return;
       try {
         if (u.type === 'colono') aiSettler(civ, u);
+        else if (u.type === 'caravana') { if (!PC.openRoute(u)) { const c = G().cities.find((x) => x.civ !== civ.id && !PC.atWar(civ.id, x.civ)); if (c) stepToward(u, c.t); } }
         else if (u.type === 'trabajador') aiWorker(civ, u);
         else if (u.type === 'explorador') aiExplorer(civ, u);
         else if (PC.isMil(u)) aiMilitary(civ, u);

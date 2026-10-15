@@ -328,7 +328,7 @@
     choices: [
       { label: 'Zarpar al poniente', hint: '−50 oro. 65%: descubrimientos; 35%: naufragio', cond: p.gold >= 50, effect: () => {
         p.gold -= 50;
-        if (PC.chance(0.65)) { g.flags.polinesia = true; p.progress += 150; p.gold += 60; PC.diverge('Una flota andina llega a Polinesia y regresa con camote, conocimientos y oro.'); return 'La expedición regresa triunfal tras meses en el mar.'; }
+        if (p.bonus.voyage || PC.chance(0.65)) { g.flags.polinesia = true; p.progress += 150; p.gold += 60; PC.diverge('Una flota andina llega a Polinesia y regresa con camote, conocimientos y oro.'); return 'La expedición regresa triunfal tras meses en el mar.'; }
         PC.addStabMod(p, 'Naufragio', -5, 6); return 'Las balsas nunca regresan.'; } },
       { label: 'No arriesgar', hint: 'Sin efecto', effect: () => 'Las balsas se quedan en la costa.' }
     ]
@@ -494,12 +494,71 @@
 
   E.propuesta_paz = (g, p, d) => {
     const c = PC.civ(d.from);
+    const L = PC.leaderOf(c);
+    const score = PC.rel(p, c).warScore || 0;
+    const live = c.alive && PC.atWar(p.id, c.id);
+    // Las condiciones dependen de quién va ganando la guerra.
+    if (score <= -20) {
+      const amt = Math.min(Math.max(0, Math.floor(p.gold)), 50 + PC.eraOf(c) * 25);
+      return {
+        title: `${L.name} ofrece la paz… a un precio`, img: '',
+        text: `${L.name}, ${L.title.toLowerCase()} de ${c.name}, va ganando la guerra (puntaje ${-score}). Exige ${amt} de oro para retirar sus tropas.`,
+        choices: [
+          { label: `Pagar ${amt} de oro`, hint: 'Paz inmediata', cond: live, effect: () => { p.gold -= amt; c.gold += amt; PC.makePeace(p, c); return 'Pagas las reparaciones y se firma la paz.'; } },
+          { label: 'Rechazar', hint: 'La guerra continúa', effect: () => 'Rechazas sus condiciones.' }
+        ]
+      };
+    }
+    const offer = score >= 20 ? Math.min(Math.max(0, Math.floor(c.gold)), 30 + PC.eraOf(c) * 20) : 0;
     return {
-      title: `${c.name} propone la paz`, img: '',
-      text: `Los mensajeros de ${c.name} llegan con ofrendas y proponen poner fin a la guerra.`,
+      title: `${L.name} propone la paz`, img: '',
+      text: `Los mensajeros de ${c.name} llegan de parte de ${L.name}${offer ? ` y ofrecen ${offer} de oro si cesan los combates` : ' y proponen poner fin a la guerra'}.`,
       choices: [
-        { label: 'Aceptar la paz', hint: '+cohesión', cond: c.alive && PC.atWar(p.id, c.id), effect: () => { PC.makePeace(p, c); PC.addStabMod(p, 'Paz', 4, 6); return 'Se firma la paz.'; } },
+        { label: offer ? `Aceptar la paz y ${offer} de oro` : 'Aceptar la paz', hint: '+cohesión', cond: live, effect: () => { if (offer) { c.gold -= offer; p.gold += offer; } PC.makePeace(p, c); PC.addStabMod(p, 'Paz', 4, 6); return 'Se firma la paz.'; } },
         { label: 'Rechazar', hint: 'La guerra continúa', effect: () => 'La guerra continúa.' }
+      ]
+    };
+  };
+
+  E.propuesta_alianza = (g, p, d) => {
+    const c = PC.civ(d.from), L = PC.leaderOf(c);
+    return {
+      title: `${L.name} propone una alianza`, img: '',
+      text: `${L.name}, ${L.title.toLowerCase()}, aprecia a tu pueblo (${PC.attName(PC.rel(c, p).att).toLowerCase()}) y propone defenderse mutuamente. Si alguien ataca a uno, el otro entrará en la guerra.`,
+      choices: [
+        { label: 'Sellar la alianza', hint: 'Aliados para la defensa', cond: c.alive && !PC.atWar(p.id, c.id), effect: () => { PC.rel(p, c).ally = PC.rel(c, p).ally = true; PC.rel(c, p).att += 10; return `Alianza con ${c.name}.`; } },
+        { label: 'Declinar con cortesía', hint: 'Sin cambios', effect: () => { PC.rel(c, p).att -= 5; return 'Declinas la alianza.'; } }
+      ]
+    };
+  };
+
+  E.llamada_aliado = (g, p, d) => {
+    const ally = PC.civ(d.ally), foe = PC.civ(d.enemy);
+    return {
+      title: `${ally.name} te llama a la guerra`, img: '',
+      text: `${foe.name} ha atacado a tu aliado ${ally.name}. ${PC.leaderOf(ally).name} te recuerda el pacto y pide que entres en la guerra.`,
+      choices: [
+        { label: `Declarar la guerra a ${foe.name}`, hint: 'Honras la alianza', cond: foe.alive && !PC.atWar(p.id, foe.id), effect: () => { PC.declareWar(p, foe); PC.rel(ally, p).att += 15; return `Entras en la guerra junto a ${ally.name}.`; } },
+        { label: 'Abandonar al aliado', hint: 'La alianza se rompe y tu reputación cae', effect: () => {
+          PC.rel(p, ally).ally = PC.rel(ally, p).ally = false; PC.rel(ally, p).att -= 40;
+          g.civs.forEach((c) => { if (c.alive && c.id !== p.id) PC.rel(c, p).att -= 5; });
+          return `Abandonas a ${ally.name}.`; } }
+      ]
+    };
+  };
+
+  E.exigencia_tributo = (g, p, d) => {
+    const c = PC.civ(d.from), L = PC.leaderOf(c);
+    const amt = Math.min(Math.max(0, Math.floor(p.gold)), 40 + PC.eraOf(c) * 25);
+    return {
+      title: `${L.name} exige tributo`, img: '',
+      text: `Emisarios de ${c.name}, mucho más poderoso que tú, exigen ${amt} de oro como señal de sumisión. Negarse puede costar una guerra.`,
+      choices: [
+        { label: `Pagar ${amt} de oro`, hint: 'Mejora su actitud', cond: c.alive, effect: () => { p.gold -= amt; c.gold += amt; PC.rel(c, p).att += 20; PC.addStabMod(p, 'Humillación', -3, 6); return 'Pagas el tributo.'; } },
+        { label: 'Negarse', hint: 'Puede declararte la guerra', effect: () => {
+          PC.rel(c, p).att -= 20;
+          if (PC.chance(0.5) && c.alive) { PC.declareWar(c, p); return `${c.name} te declara la guerra.`; }
+          return `${L.name} se retira ofendido.`; } }
       ]
     };
   };
