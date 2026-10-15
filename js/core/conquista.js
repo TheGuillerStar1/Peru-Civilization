@@ -9,6 +9,30 @@
   const pow = (c) => Math.max(1, PC.power(c));
   const player = () => PC.player();
 
+  // ---------------------------------------------------------------- Parámetros de equilibrio (v0.1.3)
+  // K = fuerza de la Corona según la dificultad (PC.diff().spain: Fácil 0.6, Medio 1, Difícil 1.4, Realista 1.6), ajustada por
+  // frente con F.tenacity (data/conquista.js: >0 la Corona se afianza con más facilidad, <0 el pueblo resiste mejor).
+  // Objetivo (12+ semillas): Fácil 30-45% de frentes conquistados, Medio 55-70%, Difícil 75-90%, Realista 80-90% con los
+  // frentes históricos (México, Perú, Charcas, N. Granada, Plata) cayendo casi siempre.
+  const TUNE = {
+    reinfEvery: 5, reinfSpan: 36, reinfSpanBonus: 8, reinfCap: 14, // refuerzos de ultramar: cada N turnos, durante N (+bono si K>1) turnos
+    settle: 28,                       // turnos de guerra tras los cuales el frente se decide por mayoría de ciudades
+    earlyShare: 0.34,                 // fracción de ciudades indígenas que debe quedar (×K) para dar el frente por perdido pronto
+    pullBase: 12, pullRate: 0.22,     // propensión base a pactar con la Corona y probabilidad por revisión (cada 4 turnos)
+    maxDefect: 0.3,                   // como máximo esta fracción de los pueblos del frente se alía con la Corona
+    returnChance: 0.3,                // probabilidad por revisión de que un aliado de la Corona vuelva a la resistencia (si ella flaquea)
+    aiLeagueAtt: -20, aiLeagueChance: 0.5, // liga espontánea: actitud mutua mínima y probabilidad por revisión
+    vassalChance: 0.3,                // probabilidad de que un pueblo que pierde su capital jure vasallaje (si no, resiste desde otra ciudad)
+    crownAtk: 40, crownAtkCity: 30,   // bono de ataque (%) y de ataque a ciudades de una Corona colonial con K = 1
+    peruScore: 32                    // frente del Perú: ciudades×10 + tropas de la Corona necesarias para darlo por conquistado
+  };
+  // Calibración fina por dificultad (medida con el banco de pruebas): Medio algo más difícil para la Corona, Fácil algo menos.
+  const calib = (s) => (s < 0.8 ? 1.05 : s < 1.2 ? 0.92 : 1);
+  const kOf = (F) => PC.clamp((PC.diff().spain || 1) * calib(PC.diff().spain || 1) * (1 + (F.tenacity || 0)) * (F.hist && PC.diff().histAI ? 1.45 : 1), 0.3, 2.8);
+
+  // Puntuación (ciudades×10 + tropas) que la Corona necesita en el Perú: más baja en Difícil/Realista y más alta en Fácil.
+  const peruNeed = (K) => (K < 1.2 ? TUNE.peruScore * Math.pow(K / 1.2, 1.3) : Math.max(14, TUNE.peruScore - 18 * (K - 1.2) / 0.72));
+
   // ---------------------------------------------------------------- Estado
   function S() {
     const g = G();
@@ -27,10 +51,10 @@
     return F.regions.filter((id) => g.map.regions.some((r) => r.id === id));
   }
   const frontsHere = () => PC.CONQUISTA_FRONTS.filter((F) => F.phases.includes(G().phase) && regionIds(F).length);
-  let keyCache = { turn: -1, phase: '', keys: null };
+  let keyCache = { turn: -1, phase: '', map: null, keys: null };
   function crownKeys() {
     const g = G();
-    if (keyCache.turn !== g.turn || keyCache.phase !== g.phase || !keyCache.keys) keyCache = { turn: g.turn, phase: g.phase, keys: new Set(frontsHere().map((F) => F.crown)) };
+    if (keyCache.turn !== g.turn || keyCache.phase !== g.phase || keyCache.map !== g.map || !keyCache.keys) keyCache = { turn: g.turn, phase: g.phase, map: g.map, keys: new Set(frontsHere().map((F) => F.crown)) };
     return keyCache.keys;
   }
   const isCrown = (c) => !c.isPlayer && crownKeys().has(c.key);
@@ -40,10 +64,11 @@
     const regs = new Set(regionIds(F)), ck = crownKeys();
     return alive().filter((c) => !c.isPlayer && !ck.has(c.key) && !c.colonial && !c.external && inRegions(c, regs).length);
   }
-  // Ciudades del bando indígena en el frente (las del jugador cuentan salvo que haya pactado con la Corona).
+  // Ciudades del bando indígena que resiste en el frente (las del jugador cuentan salvo que haya pactado con la Corona;
+  // los pueblos aliados o vasallos de la Corona ya no cuentan: han cambiado de bando).
   const nativeCities = (F) => {
-    const regs = new Set(regionIds(F));
-    return nativesOf(F).reduce((s, c) => s + inRegions(c, regs).length, 0) + (G().conquista && G().conquista.pact ? 0 : inRegions(player(), regs).length);
+    const regs = new Set(regionIds(F)), st = FS(F);
+    return nativesOf(F).reduce((s, c) => s + (['corona', 'vasallo'].includes(st.stance[c.id]) ? 0 : inRegions(c, regs).length), 0) + (G().conquista && G().conquista.pact ? 0 : inRegions(player(), regs).length);
   };
   const crownCities = (F, crown) => inRegions(crown, new Set(regionIds(F))).length;
   const crownMil = (crown) => PC.civUnits(crown).filter((u) => PC.isMil(u) && !PC.UNITS[u.type].commander).length;
@@ -88,7 +113,7 @@
   // Propensión (0-90) de un pueblo a pactar con los invasores.
   function pull(F, st, civ, crown) {
     const p = player();
-    let v = 15;
+    let v = TUNE.pullBase;
     if (F.aliados.includes(civ.key)) v += 35;
     const ag = PC.leaderOf(civ).agenda;
     v += ag === 'mercader' ? 10 : ag === 'conquistador' ? 8 : ag === 'pacifico' ? 5 : ag === 'devoto' ? -10 : 0;
@@ -104,6 +129,7 @@
     const p = player();
     const wasPlayerAlly = !!PC.rel(p, civ).ally || inLeague(civ);
     leaveLeague(civ);
+    breakPairs(st, civ);
     if (PC.atWar(civ.id, crown.id)) PC.makePeace(civ, crown);
     PC.rel(civ, crown).ally = PC.rel(crown, civ).ally = true;
     PC.rel(civ, crown).att = Math.max(PC.rel(civ, crown).att, 40); PC.rel(crown, civ).att = Math.max(PC.rel(crown, civ).att, 40);
@@ -126,27 +152,61 @@
   }
   function returnToResistance(F, st, civ, crown) {
     unally(civ, crown);
+    if (civ.tributaryOf === crown.id) civ.tributaryOf = null;
     PC.rel(civ, crown).att -= 30;
     st.stance[civ.id] = 'neutral'; civ.crownAlly = null;
     note(`${civ.name} rompe con ${F.crownName} y vuelve a la resistencia.`, F, 'war', involved(F));
+  }
+  // Ligas espontáneas entre pueblos del frente (guardadas en st.pares): se rompen si uno de los dos se pasa a la Corona.
+  function breakPairs(st, civ) {
+    st.pares = (st.pares || []).filter((pr) => {
+      if (!pr.includes(civ.id)) return true;
+      const o = PC.civ(pr[0] === civ.id ? pr[1] : pr[0]);
+      if (o) { unally(civ, o); PC.rel(o, civ).att -= 15; PC.rel(civ, o).att -= 15; }
+      return false;
+    });
+  }
+  // Dos pueblos del mismo frente, en guerra con la Corona y que se aprecian, se alían entre sí sin depender del jugador.
+  function spontaneousLeague(F, st, crown, ns) {
+    const c = ns.filter((n) => PC.atWar(n.id, crown.id) && !n.crownAlly && !n.tributaryOf && ['resiste', 'liga'].includes(stanceOf(st, n)));
+    if (c.length < 2 || !PC.chance(TUNE.aiLeagueChance)) return;
+    for (let i = 0; i < c.length; i++) for (let j = i + 1; j < c.length; j++) {
+      const a = c[i], b = c[j];
+      if (PC.isAlly(a.id, b.id) || PC.atWar(a.id, b.id) || PC.rel(a, b).att < TUNE.aiLeagueAtt || PC.rel(b, a).att < TUNE.aiLeagueAtt) continue;
+      PC.rel(a, b).ally = PC.rel(b, a).ally = true;
+      PC.rel(a, b).att += 10; PC.rel(b, a).att += 10;
+      (st.pares = st.pares || []).push([a.id, b.id]);
+      note(`${a.name} y ${b.name} sellan una liga contra ${F.crownName}.`, F, 'war', involved(F) || PC.hasMet(a) || PC.hasMet(b));
+      return;
+    }
   }
   function stanceTick(F, st, crown) {
     const g = G();
     if ((g.turn - st.since) % 4 !== 0) return;
     const ns = nativesOf(F);
     Object.keys(st.stance).forEach((id) => { const c = PC.civ(+id); if ((!c || !c.alive || !PC.civCities(c).length) && st.stance[id] !== 'caido') st.stance[id] = 'caido'; });
+    const defected = ns.filter((c) => ['corona', 'vasallo'].includes(stanceOf(st, c))).length;
     ns.forEach((civ) => {
-      const cur = stanceOf(st, civ);
+      let cur = stanceOf(st, civ);
+      if (civ.crownAlly) { // aliado de una Corona de una fase anterior: se conserva el vínculo si sigue viva
+        const cr = PC.civ(civ.crownAlly);
+        if (!cr || !cr.alive) civ.crownAlly = null;
+        else if (cur === 'neutral' && cr.id === crown.id) cur = st.stance[civ.id] = 'corona';
+      }
       if (cur === 'vasallo' || cur === 'caido') return;
       if (cur === 'corona') {
-        if (crownCities(F, crown) === 0 && crownMil(crown) <= 2 && PC.chance(0.25)) returnToResistance(F, st, civ, crown);
+        // Si la Corona flaquea (pocas ciudades y tropas, o muchas bajas), los aliados vuelven a la resistencia.
+        const weak = (crownCities(F, crown) <= 1 && crownMil(crown) <= 5) || (crownMil(crown) <= 2) || st.lost > st.captures + 2;
+        if (weak && PC.chance(TUNE.returnChance)) returnToResistance(F, st, civ, crown);
         return;
       }
       if (inLeague(civ)) st.stance[civ.id] = 'liga';
       else if (PC.atWar(civ.id, crown.id)) st.stance[civ.id] = 'resiste';
+      if (defected >= Math.ceil(ns.length * TUNE.maxDefect)) return;
       const pr = pull(F, st, civ, crown);
-      if (PC.chance(pr / 100 * 0.25)) sideWithCrown(F, st, civ, crown);
+      if (PC.chance(pr / 100 * TUNE.pullRate * (0.4 + 0.6 * kOf(F)))) sideWithCrown(F, st, civ, crown);
     });
+    spontaneousLeague(F, st, crown, ns);
   }
 
   // ---------------------------------------------------------------- La Corona ataca
@@ -188,10 +248,11 @@
   // La Corona recibe refuerzos de ultramar durante las primeras décadas; los pueblos en guerra levantan tropas.
   function reinforce(F, st, crown) {
     const g = G(), age = g.turn - st.since;
-    if (crown.external || age < 1 || age > 36 || age % 5 !== 0 || crownMil(crown) >= 14) return;
+    const K = kOf(F);
+    if (crown.external || age < 1 || age > TUNE.reinfSpan + (K > 1 ? TUNE.reinfSpanBonus : 0) || age % TUNE.reinfEvery !== 0 || crownMil(crown) >= Math.round(TUNE.reinfCap * Math.max(1, K))) return;
     const base = PC.civCities(crown)[0];
     if (!base) return;
-    const k = Math.max(1, Math.round((2 + (st.cmdUnit !== null ? 1 : 0)) * (PC.diff().spain || 1)));
+    const k = Math.max(1, Math.round((2 + (st.cmdUnit !== null ? 1 : 0)) * K));
     for (let i = 0; i < k; i++) PC.spawnUnit(crown, i % 3 === 2 ? 'caballero' : 'conquistador', PC.tile(base.t));
     crown.gold += 30;
     if (age === 5 || age === 20) note(`Llegan refuerzos de ultramar para ${F.crownName} en ${F.name}.`, F, 'war', involved(F));
@@ -203,7 +264,8 @@
       const cs = PC.civCities(n);
       if (!cs.length || PC.civUnits(n).filter(PC.isMil).length >= cs.length * 3 + 2) return;
       PC.spawnUnit(n, PC.aiBestUnit(n), PC.tile(cs[0].t));
-      if (inLeague(n)) PC.spawnUnit(n, PC.aiBestUnit(n), PC.tile(cs[0].t));
+      // La resistencia levanta más tropas en Fácil y en los frentes donde la Corona lo tuvo difícil (K < 1).
+      if (inLeague(n) || kOf(F) < 0.9) PC.spawnUnit(n, PC.aiBestUnit(n), PC.tile(cs[0].t));
     });
   }
 
@@ -223,23 +285,26 @@
   }
   function resolveTick(F, st, crown) {
     const g = G();
-    const age = g.turn - st.since, cc = crownCities(F, crown), nc = nativeCities(F);
+    const age = g.turn - st.since, cc = crownCities(F, crown), nc = nativeCities(F), K = kOf(F);
     if (F.crown === 'espana') {
       if (g.flags.coronaDesiste && !g.flags.virreinato && !g.flags.virreinatoAI) return resolve(F, st, 'resistida', crown);
       if ((g.flags.virreinato || g.flags.virreinatoAI) && cc >= 3) return resolve(F, st, 'conquistada', crown);
-      if (age >= 30) resolve(F, st, cc >= 2 || g.flags.virreinatoAI ? 'conquistada' : 'resistida', crown);
+      // Pasados 30 turnos decide el pie que la Corona ha logrado: ciudades y tropas (peruScore, escalado por la dificultad).
+      if (age >= 30) resolve(F, st, g.flags.virreinatoAI || cc >= 2 || cc * 10 + crownMil(crown) >= peruNeed(K) ? 'conquistada' : 'resistida', crown);
       return;
     }
     if (age >= 6 && cc === 0 && crownMil(crown) === 0) return resolve(F, st, 'resistida', crown);
-    if (age >= 8 && cc >= 2 && nc <= Math.floor(st.nativeStart * 0.34)) return resolve(F, st, 'conquistada', crown);
-    // Pasadas unas décadas el frente se estabiliza: gana quien tiene la mayor parte de las ciudades.
-    if (age >= 28) resolve(F, st, cc >= 2 && cc * 2 >= nc ? 'conquistada' : 'resistida', crown);
+    if (age >= 8 && cc >= 2 && nc <= Math.floor(st.nativeStart * PC.clamp(TUNE.earlyShare * K * K, 0.05, 0.7))) return resolve(F, st, 'conquistada', crown);
+    // Pasadas unas décadas el frente se estabiliza: gana quien tiene la mayor parte de las ciudades (la Corona, con más ventaja a mayor K).
+    if (age >= TUNE.settle) resolve(F, st, cc >= 2 && cc * 2 * K * K * K >= nc ? 'conquistada' : 'resistida', crown);
   }
 
   // ---------------------------------------------------------------- Ciclo de vida de un frente
   function activate(F, st, crown) {
     const g = G();
-    st.state = 'activo'; st.since = g.turn; st.nativeStart = Math.max(1, nativeCities(F)); st.stance = {}; st.cmdUnit = null; st.cmdDead = null;
+    // Acero, caballos y aliados indígenas: la ventaja militar de la expedición crece con la dificultad y el frente (K).
+    if (crown.colonial) crown.bonus = Object.assign({}, crown.bonus, { atk: Math.round(TUNE.crownAtk * kOf(F)), atkCity: Math.round(TUNE.crownAtkCity * kOf(F)) });
+    st.state = 'activo'; st.since = g.turn; st.stance = {}; st.pares = []; st.nativeStart = Math.max(1, nativeCities(F)); st.cmdUnit = null; st.cmdDead = null;
     if (!st.started) {
       st.started = true;
       note(`${F.crownName} abre un frente en ${F.name} (${PC.fmtYear(g.year)}). ${F.text}`, F, 'war', involved(F) || !S().intro);
@@ -252,6 +317,8 @@
     if (st.state === 'pendiente') {
       if (!crown) {
         if (g.year >= F.year + PC.CONQUISTA_SETTLE && !st.started) { st.state = 'resistida'; st.resolved = { turn: g.turn, year: g.year, silent: true }; }
+        // Un frente ya iniciado cuya Corona desapareció al cambiar de fase: la expedición fracasó.
+        else if (st.started && g.year >= F.year) { st.state = 'resistida'; st.resolved = { turn: g.turn, year: g.year, silent: true }; }
         return;
       }
       if (g.year < F.year && !st.started) return;
@@ -288,7 +355,7 @@
       if (!wasCapital || !old.alive) return;
       const left = PC.civCities(old);
       if (!left.length) return;
-      if (PC.chance(0.5)) {
+      if (PC.chance(TUNE.vassalChance)) {
         old.tributaryOf = nc.id; PC.rel(old, nc).ally = PC.rel(nc, old).ally = true; st.stance[old.id] = 'vasallo';
         if (PC.atWar(old.id, nc.id)) PC.makePeace(old, nc);
         note(`Sin su capital, ${old.name} jura vasallaje a ${F.crownName}.`, F, 'war', involved(F));
@@ -312,7 +379,7 @@
     const set = new Set();
     frontsHere().forEach((F) => { if (FS(F).state === 'activo') nativesOf(F).forEach((c) => set.add(c)); });
     alive().forEach((c) => { if (!c.isPlayer && !isCrown(c) && !c.external && crownEnemy(c)) set.add(c); });
-    return Array.from(set).filter((c) => !c.isPlayer && PC.civCities(c).length && PC.hasMet(c) && !PC.atWar(p.id, c.id) && !c.crownAlly && !c.tributaryOf && !inLeague(c));
+    return Array.from(set).filter((c) => !c.isPlayer && PC.civCities(c).length && (PC.hasMet(c) || G().autoplay) && !PC.atWar(p.id, c.id) && !c.crownAlly && !c.tributaryOf && !inLeague(c));
   };
   function addMember(civ) {
     const c = S(), p = player(), L = c.league;
@@ -432,7 +499,7 @@
     c.league = null;
     Object.keys(c.fronts).forEach((id) => {
       const st = c.fronts[id];
-      st.stance = {}; st.cmdUnit = null; st.cmdName = null; st.cmdDead = null;
+      st.stance = {}; st.pares = []; st.cmdUnit = null; st.cmdName = null; st.cmdDead = null;
       if (st.state === 'activo') st.state = 'pendiente';
     });
   }
@@ -442,17 +509,21 @@
     PC[name] = function () {
       const before = G().phase;
       base.apply(this, arguments);
-      if (G().phase !== before) { keyCache = { turn: -1, phase: '', keys: null }; if (G().conquista) reset(); }
+      if (G().phase !== before) { keyCache = { turn: -1, phase: '', map: null, keys: null }; if (G().conquista) reset(); }
     };
   });
   const baseTick = PC.diplomacyTick;
   PC.diplomacyTick = function () {
     if (baseTick) baseTick();
     const g = G();
-    if (!PC.player() || !PC.player().alive) return;
+    if (!PC.player()) return;
+    const t0 = PC.conqProfile ? Date.now() : 0;
     frontsHere().forEach(tickFront);
     leagueTick();
     pactTick();
+    // El piloto automático también convoca la liga de vez en cuando si hay un frente en guerra y le alcanza la influencia.
+    if (g.autoplay && !S().league && !S().pact && g.turn % 4 === 0 && frontsHere().some((F) => FS(F).state === 'activo') && (PC.player().influence || 0) >= PC.CONQUISTA_LEAGUE_COST && PC.chance(0.3)) PC.conquistaFormLeague();
+    if (PC.conqProfile) PC.conqMs = (PC.conqMs || 0) + (Date.now() - t0);
     // Fin de la Conquista en esta fase: todos los frentes decididos.
     const here = frontsHere(), c = S();
     if (c.intro && !c.ended[g.phase] && here.length && here.every((F) => ['resistida', 'conquistada'].includes(FS(F).state)) && here.some((F) => !FS(F).resolved || !FS(F).resolved.silent)) {
