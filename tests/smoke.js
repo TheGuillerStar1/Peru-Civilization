@@ -48,6 +48,9 @@ else {
   err += run(seed + 13, 'independencia', 'peru', 50, 'medio', 15);
   err += run(seed + 14, 'pacifico', 'peru', 40);
   err += run(seed + 15, 'sudamerica1810', 'peru', 70, 'medio', 0, 3);
+  // Escenario de la Conquista (v0.1.3): varios frentes y la campaña avanzada.
+  err += run(seed + 16, 'conquista1492', 'inca', 120);
+  err += run(seed + 17, 'conquista1492', 'inca', 200, 'realista');
 }
 // Guardar / cargar
 const json = PC.serialize(); PC.load(json); PC.endTurn();

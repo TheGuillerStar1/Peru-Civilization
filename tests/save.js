@@ -70,6 +70,19 @@ playTurns(10, 'América');
 roundTrip('Fase 3 · América');
 loadV1(PC.serialize(), 'Fase 3 · América');
 
+// Escenario de la Conquista: guarda a mitad de campaña y carga un guardado anterior a la campaña (sin g.conquista).
+PC.newGame({ scenario: 'conquista1492', culture: 'inca', seed: seed + 2, autoplay: true });
+playTurns(8, 'La Conquista');
+if (!PC.G.conquista || !PC.G.conquista.intro) fail('La Conquista: la campaña no se abrió en 8 turnos');
+roundTrip('La Conquista (1492)');
+{
+  const old = JSON.parse(PC.serialize());
+  delete old.conquista;
+  try { PC.load(JSON.stringify(old)); PC.conquistaView(); playTurns(5, 'sin campaña'); } catch (e) { fail(`guardado sin g.conquista: ${e.stack}`); }
+  if (!PC.G.conquista) fail('g.conquista no se creó sola al cargar un guardado antiguo');
+  else console.log('[sin campaña] guardado antiguo cargado y g.conquista creada sola');
+}
+
 // Un guardado sin sentido debe dar error, no un estado roto.
 try { PC.load('{"v":1}'); fail('un guardado vacío se cargó sin error'); } catch (e) { /* esperado */ }
 

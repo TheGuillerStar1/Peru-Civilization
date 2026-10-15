@@ -43,7 +43,8 @@ function compare(name, a, b) {
 const seed = +process.argv[2] || 21;
 const CASES = [
   { scenario: 'origenes', culture: 'caral', seed, turns: 80 },
-  { scenario: 'tahuantinsuyo', culture: 'inca', seed: seed + 1, turns: 80, difficulty: 'realista', phase2At: 25, phase3At: 50 }
+  { scenario: 'tahuantinsuyo', culture: 'inca', seed: seed + 1, turns: 80, difficulty: 'realista', phase2At: 25, phase3At: 50 },
+  { scenario: 'conquista1492', culture: 'inca', seed: seed + 2, turns: 40 }
 ];
 let fails = 0;
 CASES.forEach((c) => {
