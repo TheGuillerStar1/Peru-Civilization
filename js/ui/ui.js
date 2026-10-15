@@ -74,7 +74,7 @@
       $('#opt-start').disabled = fixed;
       $('#opt-start').innerHTML = '<option value="">Tierra histórica de la civilización</option>' +
         ['costa', 'sierra', 'selva'].map((z) => `<optgroup label="${zoneName[z]}">${regs.filter((r) => r.zone === z).map((r) => `<option value="${r.id}" ${m.start === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}</optgroup>`).join('');
-      $('#st-desc').textContent = fixed ? 'En este escenario el imperio ya existe: empiezas en el Cusco.' :
+      $('#st-desc').textContent = fixed ? (sc.startText || 'En este escenario el imperio ya existe: empiezas en el Cusco.') :
         m.start ? `Fundarás tu primera ciudad en ${regs.find((r) => r.id === m.start).name}. También puedes hacer clic en una provincia del mapa.` :
         `Empiezas en ${regs.find((r) => r.id === C.region).name}, la tierra histórica de tu civilización. Elige otra provincia en la lista o haz clic en el mapa.`;
       if (PC.G && PC.G.preview) { R.sel = { regionHL: fixed ? 'cusco' : (m.start || C.region) }; R.draw(); }
