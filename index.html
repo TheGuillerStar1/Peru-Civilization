@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Perú Civilization</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Menú principal -->
+  <section id="menu" class="screen">
+    <div class="menu-inner">
+      <h1>Perú <span>Civilization</span></h1>
+      <p class="tagline">Una historia interactiva y no lineal de los Andes: de Caral al siglo XXI. Tus decisiones cambian la historia.</p>
+      <div class="phases">
+        <span class="phase on">Fase 1 · Perú</span><span class="phase">Fase 2 · Sudamérica</span><span class="phase off">Fase 3 · América</span><span class="phase off">Fase 4 · El Mundo</span>
+      </div>
+      <h2>1. Escenario</h2>
+      <div id="scenarios" class="cards"></div>
+      <h2>2. Cultura</h2>
+      <div id="cultures" class="cards"></div>
+      <h2>3. Dificultad</h2>
+      <div id="difficulties" class="cards"></div>
+      <div class="opts">
+        <label>Velocidad <select id="opt-speed"><option value="normal">Normal (~320 turnos)</option><option value="rapida">Rápida (~160 turnos)</option></select></label>
+        <label>Semilla del mapa <input id="opt-seed" type="number" placeholder="aleatoria"></label>
+      </div>
+      <div class="menu-actions">
+        <button id="btn-start" class="primary">Comenzar la historia</button>
+        <button id="btn-continue">Continuar partida guardada</button>
+        <button id="btn-load-file">Cargar archivo…</button>
+        <input id="file-load" type="file" accept=".json" hidden>
+      </div>
+      <p class="small">Basado en la investigación de <a href="docs/INVESTIGACION_HISTORICA.md" target="_blank">docs/INVESTIGACION_HISTORICA.md</a>.</p>
+    </div>
+  </section>
+
+  <!-- Juego -->
+  <section id="game" class="screen hidden">
+    <header id="topbar">
+      <div class="civbadge"><span id="tb-color" class="dot"></span><span id="tb-civ"></span></div>
+      <div class="stat" id="tb-year" title="Año y era"></div>
+      <div class="stat" id="tb-gold" title="Oro (ingreso por turno)"></div>
+      <div class="stat" id="tb-sci" title="Investigación"></div>
+      <div class="stat" id="tb-cult" title="Cultura acumulada"></div>
+      <div class="stat" id="tb-stab" title="Cohesión del Estado"></div>
+      <div class="stat" id="tb-reg" title="Provincias controladas"></div>
+      <nav>
+        <button data-modal="techs">Tecnologías <kbd>T</kbd></button>
+        <button data-modal="diplo">Diplomacia <kbd>D</kbd></button>
+        <button data-modal="regions">Provincias <kbd>P</kbd></button>
+        <button data-modal="chronicle">Crónica <kbd>C</kbd></button>
+        <button data-modal="menu">Menú</button>
+      </nav>
+    </header>
+    <main id="main">
+      <div id="mapwrap">
+        <canvas id="map"></canvas>
+        <div id="tooltip" class="hidden"></div>
+        <div id="toasts"></div>
+        <div id="mapctl">
+          <button id="zin" title="Acercar">＋</button><button id="zout" title="Alejar">－</button>
+          <button id="tgl-regions" title="Mostrar provincias">Provincias</button>
+          <button id="tgl-yields" title="Mostrar rendimientos">Rendim.</button>
+        </div>
+        <div id="legend"></div>
+      </div>
+      <aside id="side">
+        <div id="panel"></div>
+        <button id="btn-end" class="primary big">Terminar turno <kbd>Enter</kbd></button>
+      </aside>
+    </main>
+  </section>
+
+  <div id="modal" class="hidden"><div class="modal-box"><button class="close" id="modal-close">×</button><div id="modal-body"></div></div></div>
+
+  <script src="js/core/util.js"></script>
+  <script src="js/data/geo.js"></script>
+  <script src="js/data/geo_sa.js"></script>
+  <script src="js/data/rules.js"></script>
+  <script src="js/data/civs.js"></script>
+  <script src="js/core/mapgen.js"></script>
+  <script src="js/core/game.js"></script>
+  <script src="js/core/ai.js"></script>
+  <script src="js/core/setup.js"></script>
+  <script src="js/core/events.js"></script>
+  <script src="js/core/diplomacy.js"></script>
+  <script src="js/core/phases.js"></script>
+  <script src="js/ui/render.js"></script>
+  <script src="js/ui/ui.js"></script>
+</body>
+</html>
