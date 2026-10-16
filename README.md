@@ -6,14 +6,14 @@
 La historia real es el punto de partida; lo que pase después depende de ti.
 
 [![Pruebas](https://github.com/TheGuillerStar1/Peru-Civilization/actions/workflows/test.yml/badge.svg)](https://github.com/TheGuillerStar1/Peru-Civilization/actions/workflows/test.yml)
-![Versión](https://img.shields.io/badge/versi%C3%B3n-0.1.3-e2a72e)
+![Versión](https://img.shields.io/badge/versi%C3%B3n-0.1.4-e2a72e)
 ![Sin instalación](https://img.shields.io/badge/instalaci%C3%B3n-ninguna-86ba6f)
 ![three.js](https://img.shields.io/badge/3D-three.js-a3243b)
 ![Idioma](https://img.shields.io/badge/idioma-espa%C3%B1ol-28335c)
 
 <img src="docs/img/03-peru-ciudad.jpg" alt="Cusco, capital del Tahuantinsuyo, en la maqueta 3D del juego" width="860">
 
-[Jugar](#cómo-jugar) · [Capturas](#capturas) · [La Conquista](#la-conquista-v013) · [Diseño](DESIGN.md) · [Investigación histórica](docs/INVESTIGACION_HISTORICA.md)
+[Jugar](#cómo-jugar) · [Novedades](#novedades) · [Capturas](#capturas) · [La Conquista](#la-conquista-v013) · [Diseño](DESIGN.md) · [Investigación histórica](docs/INVESTIGACION_HISTORICA.md) · [Jugabilidad de Civ VI](docs/INVESTIGACION_CIV6_JUGABILIDAD.md)
 
 </div>
 
@@ -28,12 +28,29 @@ Un *Civilization* **no lineal** sobre el Perú: tus decisiones, los recursos que
 - **Cuatro formas de ganar** (dominación, cultural, diplomática e histórica), un congreso de los pueblos que vota resoluciones y cuatro dificultades, de Fácil a **Realista**.
 - **Sin instalación**: HTML, CSS y JavaScript puros con three.js incluido. Guarda en el navegador y exporta a `.json`.
 
+## Novedades
+
+También dentro del juego, en **Menú → Novedades**. Cada versión o parche nuevo se anota aquí y en `js/data/novedades.js`.
+
+### v0.1.4 · Líderes renovados y mejoras de jugabilidad
+- **Lista de pendientes del turno (P0.1)**: filas accionables (investigación, ciudades sin producción, unidades sin órdenes, amenazas) que llevan al sitio donde se resuelven.
+- **Consejero permanente (P0.2)**: 15 consejos por condición, sin techo de turno; se pueden posponer o desactivar.
+- **Crónica consultable (P0.4)**: filtros por tipo, búsqueda sin acentos, últimos 20 turnos y salto a la ciudad mencionada.
+- **Vitrinas 3D manipulables** en el menú: girar, acercar y reencuadrar.
+- **Líderes 3D rediseñados**, más fieles a sus versiones históricas (llautu y mascapaicha, tocados, capas y atuendos).
+- **Botón «Novedades»** en el menú con el registro de versiones y parches.
+
+**Parche 0.1.4** — corregidos los modelos de Pachacútec, Túpac Yupanqui, Huayna Cápac, Manco Inca, Castilla y Grau, que no se dibujaban; constantes duplicadas que impedían cargar el render 3D; hueco entre falda y pecho en los vestidos largos; borla del llautu sobre los ojos y tocados flotantes.
+
+### v0.1.3 · La Conquista
+Campaña de 11 frentes con comandantes, alianzas y traiciones, liga de resistencia y pacto con la Corona (ver [La Conquista](#la-conquista-v013)).
+
 ## Capturas
 
 <table>
 <tr>
 <td width="50%"><img src="docs/img/01-menu.jpg" alt="Pantalla principal de Perú Civilization"><br><sub><b>Pantalla principal.</b> La maqueta del Perú gira detrás del menú.</sub></td>
-<td width="50%"><img src="docs/img/02-lideres.jpg" alt="Elección de líder con el modelo 3D de Pachacútec"><br><sub><b>Elige a tu líder.</b> Modelo 3D, habilidad única y personalidad.</sub></td>
+<td width="50%"><img src="docs/img/02-lideres.jpg" alt="Elección de líder con el modelo 3D de Pachacútec"><br><sub><b>Elige a tu líder.</b> Modelo 3D manipulable con el ratón, habilidad única y personalidad.</sub></td>
 </tr>
 <tr>
 <td width="50%"><img src="docs/img/00-guia.jpg" alt="La guía de inicio, con capturas reales del juego"><br><sub><b>Guía de inicio.</b> Cada tarjeta es una captura real de la maqueta.</sub></td>
@@ -66,7 +83,9 @@ python3 -m http.server 8000   # y abre http://localhost:8000
 **Ayudas (v0.1.2):** minimapa con terrenos, fronteras, niebla y el recuadro de la vista (un clic centra la cámara); consejero con consejos en los primeros 30 turnos y avisos de enemigos cerca de tus ciudades; resumen compacto al empezar cada turno; y fronteras con patrón para daltonismo. Todo se activa o desactiva en Opciones › Ayudas y accesibilidad.
 
 ### Menú
-Como en Civilization, el menú va por pantallas: **pantalla principal** (Continuar, Nueva partida, Cargar partida, Opciones), luego **Líder** (lista con retratos y el modelo 3D girando, con su habilidad y personalidad), **Civilización y escenario**, y **Configuración de la partida** (dificultad, punto de partida y opciones avanzadas). `Esc` vuelve a la pantalla anterior.
+Como en Civilization, el menú va por pantallas: **pantalla principal** (Continuar, Nueva partida, Cargar partida, Opciones), luego **Líder** (lista con retratos y el modelo 3D de cuerpo entero sobre su pedestal, con su habilidad y su personalidad), **Civilización y escenario** y **Configuración de la partida** (dificultad, punto de partida y opciones avanzadas). `Esc` vuelve a la pantalla anterior.
+
+Las tres pantallas llevan una **vitrina 3D manipulable**: arrastra para girar al personaje, usa la rueda para acercarte (de cerca la mirada sube al rostro) y haz doble clic para volver a encuadrarlo; sin tocarlo se mece despacio. En **Civilización** la vitrina muestra a los personajes de la cultura elegida —el ayllu de mit'a, los honderos, el chaski explorador, el awqa runa…— y sus fichas cambian el modelo. En **Partida** muestra el **pedazo de tierra** de la provincia inicial: siete casillas con su relieve, sus ríos y su decoración sobre un plinto de lana, con el estandarte dorado en la casilla donde nacerá tu primera ciudad, y a su lado la ficha de la provincia (terreno, rendimientos por casilla, recursos y nombre histórico de la ciudad).
 
 ### Líderes, inicio y diplomacia (inspirado en Civilization VII)
 - **Líder histórico** con modelo 3D low-poly propio (mascapaicha y orejeras de los incas, el tocado de oro del Señor de Sipán, la máscara de jaguar de Chavín, la montera de Micaela Bastidas, el bicornio de Grau…) y ventaja única, independiente de la cultura: Pachacútec, Túpac Yupanqui, Huayna Cápac, Mama Ocllo, Señor de Sipán, Taycanamo, el sumo sacerdote de Chavín, Manco Inca, Micaela Bastidas y Túpac Amaru II; y de la Colonia y la República, Juan Santos Atahualpa, María Parado de Bellido, José Olaya, Ramón Castilla, Miguel Grau, Francisco Bolognesi y Andrés A. Cáceres.

@@ -72,9 +72,10 @@
     return out;
   }
   function cachedGeo(key, build) {
-    if (!geoCache[key]) geoCache[key] = merge(build());
+    if (!geoCache[key]) { const g = merge(build()); g.userData.keep = true; geoCache[key] = g; } // las geometrías con caché no se liberan
     return geoCache[key];
   }
+  function disposeNode(n) { n.traverse((o) => { if (o.geometry && !o.geometry.userData.keep) o.geometry.dispose(); }); }
   function shadeHex(hex, f) { const c = C(hex); c.multiplyScalar(f); return '#' + c.getHexString(); }
 
   // ---------------------------------------------------------------- texturas tejidas
@@ -200,6 +201,10 @@
 
   // ---------------------------------------------------------------- mapa base
   const TOP_FACES = 6;
+  function tileMaterial() {
+    if (!R.matTile) R.matTile = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.92, metalness: 0.0, side: THREE.DoubleSide });
+    return R.matTile;
+  }
   function hexCorner(cx, cz, k, s) { const a = Math.PI / 180 * (60 * k - 30); return [cx + s * Math.cos(a), cz + s * Math.sin(a)]; }
   function buildTiles() {
     const g = PC.G;
@@ -227,8 +232,7 @@
     geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(pos.length), 3));
     geo.computeVertexNormals();
     if (tileMesh) { scene.remove(tileMesh); tileMesh.geometry.dispose(); }
-    if (!R.matTile) R.matTile = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.92, metalness: 0.0, side: THREE.DoubleSide });
-    tileMesh = new THREE.Mesh(geo, R.matTile);
+    tileMesh = new THREE.Mesh(geo, tileMaterial());
     tileMesh.receiveShadow = true;
     scene.add(tileMesh);
   }
@@ -965,92 +969,171 @@
 
   // ---------------------------------------------------------------- líderes (modelos low-poly y retratos)
   const GOLD = '#e6b422', RED = '#a3243b', BLACK = '#1a1410', WHITE = '#efe9dc', TURQ = '#2fa39a', SILVER = '#c9ccd4';
+  const STEEL = '#9aa3ad', LWOOD = '#6b4a2f';
+  // Cuerpo base. Los brazos van siempre por fuera de la ropa: los vestidos largos (anaku, polleras)
+  // se construyen por tramos que se ensanchan hacia el ruedo, sin taparlos.
   function leaderBody(P, o) {
-    const skin = o.skin || '#9a6440';
-    // piernas y sandalias (ojotas)
-    if (!o.longDress) {
-      P.push(['box', skin, -0.1, 0.18, 0, 0.11, 0.36, 0.12]); P.push(['box', skin, 0.1, 0.18, 0, 0.11, 0.36, 0.12]);
-      P.push(['box', '#5a3a22', -0.1, 0.02, 0.03, 0.13, 0.04, 0.2]); P.push(['box', '#5a3a22', 0.1, 0.02, 0.03, 0.13, 0.04, 0.2]);
+    const skin = o.skin || SKIN, dress = !!o.longDress;
+    const ax = o.armX || (dress ? 0.37 : 0.31);
+    if (!dress) {
+      P.push(['box', o.legs || skin, -0.1, 0.18, 0, 0.11, 0.36, 0.12]); P.push(['box', o.legs || skin, 0.1, 0.18, 0, 0.11, 0.36, 0.12]);
+      P.push(['box', o.shoes || '#5a3a22', -0.1, 0.02, 0.03, 0.13, 0.04, 0.2]); P.push(['box', o.shoes || '#5a3a22', 0.1, 0.02, 0.03, 0.13, 0.04, 0.2]);
     }
-    // túnica (unku) o vestido largo (anaku)
-    if (o.longDress) P.push(['cyl', o.tunic, 0, 0.42, 0, 0.36, 0.84, 0.3]);
-    else P.push(['cyl', o.tunic, 0, 0.66, 0, 0.27, 0.62, 0.21]);
-    // franja de tocapus al frente
+    if (dress) {
+      P.push(['cyl', o.tunic, 0, 0.63, 0, 0.25, 0.22, 0.2]);
+      P.push(['cyl', o.tunic, 0, 0.43, 0, 0.3, 0.24, 0.23]);
+      P.push(['cyl', o.tunic, 0, 0.17, 0, 0.35, 0.3, 0.27]);
+      P.push(['cyl', o.tunic, 0, 0.84, 0, 0.23, 0.22, 0.19]); // corpiño: cierra el hueco entre la falda y el pecho
+      P.push(['cyl12', o.hem || shadeHex(o.tunic, 0.55), 0, 0.03, 0, 0.36, 0.05, 0.28]);
+      (o.skirtBands || []).forEach((col, k) => P.push(['cyl12', col, 0, 0.22 + k * 0.11, 0, 0.352 - k * 0.03, 0.03, 0.272 - k * 0.02]));
+    } else {
+      P.push(['cyl', o.tunic, 0, 0.66, 0, 0.27, 0.62, 0.21]);
+    }
     if (o.tocapu !== false) {
       const tc = o.tocapuColors || [WHITE, RED, GOLD, BLACK];
       for (let r = 0; r < 2; r++) for (let c = -2; c <= 2; c++) P.push(['box', tc[(r * 5 + c + 10) % tc.length], c * 0.075, 0.62 + r * 0.075, 0.215, 0.065, 0.065, 0.02]);
     }
-    P.push(['cyl', o.belt || WHITE, 0, o.longDress ? 0.84 : 0.5, 0, o.longDress ? 0.3 : 0.28, 0.05, 0.22]);
-    // torso superior y brazos
+    P.push(['cyl', o.belt || WHITE, 0, dress ? 0.8 : 0.5, 0, dress ? 0.26 : 0.28, 0.05, dress ? 0.21 : 0.22]);
     P.push(['cyl', o.tunic, 0, 1.05, 0, 0.22, 0.26, 0.17]);
-    P.push(['box', o.sleeve || skin, -0.31, 0.86, 0, 0.1, 0.42, 0.11, 0, 0, 0.12]);
-    P.push(['box', o.sleeve || skin, 0.31, 0.86, 0, 0.1, 0.42, 0.11, 0, 0, -0.12]);
-    P.push(['sph', skin, -0.34, 0.62, 0.02, 0.06, 0.06, 0.06]); P.push(['sph', skin, 0.34, 0.62, 0.02, 0.06, 0.06, 0.06]);
-    // cabeza y rostro
+    P.push(['box', o.sleeve || skin, -ax, 0.86, 0, 0.1, 0.42, 0.11, 0, 0, 0.12]);
+    P.push(['box', o.sleeve || skin, ax, 0.86, 0, 0.1, 0.42, 0.11, 0, 0, -0.12]);
+    const hand = o.hand || (o.gloves ? o.sleeve : skin);
+    P.push(['sph', hand, -ax - 0.03, 0.62, 0.02, 0.06, 0.06, 0.06]); P.push(['sph', hand, ax + 0.03, 0.62, 0.02, 0.06, 0.06, 0.06]);
+    if (o.collar) P.push(['cyl12', o.collar, 0, 1.17, 0, 0.19, 0.06, 0.17]);
+    // rostro: cejas, ojos, nariz y boca
     P.push(['cyl', skin, 0, 1.22, 0, 0.07, 0.08, 0.07]);
     P.push(['sph', skin, 0, 1.38, 0, 0.17, 0.2, 0.17]);
-    P.push(['box', BLACK, -0.06, 1.41, 0.155, 0.04, 0.02, 0.01]); P.push(['box', BLACK, 0.06, 1.41, 0.155, 0.04, 0.02, 0.01]);
+    P.push(['box', o.brow || '#3a2a20', -0.06, 1.44, 0.155, 0.05, 0.015, 0.012]); P.push(['box', o.brow || '#3a2a20', 0.06, 1.44, 0.155, 0.05, 0.015, 0.012]);
+    P.push(['box', BLACK, -0.06, 1.41, 0.16, 0.04, 0.02, 0.012]); P.push(['box', BLACK, 0.06, 1.41, 0.16, 0.04, 0.02, 0.012]);
     P.push(['box', skin, 0, 1.36, 0.165, 0.04, 0.07, 0.04]);
-    P.push(['box', '#5a2a22', 0, 1.29, 0.155, 0.07, 0.015, 0.01]);
-    if (o.beard) P.push(['box', o.beard, 0, 1.25, 0.12, 0.2, 0.12, 0.1]);
+    P.push(['box', '#5a2a22', 0, 1.29, 0.16, 0.06, 0.015, 0.012]);
+    if (o.mustache) P.push(['box', o.mustache, 0, 1.325, 0.165, 0.095, 0.022, 0.015]);
+    if (o.beard) { // barba corta pegada a la mandíbula
+      P.push(['box', o.beard, 0, 1.27, 0.11, 0.2, 0.13, 0.1]);
+      P.push(['box', o.beard, -0.075, 1.33, 0.13, 0.045, 0.09, 0.06]); P.push(['box', o.beard, 0.075, 1.33, 0.13, 0.045, 0.09, 0.06]);
+    }
+    if (o.beardFull) { // barba larga (patriarcas del XIX)
+      P.push(['box', o.beardFull, 0, 1.24, 0.1, 0.24, 0.2, 0.13]);
+      P.push(['box', o.beardFull, 0, 1.11, 0.1, 0.16, 0.1, 0.1]);
+      P.push(['box', o.beardFull, -0.08, 1.36, 0.13, 0.05, 0.12, 0.06]); P.push(['box', o.beardFull, 0.08, 1.36, 0.13, 0.05, 0.12, 0.06]);
+    }
     if (o.hair !== false) P.push(['sph', o.hair || BLACK, 0, 1.45, -0.03, 0.18, 0.15, 0.18]);
-    if (o.cloak) P.push(['box', o.cloak, 0, 0.82, -0.2, 0.62, 0.7, 0.04, 0.08, 0, 0]);
+    if (o.longHair) P.push(['box', o.hair || BLACK, 0, 1.2, -0.17, 0.26, 0.42, 0.09]);
+    if (o.cloak) P.push(['box', o.cloak, 0, 0.82, -0.21, 0.62, 0.72, 0.05, 0.08, 0, 0]);
   }
-  function incaCrown(P, o) {
-    // llautu (trenza multicolor), mascapaicha (borla roja) y plumas de corequenque
-    P.push(['cyl', o.band || '#c23a50', 0, 1.47, 0, 0.18, 0.05, 0.18]);
-    for (let k = -2; k <= 2; k++) P.push(['box', RED, k * 0.035, 1.39, 0.17, 0.03, 0.08, 0.01]);
-    P.push(['box', GOLD, 0, 1.5, 0.16, 0.08, 0.06, 0.02]);
-    P.push(['box', WHITE, -0.03, 1.66, 0.12, 0.035, 0.24, 0.01, 0.15, 0, 0.1]); P.push(['box', BLACK, 0.03, 1.66, 0.12, 0.035, 0.24, 0.01, 0.15, 0, -0.1]);
-    // orejeras de oro
-    P.push(['cyl12', GOLD, -0.17, 1.37, 0, 0.06, 0.025, 0.06, 0, 0, Math.PI / 2]); P.push(['cyl12', GOLD, 0.17, 1.37, 0, 0.06, 0.025, 0.06, 0, 0, Math.PI / 2]);
+  // Llautu del Sapa Inca: trenza de colores, mascapaicha (borla roja sobre la frente),
+  // dos plumas de corequenque (blancas de punta negra) y orejeras de oro.
+  function llautu(P, o) {
+    o = o || {};
+    P.push(['cyl', o.band || '#c23a50', 0, 1.51, 0, 0.19, 0.06, 0.19]);
+    for (let k = -2; k <= 2; k++) P.push(['box', o.braid || RED, k * 0.037, 1.55, -0.03, 0.03, 0.05, 0.02]);
+    P.push(['box', GOLD, 0, 1.54, 0.17, 0.1, 0.04, 0.02]);
+    for (let k = -1; k <= 1; k++) P.push(['box', '#c23a50', k * 0.036, 1.495, 0.185, 0.028, 0.07, 0.015]);
+    [-1, 1].forEach((s) => {
+      P.push(['box', WHITE, s * 0.05, 1.72, 0.05, 0.032, 0.26, 0.012, -0.2, 0, s * 0.14]);
+      P.push(['box', BLACK, s * 0.075, 1.85, 0.02, 0.032, 0.06, 0.012, -0.2, 0, s * 0.14]);
+    });
+    P.push(['cyl12', GOLD, -0.18, 1.37, 0, 0.06, 0.025, 0.06, 0, 0, Math.PI / 2]); P.push(['cyl12', GOLD, 0.18, 1.37, 0, 0.06, 0.025, 0.06, 0, 0, Math.PI / 2]);
   }
+  // Báculo con remate: 'estrella' (maza estrellada), 'sol' (disco) o 'remo' (cetro en T chimú).
   function staff(P, x, top, topColor, h) {
-    P.push(['cyl', '#6b4a2f', x, (h || 1.3) / 2, 0.08, 0.02, h || 1.3, 0.02]);
+    P.push(['cyl', LWOOD, x, (h || 1.3) / 2, 0.08, 0.02, h || 1.3, 0.02]);
     if (top === 'estrella') P.push(['ico', topColor || GOLD, x, (h || 1.3) + 0.04, 0.08, 0.08, 0.08, 0.08]);
     if (top === 'sol') P.push(['cyl12', topColor || GOLD, x, (h || 1.3) + 0.06, 0.08, 0.11, 0.02, 0.11, Math.PI / 2, 0, 0]);
-    if (top === 'remo') P.push(['box', '#8a6a44', x, (h || 1.3) - 0.05, 0.08, 0.1, 0.32, 0.02]);
+    if (top === 'remo') P.push(['box', topColor || '#8a6a44', x, (h || 1.3) - 0.05, 0.08, 0.12, 0.32, 0.02]);
   }
-  // Uniforme republicano: casaca, charreteras de oro, botones y botas.
+  // Champi: maza de mano con cabeza estrellada de cobre.
+  function champi(P, x) {
+    P.push(['cyl', LWOOD, x, 0.56, 0.05, 0.016, 0.46, 0.016]);
+    P.push(['ico', COPPER, x, 0.84, 0.05, 0.075, 0.075, 0.075]);
+  }
+  // Rodela (escudo redondo) embrazada a la izquierda.
+  function rodela(P, x, color) {
+    P.push(['cyl12', color || RED, x, 0.78, 0.15, 0.22, 0.03, 0.22, Math.PI / 2, 0, 0]);
+    P.push(['cyl12', GOLD, x, 0.78, 0.18, 0.07, 0.025, 0.07, Math.PI / 2, 0, 0]);
+  }
+  // Balsa de totora con vela: el viaje del Inca navegante.
+  function balsa(P, x, z) {
+    for (let k = -1; k <= 1; k++) P.push(['cyl', '#c9b46a', x, 0.05, z + k * 0.07, 0.035, 0.5, 0.035, 0, 0, Math.PI / 2]);
+    P.push(['cyl', LWOOD, x, 0.22, z, 0.012, 0.34, 0.012]);
+    P.push(['box', WHITE, x, 0.3, z + 0.008, 0.36, 0.24, 0.012]);
+    P.push(['box', RED, x, 0.36, z + 0.016, 0.36, 0.03, 0.012]);
+  }
+  // Arco amazónico con su cuerda, a la altura de la mano.
+  function arco(P, x) {
+    P.push(['halftorus', LWOOD, x + 0.2, 0.88, 0.05, 0.26, 0.46, 0.03]);
+    P.push(['cyl', '#efe4cc', x + 0.2, 0.88, 0.05, 0.004, 0.9, 0.004]);
+    P.push(['cyl', '#efe4cc', x, 0.88, 0.06, 0.008, 0.5, 0.008, 0, 0, 1.2]);
+  }
+  // Canasta del pescador con la carta y el pescado (José Olaya).
+  function canasta(P, x) {
+    P.push(['cyl', '#b8913e', x, 0.68, 0.16, 0.1, 0.14, 0.08]);
+    P.push(['box', '#efe4cc', x, 0.78, 0.16, 0.05, 0.07, 0.008]);
+    P.push(['sph', '#c0c8d0', x + 0.02, 0.72, 0.21, 0.07, 0.03, 0.02, 0, 0, 0.3]);
+  }
+  // Cañón de campaña en miniatura sobre el pedestal (Bolognesi era artillero).
+  function canon(P, x, z) {
+    P.push(['box', '#5a4a3a', x, 0.07, z, 0.28, 0.06, 0.1]);
+    P.push(['cyl', '#3a3f45', x + 0.08, 0.15, z, 0.035, 0.34, 0.035, 0, 0, 1.3]);
+    P.push(['cyl12', LWOOD, x - 0.07, 0.1, z + 0.075, 0.085, 0.025, 0.085, Math.PI / 2, 0, 0]);
+    P.push(['cyl12', LWOOD, x - 0.07, 0.1, z - 0.075, 0.085, 0.025, 0.085, Math.PI / 2, 0, 0]);
+  }
+  // Casaca de uniforme (siglos XVIII y XIX): cuello, charreteras, botones, bocamangas y botas.
   function uniform(P, o) {
-    leaderBody(P, { tunic: o.coat, tocapu: false, sleeve: o.coat, skin: o.skin || '#b07850', beard: o.beard, hair: o.hair || '#2a1e16', belt: o.belt || GOLD, cloak: o.cloak || false });
-    P.push(['box', o.trousers || '#e8e2d2', -0.1, 0.2, 0, 0.12, 0.38, 0.13]); P.push(['box', o.trousers || '#e8e2d2', 0.1, 0.2, 0, 0.12, 0.38, 0.13]);
-    P.push(['box', BLACK, -0.1, 0.08, 0.02, 0.13, 0.16, 0.16]); P.push(['box', BLACK, 0.1, 0.08, 0.02, 0.13, 0.16, 0.16]);
-    P.push(['box', GOLD, -0.27, 1.17, 0, 0.14, 0.04, 0.14]); P.push(['box', GOLD, 0.27, 1.17, 0, 0.14, 0.04, 0.14]);
+    leaderBody(P, { tunic: o.coat, tocapu: false, sleeve: o.coat, skin: o.skin || '#b07850', beard: o.beard, beardFull: o.beardFull,
+      mustache: o.mustache, brow: o.brow, hair: o.hair || '#2a1e16', longHair: o.longHair, legs: o.trousers || '#e8e2d2', shoes: BLACK,
+      belt: o.belt || GOLD, cloak: o.cloak || false, collar: o.collar, hand: o.hand });
+    P.push(['box', BLACK, -0.1, 0.09, 0.02, 0.13, 0.18, 0.16]); P.push(['box', BLACK, 0.1, 0.09, 0.02, 0.13, 0.18, 0.16]);
+    P.push(['box', GOLD, -0.29, 1.17, 0, 0.15, 0.04, 0.15]); P.push(['box', GOLD, 0.29, 1.17, 0, 0.15, 0.04, 0.15]);
     for (let k = 0; k < 4; k++) P.push(['sph', GOLD, 0, 0.98 - k * 0.1, 0.205, 0.018, 0.018, 0.018]);
-    P.push(['box', WHITE, 0, 1.15, 0.15, 0.1, 0.08, 0.04]);
+    P.push(['box', WHITE, 0, 1.14, 0.15, 0.1, 0.1, 0.04]);
+    if (o.cuffs !== false) { P.push(['cyl12', GOLD, -0.31, 0.67, 0.03, 0.055, 0.04, 0.055]); P.push(['cyl12', GOLD, 0.31, 0.67, 0.03, 0.055, 0.04, 0.055]); }
   }
   function sword(P, x) { P.push(['box', SILVER, x, 0.5, 0.12, 0.025, 0.6, 0.03, 0, 0, 0.12]); P.push(['box', GOLD, x - 0.04, 0.82, 0.12, 0.12, 0.025, 0.04, 0, 0, 0.12]); }
-  function bicorne(P, color, trim) {
-    // prisma triangular tumbado de lado a lado, con la arista hacia arriba
-    P.push(['prism', color, 0, 1.6, 0, 0.09, 0.48, 0.12, -Math.PI / 2, 0, Math.PI / 2]);
-    P.push(['box', trim || GOLD, 0, 1.56, 0.05, 0.48, 0.025, 0.02]);
-    P.push(['cyl12', '#c23a50', 0.06, 1.62, 0.06, 0.035, 0.015, 0.035, Math.PI / 2, 0, 0]);
+  // Bicornio: ala plana y dos vuelos levantados en V.
+  function bicornio(P, color, trim) {
+    const c = color || BLACK;
+    P.push(['cyl12', c, 0, 1.5, 0, 0.3, 0.045, 0.23]);
+    P.push(['box', c, -0.17, 1.62, 0.01, 0.15, 0.22, 0.05, 0, 0, 0.45]);
+    P.push(['box', c, 0.17, 1.62, 0.01, 0.15, 0.22, 0.05, 0, 0, -0.45]);
+    P.push(['box', trim || GOLD, 0, 1.52, 0.23, 0.34, 0.025, 0.02]);
+    P.push(['cyl12', '#c23a50', 0.16, 1.56, 0.1, 0.035, 0.015, 0.035, Math.PI / 2, 0, 0]);
   }
-  function kepi(P, color) {
-    P.push(['cyl12', color, 0, 1.58, 0, 0.16, 0.14, 0.16]); P.push(['cyl12', '#c23a50', 0, 1.53, 0, 0.165, 0.03, 0.165]);
-    P.push(['box', BLACK, 0, 1.52, 0.15, 0.2, 0.02, 0.1, -0.3, 0, 0]);
+  // Kepí con visera y galón.
+  function kepi(P, color, band) {
+    P.push(['cyl12', color, 0, 1.575, 0, 0.17, 0.13, 0.17]);
+    P.push(['cyl12', band || '#c23a50', 0, 1.51, 0, 0.175, 0.035, 0.175]);
+    P.push(['box', BLACK, 0, 1.495, 0.16, 0.22, 0.025, 0.1, -0.35, 0, 0]);
+    P.push(['sph', GOLD, 0, 1.645, 0, 0.02, 0.02, 0.02]);
+  }
+  // Morrión español: casco con cresta y ala.
+  function morrion(P, color) {
+    const c = color || STEEL;
+    P.push(['sph', c, 0, 1.47, 0, 0.18, 0.17, 0.18]);
+    P.push(['cyl12', c, 0, 1.42, 0.02, 0.25, 0.03, 0.21]);
+    P.push(['box', c, 0, 1.6, 0, 0.045, 0.12, 0.28]);
+    P.push(['box', GOLD, 0, 1.63, 0, 0.05, 0.02, 0.29]);
   }
   PC.LEADER_MODELS = {
-    pachacutec: (c) => { const P = []; leaderBody(P, { tunic: c, cloak: RED }); incaCrown(P, {}); staff(P, 0.42, 'estrella'); return P; },
-    tupac_yupanqui: (c) => { const P = []; leaderBody(P, { tunic: c, cloak: '#2f5f8f' }); incaCrown(P, { band: '#2fa39a' }); staff(P, 0.42, 'remo', null, 1.4);
+    pachacutec: (c) => { const P = []; leaderBody(P, { tunic: c, cloak: '#d9c9a0' }); llautu(P, {}); staff(P, 0.42, 'estrella'); return P; },
+    tupac_yupanqui: (c) => { const P = []; leaderBody(P, { tunic: c, cloak: '#2f5f8f' }); llautu(P, { band: '#2fa39a' }); staff(P, 0.42, 'remo', null, 1.4);
       for (let k = -1; k <= 1; k++) P.push(['cyl', '#8a6a44', -0.45, 0.04, k * 0.06 + 0.25, 0.03, 0.5, 0.03, 0, 0, Math.PI / 2]); P.push(['box', WHITE, -0.45, 0.22, 0.25, 0.01, 0.25, 0.22]); return P; },
-    huayna_capac: (c) => { const P = []; leaderBody(P, { tunic: c, cloak: GOLD, tocapuColors: [GOLD, RED, WHITE] }); incaCrown(P, { band: GOLD });
+    huayna_capac: (c) => { const P = []; leaderBody(P, { tunic: c, cloak: GOLD, tocapuColors: [GOLD, RED, WHITE] }); llautu(P, { band: GOLD });
       P.push(['cyl12', GOLD, 0, 1.02, 0.18, 0.13, 0.02, 0.13, Math.PI / 2, 0, 0]); staff(P, 0.42, 'sol'); return P; },
     mama_ocllo: (c) => { const P = []; leaderBody(P, { tunic: c, longDress: true, belt: GOLD, hair: BLACK });
-      P.push(['box', RED, 0, 1.08, 0.02, 0.56, 0.24, 0.3]); P.push(['sph', GOLD, -0.14, 1.1, 0.19, 0.035, 0.035, 0.035]); P.push(['sph', GOLD, 0.14, 1.1, 0.19, 0.035, 0.035, 0.035]);
+      P.push(['box', '#e2a72e', 0, 1.1, 0.02, 0.46, 0.14, 0.26]); P.push(['box', '#2a6a8a', 0, 0.98, 0.02, 0.4, 0.1, 0.25]); P.push(['sph', GOLD, 0, 1.0, 0.16, 0.04, 0.04, 0.04]);
       P.push(['cyl', BLACK, -0.1, 1.05, -0.16, 0.03, 0.55, 0.03]); P.push(['cyl', BLACK, 0.1, 1.05, -0.16, 0.03, 0.55, 0.03]);
       P.push(['cyl', WHITE, 0, 1.47, 0, 0.18, 0.04, 0.18]);
       P.push(['cyl', '#6b4a2f', 0.36, 0.72, 0.08, 0.012, 0.36, 0.012]); P.push(['cyl12', '#efe4cc', 0.36, 0.62, 0.08, 0.05, 0.03, 0.05]); return P; },
     senor_sipan: (c) => { const P = []; leaderBody(P, { tunic: c, cloak: '#7a2a1f', tocapuColors: [GOLD, TURQ, RED] });
-      P.push(['halftorus', GOLD, 0, 1.6, 0, 0.34, 0.3, 0.12, 0, 0, 0]); P.push(['box', GOLD, 0, 1.5, 0.12, 0.3, 0.1, 0.04]);
+      P.push(['halftorus', GOLD, 0, 1.52, 0, 0.3, 0.3, 0.12, 0, 0, 0]); P.push(['cyl', GOLD, 0, 1.5, 0, 0.185, 0.06, 0.185]); P.push(['box', GOLD, 0, 1.52, 0.17, 0.2, 0.08, 0.03]);
       P.push(['box', GOLD, 0, 1.31, 0.17, 0.12, 0.05, 0.015]);
       P.push(['torus', GOLD, 0, 1.18, 0, 0.2, 0.2, 0.2, Math.PI / 2, 0, 0]);
       P.push(['cyl12', TURQ, -0.17, 1.37, 0, 0.065, 0.025, 0.065, 0, 0, Math.PI / 2]); P.push(['cyl12', TURQ, 0.17, 1.37, 0, 0.065, 0.025, 0.065, 0, 0, Math.PI / 2]);
       staff(P, 0.42, 'estrella', GOLD, 1.2); return P; },
     taycanamo: (c) => { const P = []; leaderBody(P, { tunic: c, cloak: '#1f6f6a', tocapuColors: [SILVER, TURQ, WHITE] });
-      P.push(['cyl', SILVER, 0, 1.56, 0, 0.17, 0.16, 0.17]); P.push(['cone', SILVER, 0, 1.72, 0, 0.26, 0.14, 0.26, Math.PI, 0, 0]);
-      for (let k = -3; k <= 3; k++) P.push(['box', k % 2 ? GOLD : WHITE, k * 0.07, 1.86, -0.02, 0.05, 0.2, 0.01, 0, 0, k * 0.12]);
+      P.push(['cyl', SILVER, 0, 1.58, 0, 0.18, 0.14, 0.18]);
+      for (let k = -3; k <= 3; k++) P.push(['box', k % 2 ? GOLD : WHITE, k * 0.07, 1.76, -0.02, 0.05, 0.22, 0.01, 0, 0, k * 0.12]);
       staff(P, 0.42, 'remo', null, 1.35); return P; },
     sacerdote_chavin: (c) => { const P = []; leaderBody(P, { tunic: '#6f6a5f', cloak: c, tocapu: false, hair: false, sleeve: '#6f6a5f' });
       P.push(['box', '#8a7a5a', 0, 1.38, 0.13, 0.32, 0.3, 0.1]);
@@ -1059,7 +1142,7 @@
       for (let k = 0; k < 6; k++) P.push(['cyl', '#4f7a3a', Math.cos(k) * 0.16, 1.62, Math.sin(k) * 0.1 - 0.02, 0.025, 0.24, 0.025, Math.sin(k) * 0.5, 0, Math.cos(k) * 0.5]);
       P.push(['cone', WHITE, -0.38, 0.85, 0.1, 0.06, 0.2, 0.06, 0, 0, 1.4]);
       P.push(['cyl', '#4f8a3a', 0.42, 0.75, 0.08, 0.05, 1.5, 0.05]); return P; },
-    manco_inca: (c) => { const P = []; leaderBody(P, { tunic: c, cloak: '#3a2f2a' }); incaCrown(P, {});
+    manco_inca: (c) => { const P = []; leaderBody(P, { tunic: c, cloak: '#3a2f2a' }); llautu(P, {});
       P.push(['sph', '#c8743a', 0, 1.5, 0, 0.19, 0.08, 0.19]);
       P.push(['box', c, -0.44, 0.85, 0.05, 0.03, 0.4, 0.34]); P.push(['box', WHITE, -0.46, 0.85, 0.05, 0.01, 0.12, 0.12]);
       P.push(['box', SILVER, 0.42, 0.8, 0.1, 0.03, 0.55, 0.05]); P.push(['box', '#6a5a3a', 0.42, 0.52, 0.1, 0.12, 0.03, 0.03]); return P; },
@@ -1096,18 +1179,18 @@
     ramon_castilla: (c) => { const P = []; uniform(P, { coat: BLACK, beard: false, cloak: c });
       P.push(['box', '#c23a50', 0, 0.98, 0.21, 0.07, 0.5, 0.02, 0, 0, 0.6]); P.push(['box', WHITE, 0.03, 0.98, 0.212, 0.03, 0.5, 0.02, 0, 0, 0.6]);
       P.push(['box', '#2a1e16', 0, 1.3, 0.16, 0.14, 0.03, 0.02]);
-      bicorne(P, BLACK); P.push(['cyl', '#6b4a2f', 0.42, 0.55, 0.1, 0.02, 1.1, 0.02]); P.push(['sph', GOLD, 0.42, 1.1, 0.1, 0.04, 0.04, 0.04]); return P; },
+      bicornio(P, BLACK); P.push(['cyl', '#6b4a2f', 0.42, 0.55, 0.1, 0.02, 1.1, 0.02]); P.push(['sph', GOLD, 0.42, 1.1, 0.1, 0.04, 0.04, 0.04]); return P; },
     miguel_grau: (c) => { const P = []; uniform(P, { coat: c, trousers: c, beard: '#2a1e16' });
       for (let k = 0; k < 3; k++) P.push(['box', GOLD, k % 2 ? 0.31 : -0.31, 0.68, 0.06, 0.11, 0.02, 0.12]);
-      bicorne(P, BLACK); sword(P, 0.36);
+      bicornio(P, BLACK); sword(P, 0.36);
       P.push(['torus', '#3a2a1a', -0.4, 0.75, 0.1, 0.12, 0.12, 0.12]); for (let k = 0; k < 4; k++) P.push(['box', '#3a2a1a', -0.4, 0.75, 0.1, 0.02, 0.24, 0.02, 0, 0, k * Math.PI / 4]);
       return P; },
     francisco_bolognesi: (c) => { const P = []; uniform(P, { coat: '#2a3048', trousers: '#c23a50', beard: '#e8e2d2', hair: '#e8e2d2' });
       P.push(['box', c, 0, 0.5, 0, 0.58, 0.06, 0.44]); kepi(P, '#2a3048'); sword(P, 0.36);
-      P.push(['cyl', BLACK, -0.42, 0.45, 0.15, 0.08, 0.5, 0.08, 0.3, 0, 0.6]); P.push(['cyl12', '#6b4a2f', -0.42, 0.18, 0.05, 0.16, 0.04, 0.16, 0, 0, Math.PI / 2]); return P; },
+      canon(P, -0.42, 0.22); return P; },
     andres_caceres: (c) => { const P = []; uniform(P, { coat: '#3a3a30', trousers: '#5a4a3a', beard: '#2a1e16' });
-      P.push(['box', c, 0, 0.95, 0.01, 0.62, 0.5, 0.48]);
-      for (let r = 0; r < 3; r++) P.push(['box', [RED, GOLD, WHITE][r], 0, 0.78 + r * 0.06, 0.245, 0.6, 0.025, 0.01]);
+      P.push(['box', c, 0, 0.9, 0.01, 0.5, 0.42, 0.4]);
+      for (let r = 0; r < 3; r++) P.push(['box', [RED, GOLD, WHITE][r], 0, 0.74 + r * 0.06, 0.205, 0.48, 0.025, 0.01]);
       P.push(['box', '#2a1e16', 0, 1.3, 0.17, 0.26, 0.04, 0.03]);
       kepi(P, '#3a3a30'); sword(P, 0.36); return P; },
     // Arquetipos para los líderes de la IA
@@ -1175,21 +1258,33 @@
     presidenta: (c) => { const P = []; leaderBody(P, { tunic: '#2a2f3a', longDress: true, tocapu: false, sleeve: '#2a2f3a', skin: '#c89070', hair: '#3a2a20', belt: '#2a2f3a' });
       P.push(['sph', '#3a2a20', 0, 1.32, -0.08, 0.17, 0.2, 0.12]); P.push(['box', c, 0, 0.98, 0.2, 0.5, 0.06, 0.02, 0, 0, 0.5]); return P; }
   };
+  // Pedestal tejido (estera de lana con cenefa escalonada) sobre el que posan los modelos del menú.
+  function pedestalParts(radius, blocks) {
+    const P = [['cyl12', '#1d2646', 0, -0.06, 0, radius, 0.12, radius],
+      ['cyl12', '#2a3360', 0, -0.004, 0, radius * 0.97, 0.012, radius * 0.97]];
+    for (let k = 0; k < blocks; k++) {
+      const a = k / blocks * Math.PI * 2;
+      P.push(['box', k % 2 ? '#a3243b' : '#e2a72e', Math.cos(a) * radius, -0.06, Math.sin(a) * radius, radius * 0.13, 0.06, 0.03, 0, -a + Math.PI / 2, 0]);
+    }
+    return P;
+  }
   function leaderGeo(model, color) {
     const build = PC.LEADER_MODELS[model] || PC.LEADER_MODELS.curaca;
     return cachedGeo('leader_' + model + color, () => {
       const P = build(color);
-      // Pedestal tejido
-      P.push(['cyl12', '#1d2646', 0, -0.06, 0, 0.62, 0.12, 0.62]);
-      P.push(['cyl12', '#2a3360', 0, -0.004, 0, 0.6, 0.012, 0.6]);
-      for (let k = 0; k < 12; k++) P.push(['box', k % 2 ? '#a3243b' : '#e2a72e', Math.cos(k / 12 * Math.PI * 2) * 0.61, -0.06, Math.sin(k / 12 * Math.PI * 2) * 0.61, 0.08, 0.06, 0.03, 0, -k / 12 * Math.PI * 2 + Math.PI / 2, 0]);
+      pedestalParts(0.62, 12).forEach((p) => P.push(p));
       return P;
     });
   }
-  // Renderizador de retratos (un único contexto WebGL extra): miniaturas en caché y un escenario animado.
-  const portrait = { r: null, scene: null, cam: null, mesh: null, stage: null, key: null, thumbs: {} };
-  function ensurePortrait() {
-    if (portrait.r) return portrait;
+  // Escenario 3D del menú (un único contexto WebGL extra): miniaturas en caché y una vitrina que se muda
+  // a la pantalla que la pide. Con el ratón se gira (arrastrar), se acerca (rueda o pinza) y se vuelve a
+  // encuadrar (doble clic); sin tocar nada, el modelo se mece despacio.
+  const stage = { r: null, scene: null, cam: null, host: null, node: null, key: null, thumbs: {}, loop: false, t0: 0, orbit: null };
+  const PITCH = [-0.5, 1.25]; // de mirar desde abajo a mirar desde arriba
+  const V3 = (o) => new THREE.Vector3(o.x || 0, o.y || 0, o.z || 0);
+
+  function ensureStage() {
+    if (stage.r) return stage;
     const r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
     r.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping;
@@ -1197,62 +1292,253 @@
     sc.add(new THREE.HemisphereLight(0xf6e7c8, 0x253056, 1.6));
     const key = new THREE.DirectionalLight(0xfff0d6, 2.6); key.position.set(2, 4, 3); sc.add(key);
     const rim = new THREE.DirectionalLight(0xe2a72e, 1.4); rim.position.set(-3, 2, -2); sc.add(rim);
-    const cam = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
-    portrait.r = r; portrait.scene = sc; portrait.cam = cam;
+    const cam = new THREE.PerspectiveCamera(30, 1, 0.1, 90);
+    stage.r = r; stage.scene = sc; stage.cam = cam;
     r.domElement.className = 'leader-canvas';
-    return portrait;
+    return stage;
   }
-  function setPortraitModel(model, color) {
-    const pt = ensurePortrait();
-    const k = model + color;
-    if (pt.key === k && pt.mesh) return;
-    if (pt.mesh) pt.scene.remove(pt.mesh);
-    pt.mesh = new THREE.Mesh(leaderGeo(model, color), mat);
-    pt.scene.add(pt.mesh); pt.key = k; pt.cur = { model, color };
+  function stageFit() {
+    if (!stage.host) return;
+    const w = stage.host.clientWidth || 300, h = stage.host.clientHeight || 360;
+    stage.r.setSize(w, h, false);
+    stage.r.domElement.style.width = w + 'px'; stage.r.domElement.style.height = h + 'px';
+    stage.cam.aspect = w / Math.max(1, h); stage.cam.updateProjectionMatrix();
   }
-  function framePortrait(bust) {
-    const pt = portrait;
-    if (bust) { pt.cam.position.set(0, 1.42, 2.2); pt.cam.lookAt(0, 1.3, 0); }
-    else { pt.cam.position.set(0, 1.25, 4.6); pt.cam.lookAt(0, 0.85, 0); }
+  function putCamera() {
+    const o = stage.orbit, c = stage.cam;
+    if (!o) return;
+    // Al acercarse más allá del encuadre de partida, la mirada sube hacia el rostro del personaje.
+    const k = PC.clamp((o.view.dist - o.dist) / Math.max(0.001, o.view.dist - o.minD), 0, 1);
+    const ty = o.at.y + k * (o.view.focus || 0);
+    const cp = Math.cos(o.pitch);
+    c.position.set(o.at.x + Math.sin(o.yaw) * cp * o.dist, ty + Math.sin(o.pitch) * o.dist, o.at.z + Math.cos(o.yaw) * cp * o.dist);
+    c.lookAt(o.at.x, ty, o.at.z);
+  }
+  function zoomStage(f) { const o = stage.orbit; if (o) o.dist = PC.clamp(o.dist * f, o.minD, o.maxD); }
+  function resetStageView() {
+    const o = stage.orbit; if (!o) return;
+    o.yaw = o.view.yaw; o.pitch = o.view.pitch; o.dist = o.view.dist; o.manual = false;
+  }
+  // Ratón y tacto sobre la vitrina: arrastrar gira, la rueda acerca, dos dedos giran y hacen pinza.
+  const touchPts = new Map();
+  let pinch0 = 0;
+  const pinchDist = () => { const p = [...touchPts.values()]; return Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y); };
+  function bindStage(el) {
+    if (el._stageInput) return;
+    el._stageInput = true;
+    el.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      touchPts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (touchPts.size === 2) pinch0 = pinchDist();
+      el.classList.add('manipulando');
+      try { el.setPointerCapture(e.pointerId); } catch (err) { /* sin captura */ }
+    });
+    el.addEventListener('pointermove', (e) => {
+      const p = touchPts.get(e.pointerId), o = stage.orbit;
+      if (!p || !o) return;
+      const dx = e.clientX - p.x, dy = e.clientY - p.y;
+      p.x = e.clientX; p.y = e.clientY;
+      o.manual = true;
+      o.yaw -= dx * (touchPts.size > 1 ? 0.005 : 0.009);
+      o.pitch = PC.clamp(o.pitch + dy * 0.006, PITCH[0], PITCH[1]);
+      if (touchPts.size > 1) { const d = pinchDist(); if (pinch0) zoomStage(pinch0 / Math.max(1, d)); pinch0 = d; }
+    });
+    const end = (e) => {
+      touchPts.delete(e.pointerId);
+      if (touchPts.size < 2) pinch0 = 0;
+      if (!touchPts.size) el.classList.remove('manipulando');
+    };
+    el.addEventListener('pointerup', end);
+    el.addEventListener('pointercancel', end);
+    el.addEventListener('wheel', (e) => { if (!stage.orbit) return; e.preventDefault(); zoomStage(e.deltaY > 0 ? 1.1 : 1 / 1.1); }, { passive: false });
+    el.addEventListener('dblclick', resetStageView);
+  }
+  function mountStage(el, node, key, view) {
+    if (!THREE || !el) return;
+    const pt = ensureStage();
+    if (pt.key !== key || !pt.node) {
+      if (pt.node) { pt.scene.remove(pt.node); disposeNode(pt.node); }
+      pt.node = node; pt.key = key;
+      pt.scene.add(node);
+      pt.orbit = { at: V3(view.at), view, yaw: view.yaw, pitch: view.pitch, dist: view.dist,
+        minD: view.minD || 1.1, maxD: view.maxD || 9, manual: false };
+      pt.t0 = performance.now();
+    } else if (pt.node !== node) disposeNode(node);
+    pt.host = el;
+    bindStage(el);
+    if (pt.r.domElement.parentElement !== el) el.appendChild(pt.r.domElement);
+    stageFit(); putCamera();
+    pt.r.render(pt.scene, pt.cam); // ya dibujado en el primer fotograma: la vitrina no parpadea al cambiar de pantalla
+    if (!pt.loop) { pt.loop = true; requestAnimationFrame(stageTick); }
+  }
+  function stageTick() {
+    const pt = stage;
+    if (!pt.host || !document.body.contains(pt.host) || pt.host.offsetParent === null) { pt.loop = false; return; }
+    const t = (performance.now() - pt.t0) / 1000;
+    if (pt.node && pt.node.userData.bob) pt.node.position.y = Math.sin(t * 1.6) * 0.015;
+    if (pt.orbit && !pt.orbit.manual) pt.orbit.yaw = pt.orbit.view.yaw + Math.sin(t * 0.45) * 0.5;
+    stageFit(); putCamera();
+    pt.r.render(pt.scene, pt.cam);
+    requestAnimationFrame(stageTick);
   }
   R.leaderThumb = function (model, color) {
     const k = model + color;
-    if (portrait.thumbs[k]) return portrait.thumbs[k];
-    if (!THREE) return '';
-    const pt = ensurePortrait();
-    const prev = pt.cur;
-    setPortraitModel(model, color);
-    pt.r.setSize(160, 160, false); pt.cam.aspect = 1; pt.cam.updateProjectionMatrix();
-    pt.mesh.rotation.y = -0.35;
-    framePortrait(true);
+    if (stage.thumbs[k]) return stage.thumbs[k];
+    if (!THREE || !mat) return ''; // sin WebGL el menú sigue funcionando, solo sin vitrinas
+    const pt = ensureStage();
+    const keep = pt.node;
+    if (keep) keep.visible = false; // la miniatura se dibuja sin la vitrina de fondo
+    const m = new THREE.Mesh(leaderGeo(model, color), mat);
+    m.rotation.y = -0.35;
+    pt.scene.add(m);
+    pt.r.setSize(160, 160, false);
+    pt.cam.aspect = 1; pt.cam.updateProjectionMatrix();
+    pt.cam.position.set(0, 1.42, 2.2); pt.cam.lookAt(0, 1.3, 0);
     pt.r.render(pt.scene, pt.cam);
-    portrait.thumbs[k] = pt.r.domElement.toDataURL('image/png');
-    pt.mesh.rotation.y = 0;
-    if (prev) setPortraitModel(prev.model, prev.color);
-    return portrait.thumbs[k];
+    stage.thumbs[k] = pt.r.domElement.toDataURL('image/png');
+    pt.scene.remove(m);
+    if (keep) keep.visible = true;
+    return stage.thumbs[k];
   };
-  // Monta un escenario animado (modelo de cuerpo entero girando) dentro de un elemento.
+  // El líder de cuerpo entero, de pie sobre su pedestal.
   R.mountLeader = function (el, model, color) {
-    if (!THREE || !el) return;
-    const pt = ensurePortrait();
-    setPortraitModel(model, color);
-    if (pt.r.domElement.parentElement !== el) el.appendChild(pt.r.domElement);
-    pt.stage = el; pt.t0 = performance.now();
-    const fit = () => { const w = el.clientWidth || 300, h = el.clientHeight || 360; pt.r.setSize(w, h, false); pt.r.domElement.style.width = w + 'px'; pt.r.domElement.style.height = h + 'px'; pt.cam.aspect = w / h; pt.cam.updateProjectionMatrix(); };
-    fit();
-    framePortrait(false);
-    if (!pt.loop) {
-      pt.loop = true;
-      const tick = () => {
-        if (!pt.stage || !document.body.contains(pt.stage) || pt.stage.offsetParent === null) { pt.loop = false; return; }
-        const t = (performance.now() - pt.t0) / 1000;
-        if (pt.mesh) { pt.mesh.rotation.y = Math.sin(t * 0.5) * 0.6; pt.mesh.position.y = Math.sin(t * 1.6) * 0.015; }
-        fit(); framePortrait(false);
-        pt.r.render(pt.scene, pt.cam);
-        requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-    }
+    if (!THREE || !mat || !el) return;
+    const node = new THREE.Mesh(leaderGeo(model, color), mat);
+    node.userData.bob = true;
+    mountStage(el, node, 'leader_' + model + color, { at: { x: 0, y: 0.85, z: 0 }, yaw: 0, pitch: 0.09, dist: 4.62, minD: 0.95, maxD: 8, focus: 0.5 });
+  };
+  // Los personajes de una civilización: su escuadrón representativo con el estandarte del pueblo.
+  R.mountCharacters = function (el, civ, type) {
+    if (!THREE || !mat || !el || !civ) return;
+    const ped = 0.75;
+    const geo = cachedGeo('unit_' + type + civ.color, () => unitParts(type, civ.color));
+    if (!geo.boundingSphere) geo.computeBoundingSphere();
+    const bs = geo.boundingSphere;
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(merge(pedestalParts(ped, 12)), mat));
+    const body = new THREE.Mesh(geo, mat);
+    body.castShadow = false;
+    g.add(body);
+    const flag = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.255),
+      new THREE.MeshStandardMaterial({ map: emblemTexture(civ), side: THREE.DoubleSide, roughness: 1 }));
+    flag.position.set(0.17, 0.72, -0.3);
+    g.add(flag);
+    g.userData.bob = true;
+    // El encuadre se calcula del propio modelo: así una figura sola y un escuadrón de tres
+    // llenan igual de bien la vitrina, y la estera nunca se sale del cuadro.
+    const half = Math.tan(Math.PI / 12), r = Math.max(0.3, bs.radius);
+    const aspect = Math.max(0.55, (el.clientWidth || 300) / Math.max(1, el.clientHeight || 360));
+    const dist = PC.clamp(Math.max(r / half, r / (half * aspect), ped / (half * aspect)) * 1.08, 1.0, 9);
+    mountStage(el, g, 'cast_' + civ.key + civ.color + type,
+      { at: { x: 0, y: bs.center.y, z: 0 }, yaw: 0.3, pitch: 0.16, dist, minD: dist * 0.38, maxD: dist * 2.8, focus: r * 0.42 });
+  };
+
+  // ---------------------------------------------------------------- pedazo de tierra (pantalla de partida)
+  // Geometría de un trozo de mapa: las casillas con su relieve, o una base plana (plinto) algo mayor.
+  function patchGeo(list, center, o) {
+    o = o || {};
+    const k = o.scale || 1;
+    const [ox, oz] = R.tileXZ(center);
+    const bottom = o.bottom === undefined ? -0.12 : o.bottom;
+    const pos = [];
+    list.forEach((t) => {
+      const [wx, wz] = R.tileXZ(t);
+      const cx = (wx - ox) * k, cz = (wz - oz) * k;
+      const h = o.flat ? (o.top || 0) : R.tileTop(t);
+      for (let j = 0; j < TOP_FACES; j++) {
+        const [ax, az] = hexCorner(cx, cz, j, k), [bx, bz] = hexCorner(cx, cz, j + 1, k);
+        pos.push(cx, h, cz, bx, h, bz, ax, h, az);
+      }
+      for (let j = 0; j < 6; j++) {
+        const [ax, az] = hexCorner(cx, cz, j, k), [bx, bz] = hexCorner(cx, cz, j + 1, k);
+        pos.push(ax, h, az, bx, h, bz, ax, bottom, az);
+        pos.push(bx, h, bz, bx, bottom, bz, ax, bottom, az);
+      }
+    });
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    const col = new THREE.BufferAttribute(new Float32Array(pos.length), 3);
+    geo.setAttribute('color', col);
+    geo.computeVertexNormals();
+    const c = new THREE.Color(), side = new THREE.Color();
+    list.forEach((t, idx) => {
+      if (o.flat) { c.set(o.topColor || '#2a3360'); side.set(o.sideColor || '#1d2646'); }
+      else { // la cara superior llevaba el color del terreno y los flancos van más oscuros, como en la maqueta
+        c.set(PC.TERRAIN[t.terrain].color).multiplyScalar(0.92 + PC.hash2(t.c, t.r, 3) * 0.16);
+        side.copy(c).multiplyScalar(0.62);
+      }
+      const base = idx * 54;
+      for (let v = 0; v < 18; v++) col.setXYZ(base + v, c.r, c.g, c.b);
+      for (let v = 18; v < 54; v++) col.setXYZ(base + v, side.r, side.g, side.b);
+    });
+    return geo;
+  }
+  // La misma decoración que la maqueta (árboles, nevados, ichu, dunas…) pero en el trozo de tierra.
+  function patchDeco(list, center) {
+    const [ox, oz] = R.tileXZ(center);
+    const group = new THREE.Group();
+    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), vp = new THREE.Vector3(), vs = new THREE.Vector3();
+    const per = {};
+    list.forEach((t) => {
+      const rules = DECO_RULES[t.terrain] || [];
+      const [wx, wz] = R.tileXZ(t);
+      const cx = wx - ox, cz = wz - oz, h = R.tileTop(t);
+      let n = 0;
+      rules.forEach(([kind, count]) => {
+        for (let j = 0; j < count; j++, n++) {
+          const r1 = PC.hash2(t.c * 3 + j, t.r * 5 + n, 21), r2 = PC.hash2(t.c * 7 + n, t.r * 3 + j, 22);
+          let ang = r1 * Math.PI * 2, rad = 0.25 + r2 * 0.5;
+          if (t.terrain === 'cordillera') { ang = (n / 2) * Math.PI * 2 + (t.feature === 'abra' ? 0 : r1); rad = t.feature === 'abra' ? 0.55 : 0.32; }
+          const s = kind === 'nevado' ? (0.85 + r2 * 0.5) : (0.75 + r2 * 0.5);
+          e.set(0, r1 * 6.28, 0); q.setFromEuler(e);
+          vp.set(cx + Math.cos(ang) * rad, h, cz + Math.sin(ang) * rad); vs.set(s, s, s);
+          m4.compose(vp, q, vs);
+          (per[kind] = per[kind] || []).push(m4.clone());
+        }
+      });
+    });
+    Object.keys(per).forEach((kind) => {
+      const mesh = new THREE.InstancedMesh(decoGeo(kind), mat, per[kind].length);
+      per[kind].forEach((m, j) => mesh.setMatrixAt(j, m));
+      mesh.instanceMatrix.needsUpdate = true;
+      mesh.frustumCulled = false;
+      group.add(mesh);
+    });
+    return group.children.length ? group : null;
+  }
+  // Ríos, lagos y abras del trozo de tierra.
+  function patchFeature(list, center) {
+    const [ox, oz] = R.tileXZ(center);
+    const parts = [];
+    list.forEach((t) => {
+      const [wx, wz] = R.tileXZ(t);
+      const cx = wx - ox, cz = wz - oz, h = R.tileTop(t);
+      if (t.feature === 'rio' || t.terrain === 'valle') parts.push(['box', '#3f8fc4', cx, h + 0.012, cz, 1.7, 0.02, 0.13, 0, PC.hash2(t.c, t.r, 41) * Math.PI, 0]);
+      if (t.feature === 'abra') { parts.push(['box', '#d9a441', cx, h + 0.02, cz, 1.5, 0.03, 0.12, 0, 0.5, 0]); parts.push(['cone4', '#8a7a5a', cx, h + 0.15, cz, 0.06, 0.3, 0.06]); }
+      if (t.terrain === 'lago') parts.push(['cyl12', '#3a85b5', cx, h + 0.01, cz, 0.85, 0.02, 0.85]);
+    });
+    return parts.length ? new THREE.Mesh(merge(parts), mat) : null;
+  }
+  // Señal del sitio donde se fundará la primera ciudad.
+  function markerParts(h) {
+    return [['cyl12', '#e2a72e', 0, h + 0.006, 0, 0.4, 0.012, 0.4],
+      ['cyl12', '#a3243b', 0, h + 0.016, 0, 0.32, 0.012, 0.32],
+      ['cyl', '#2a1f18', 0, h + 0.45, 0, 0.016, 0.9, 0.016],
+      ['box', '#e2a72e', 0.14, h + 0.8, 0, 0.24, 0.15, 0.014]];
+  }
+  R.mountLand = function (el, tile) {
+    if (!THREE || !mat || !el || !tile) return false;
+    const list = [tile].concat(PC.hexNeighborsCR(tile.c, tile.r).map(([c, r]) => PC.tileCR(c, r)).filter(Boolean))
+      .filter((t, j, a) => a.indexOf(t) === j);
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(patchGeo(list, tile, { scale: 1.07, flat: true, top: -0.02, bottom: -0.24, topColor: '#2a3360', sideColor: '#1d2646' }), mat));
+    g.add(new THREE.Mesh(patchGeo(list, tile, { bottom: -0.12 }), tileMaterial()));
+    const deco = patchDeco(list, tile); if (deco) g.add(deco);
+    const feat = patchFeature(list, tile); if (feat) g.add(feat);
+    g.add(new THREE.Mesh(merge(markerParts(R.tileTop(tile))), mat));
+    g.userData.bob = false;
+    mountStage(el, g, 'land_' + tile.i, { at: { x: 0, y: 0.45, z: 0 }, yaw: 0.5, pitch: 0.62, dist: 9.5, minD: 4, maxD: 24, focus: 0 });
+    return true;
   };
 
   // ---------------------------------------------------------------- API

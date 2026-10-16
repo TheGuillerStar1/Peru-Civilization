@@ -5,7 +5,7 @@
   const $ = (s) => document.querySelector(s);
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const ic = (n, cls) => PC.icon(n, cls);
-  const UI = PC.UI = { menu: { scenario: 'origenes', culture: 'caral', difficulty: 'medio', leader: null, start: '' }, modal: null, buildTab: 'unit' };
+  const UI = PC.UI = { menu: { scenario: 'origenes', culture: 'caral', difficulty: 'medio', leader: null, start: '', cast: null }, modal: null, buildTab: 'unit' };
   // Guardado: ranuras de js/ui/saves.js (la última partida y el guardado automático rotativo).
   const storage = {
     get() { const x = PC.Saves.latest(); return x ? PC.Saves.get(x.slot) : null; },
@@ -42,6 +42,117 @@
   }
   // Cada líder se muestra con los colores de su propio vestuario histórico.
   function leaderColor(id) { return (PC.LEADERS[id] && PC.LEADERS[id].color) || '#8a2232'; }
+
+  // ------------------------------------------------------------------ Personajes y tierra de la partida
+  // El modelo 3D de «Escenario y civilización» es el escuadrón que esa cultura pone en el mapa.
+  const CAST = {
+    caral: ['trabajador', 'hondero', 'explorador'],
+    sechin: ['guerrero', 'macanero', 'hondero'],
+    kotosh: ['trabajador', 'guerrero', 'explorador'],
+    paracas: ['trabajador', 'hondero', 'explorador'],
+    titicaca: ['colono', 'lancero', 'trabajador'],
+    cusco: ['guerrero', 'macanero', 'trabajador'],
+    amazonia: ['arquero', 'trabajador', 'explorador'],
+    inca: ['awqa', 'lancero', 'trabajador'],
+    peru: ['fusilero', 'jinete', 'trabajador']
+  };
+  const CAST_NOTE = {
+    trabajador: "El ayllu de mit'a: construye chacras, andenes, canales, minas y caminos.",
+    colono: 'El ayllu colonizador: funda ciudades y lleva consigo llamas y alpacas.',
+    explorador: 'El chaski: corre el mapa y abre la niebla de guerra.',
+    guerrero: 'Guerreros con porra, la primera infantería de los Andes.',
+    hondero: 'Honderos: golpean a distancia con piedras.',
+    macanero: 'Macaneros con escudo redondo, la tropa de choque temprana.',
+    lancero: 'Lanceros de cobre, con casco y escudo.',
+    awqa: 'El awqa runa, el ejército imperial del Tahuantinsuyo.',
+    arquero: 'Arqueros amazónicos: no sufren desgaste en la selva.',
+    fusilero: 'Fusileros de la república, con kepí y correaje.',
+    jinete: 'Caballería: reconocimiento y golpes rápidos.',
+    infanteria: 'Infantería moderna, con casco y camuflaje.'
+  };
+  function zoneOf(regionId) { const g = (PC.GEO_PERU.regions || []).find((r) => r.id === regionId); return g ? g.zone : null; }
+  function cultureCast(key) {
+    if (CAST[key]) return CAST[key];
+    const c = PC.CULTURES[key] || {}, z = zoneOf(c.region);
+    if ((c.bonus && c.bonus.selvaNative) || z === 'selva') return ['arquero', 'trabajador', 'explorador'];
+    if (z === 'costa') return ['hondero', 'trabajador', 'guerrero'];
+    return ['guerrero', 'lancero', 'trabajador'];
+  }
+  // Panel de personajes: botones para cambiar de modelo y la ficha del que se está viendo.
+  function peopleHTML(civKey) {
+    const c = PC.CULTURES[civKey], list = cultureCast(civKey);
+    // Al cambiar de civilización se vuelve a su personaje representativo; dentro de una misma
+    // civilización se conserva el que el jugador estaba mirando.
+    const active = UI.menu.castCiv === civKey && list.includes(UI.menu.cast) ? UI.menu.cast : list[0];
+    UI.menu.cast = active; UI.menu.castCiv = civKey;
+    const U = PC.UNITS[active];
+    const techs = (c.techs || []).map((t) => PC.TECH[t] && PC.TECH[t].name).filter(Boolean);
+    $('#civ-people').innerHTML = `<div class="sec"><h4>Personajes de ${esc(c.name)}</h4>
+      <div class="cast" role="group" aria-label="Personajes de la civilización">${list.map((id) => `<button type="button" data-cast="${id}" aria-pressed="${id === active}">${esc(PC.UNITS[id].name)}</button>`).join('')}</div>
+      <p class="small muted">${esc(CAST_NOTE[active] || U.desc || 'La gente de esta civilización, tal como aparece en la maqueta.')}</p></div>
+      ${techs.length ? `<div class="sec"><h4>Saberes iniciales</h4><div class="chips">${techs.map((t) => `<span class="chip">${esc(t)}</span>`).join('')}</div></div>` : ''}`;
+    return active;
+  }
+  const ZONE_TIP = {
+    costa: 'Costa: valles fértiles junto al mar, con desierto que desgasta a quien lo cruza.',
+    sierra: 'Sierra: valles y puna entre cordilleras; se cruza por las abras y da cobre y plata.',
+    selva: 'Selva: alimento, ríos y caucho, pero la niebla, el desgaste y la fauna acechan.',
+    llano: 'Llanos: praderas y pampas abiertas, buenas para crecer y cabalgar.'
+  };
+  // Zonas de los mapas continentales (Fases 2 y 3).
+  const MACRO_TIP = {
+    andes: 'Andes: la columna vertebral del continente, entre cordilleras y valles templados.',
+    caribe: 'Caribe y Orinoco: costas, islas y llanos, puerta de las expediciones europeas.',
+    amazonia: 'Amazonía: ríos navegables, caucho y castaña, con fauna y desgaste.',
+    brasil: 'Brasil: litoral atlántico y mesetas interiores, de los tupí al imperio.',
+    cono_sur: 'Cono Sur: pampas, Chaco y Patagonia, tierra de ganado y de frontera.',
+    norteamerica: 'Norteamérica: praderas, bosques y Grandes Lagos, del misisipiano a la unión.',
+    mesoamerica: 'Mesoamérica: tierras altas volcánicas y selvas mayas.',
+    antillas: 'Antillas: islas del Caribe, primer escenario del contacto.',
+    mixta: 'Tierra de frontera entre costa, sierra y selva.'
+  };
+  // La provincia donde se fundará la primera ciudad: la misma tierra que se muestra en 3D.
+  function startSite() {
+    const sc = PC.SCENARIOS[UI.menu.scenario], C = PC.CULTURES[UI.menu.culture];
+    const fixed = !!sc.playerCities;
+    const want = fixed ? (sc.playerCities[0] && sc.playerCities[0].region) : (UI.menu.start || C.region);
+    const map = PC.G && PC.G.map;
+    let region = map ? (map.regions || []).find((r) => r.id === want) : null;
+    // En los escenarios continentales la provincia histórica no existe en el mapa nuevo: se muestra
+    // la tierra de la capital, que es la que el jugador va a gobernar.
+    if (!region && map) {
+      const cap = PC.player() && PC.player().capitalId ? PC.cityById(PC.player().capitalId) : null;
+      const t = cap ? PC.tile(cap.t) : null;
+      if (t && t.region) region = map.regions.find((r) => r.id === t.region) || null;
+    }
+    const tile = region ? (PC.bestSiteInRegion(region.id, PC.player()) || PC.tile(region.tiles[0])) : null;
+    return { region, tile, fixed };
+  }
+  function landInfoHTML(site) {
+    const { region, tile } = site;
+    if (!region || !tile) return '<p class="small muted">Este escenario no tiene una provincia inicial en este mapa.</p>';
+    const map = PC.G.map;
+    const tiles = region.tiles.map((i) => map.tiles[i]).filter(Boolean);
+    const land = tiles.filter((t) => t.terrain !== 'oceano' && t.terrain !== 'lago');
+    const n = Math.max(1, land.length);
+    const y = land.reduce((a, t) => { const T = PC.TERRAIN[t.terrain]; a.f += T.f; a.p += T.p; a.g += T.g; return a; }, { f: 0, p: 0, g: 0 });
+    const hist = {};
+    tiles.forEach((t) => { hist[t.terrain] = (hist[t.terrain] || 0) + 1; });
+    const sea = tiles.some((t) => t.terrain === 'oceano');
+    const res = [...new Set(tiles.filter((t) => t.res).map((t) => PC.RESOURCES[t.res].name))];
+    const names = PC.CITY_NAMES[region.id] || [];
+    const zone = PC.ZONE_NAME[region.zone] || PC.MACRO_NAME[region.zone] || '';
+    const rows = [['Casillas', `${tiles.length} · ${land.length} de tierra`],
+      ['Alimento por casilla', (y.f / n).toFixed(1)], ['Producción por casilla', (y.p / n).toFixed(1)], ['Oro por casilla', (y.g / n).toFixed(1)],
+      ['Mar en la provincia', sea ? 'Sí' : 'No'], ['Primera ciudad', names[0] || 'Campamento']];
+    return `<div class="sec"><h4>Punto de partida</h4>
+      <div class="land-head"><b>${esc(region.name)}</b>${zone ? `<span class="chip">${esc(zone)}</span>` : ''}</div>
+      <p class="small muted">${esc(ZONE_TIP[region.zone] || MACRO_TIP[region.zone] || '')}</p></div>
+      <div class="sec"><h4>El terreno</h4><div class="chips">${Object.entries(hist).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<span class="chip" style="border-color:${PC.TERRAIN[k].color}">${esc(PC.TERRAIN[k].name)} · ${v}</span>`).join('')}</div></div>
+      <div class="sec"><h4>Por casilla</h4>${rows.map(([k, v]) => `<div class="kv"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')}</div>
+      ${res.length ? `<div class="sec"><h4>Recursos de la provincia</h4><div class="chips">${res.map((r) => `<span class="chip">${esc(r)}</span>`).join('')}</div></div>` : ''}
+      <p class="small muted">La casilla del estandarte dorado es donde se fundará tu primera ciudad.${names.length > 1 ? ` Nombres históricos de la zona: ${esc(names.slice(1, 4).join(', '))}.` : ''}</p>`;
+  }
   function renderMenu() {
     const m = UI.menu;
     const sc = PC.SCENARIOS[m.scenario];
@@ -62,6 +173,7 @@
       $('#leader-info').innerHTML = `<h3>${esc(L.name)}</h3><p class="muted">${esc(L.title)}</p>
         <div class="sec"><h4>Habilidad única</h4><p>${esc(L.desc)}</p></div>
         <div class="sec"><h4>Personalidad · ${esc(A.name)}</h4><p class="small muted">Como rival en la IA: le agrada ${esc(A.likes.toLowerCase())}; le desagrada ${esc(A.dislikes.toLowerCase())}.</p></div>
+        <p class="small muted">Arrastra sobre el modelo para girarlo y verlo de cerca, acerca con la rueda para mirarle la cara y haz doble clic para volver a encuadrarlo.</p>
         <p class="small muted">Puedes combinar cualquier líder con cualquier civilización.</p>`;
       if (R.mountLeader) R.mountLeader($('#leader-stage'), m.leader, leaderColor(m.leader));
     }
@@ -75,6 +187,9 @@
         return `<button type="button" class="cul" data-cu="${id}" aria-pressed="${id === m.culture}">${PC.emblem(id, c.color)}<span>${esc(c.name)}${rec ? '<small>Afín a tu líder</small>' : ''}</span></button>`;
       }).join('');
       $('#cu-desc').textContent = PC.CULTURES[m.culture].desc;
+      // El modelo 3D representa a la gente de la civilización elegida.
+      const cast = peopleHTML(m.culture);
+      if (R.mountCharacters) R.mountCharacters($('#civ-stage'), { key: m.culture, color: PC.CULTURES[m.culture].color }, cast);
     }
     if (UI.screen === 'setup') {
       const L = PC.LEADERS[m.leader], C = PC.CULTURES[m.culture];
@@ -92,7 +207,11 @@
       $('#st-desc').textContent = fixed ? (sc.startText || 'En este escenario el imperio ya existe: empiezas en el Cusco.') :
         m.start ? `Fundarás tu primera ciudad en ${regs.find((r) => r.id === m.start).name}. También puedes hacer clic en una provincia del mapa.` :
         `Empiezas en ${regs.find((r) => r.id === C.region).name}, la tierra histórica de tu civilización. Elige otra provincia en la lista o haz clic en el mapa.`;
-      if (PC.G && PC.G.preview) { R.sel = { regionHL: fixed ? 'cusco' : (m.start || C.region) }; R.draw(); }
+      // El pedazo de tierra y su ficha: la provincia donde nacerá tu primera ciudad.
+      const site = startSite();
+      $('#land-info').innerHTML = landInfoHTML(site);
+      if (R.mountLand) R.mountLand($('#land-stage'), site.tile);
+      if (PC.G && PC.G.preview) { R.sel = site.region ? { regionHL: site.region.id } : null; R.draw(); }
     } else if (PC.G && PC.G.preview && R.sel && R.sel.regionHL) { R.sel = null; R.draw(); }
     if (UI.screen === 'load') {
       $('#save-list').innerHTML = PC.Saves.html(esc, 'load') || '<p class="muted">No hay partidas guardadas en este navegador.</p>';
@@ -120,10 +239,11 @@
       if (b.dataset.ld) { UI.menu.leader = b.dataset.ld; const pref = Object.keys(PC.DEFAULT_LEADER).find((c) => PC.DEFAULT_LEADER[c] === b.dataset.ld && PC.SCENARIOS[UI.menu.scenario].playable.includes(c)); if (pref) UI.menu.culture = pref; }
       if (b.dataset.sc) { UI.menu.scenario = b.dataset.sc; rebuild = true; }
       if (b.dataset.cu) UI.menu.culture = b.dataset.cu;
+      if (b.dataset.cast) UI.menu.cast = b.dataset.cast;
       if (b.dataset.df) UI.menu.difficulty = b.dataset.df;
       if (b.dataset.q) { prefs.quality = b.dataset.q; savePrefs(); R.setQuality(b.dataset.q); }
       if (b.dataset.loadslot) { try { PC.load(PC.Saves.get(b.dataset.loadslot)); startGame(false); } catch (err) { menuError('No se pudo abrir la partida guardada.'); } return; }
-      if (b.dataset.ld || b.dataset.sc || b.dataset.cu || b.dataset.df || b.dataset.q) renderMenu();
+      if (b.dataset.ld || b.dataset.sc || b.dataset.cu || b.dataset.df || b.dataset.q || b.dataset.cast) renderMenu();
       if (rebuild) previewWorld();
     });
     $('#opt-regions').onchange = (e) => { prefs.regions = e.target.checked; savePrefs(); };
@@ -797,6 +917,7 @@
     openModal(h + '</div>', 'regions');
   }
   function openChronicle() {
+    if (UI.chronicle && UI.chronicle.open) return UI.chronicle.open(); // registro filtrable (chronicle_ui.js)
     const g = PC.G;
     const log = g.log.slice().reverse().filter((l) => l.type !== 'info');
     openModal(`<h2>Crónica</h2>

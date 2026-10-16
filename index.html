@@ -28,9 +28,10 @@
         <button class="mm" data-go="leader" type="button"><b>Nueva partida</b><small>Elige líder, civilización y partida</small></button>
         <button class="mm" data-go="load" type="button"><b>Cargar partida</b><small>Desde este navegador o un archivo</small></button>
         <button class="mm" data-go="options" type="button"><b>Opciones</b><small>Gráficos y controles</small></button>
+        <button id="btn-news" class="mm" type="button"><b>Novedades</b><small>Versión 0.1.4: cambios y parches</small></button>
         <a class="mm" id="doc-link" href="docs/INVESTIGACION_HISTORICA.md" target="_blank" rel="noopener"><b>Investigación histórica</b><small>La base documental del juego</small></a>
       </nav>
-      <p class="version small muted">Versión 0.1.3 · Fases 1 · Perú, 2 · Sudamérica y 3 · América disponibles. Fase 4 en desarrollo.</p>
+      <p class="version small muted">Versión 0.1.4 · Fases 1 · Perú, 2 · Sudamérica y 3 · América disponibles. Fase 4 en desarrollo.</p>
     </div>
 
     <div id="scr-leader" class="scr scr-wide" hidden>
@@ -43,27 +44,40 @@
       <footer class="scr-foot"><button class="btn big" data-go="title" type="button">Atrás</button><button class="btn primary big" data-go="civ" type="button">Siguiente: civilización</button></footer>
     </div>
 
-    <div id="scr-civ" class="scr scr-mid" hidden>
+    <div id="scr-civ" class="scr scr-wide" hidden>
       <header class="scr-head"><ol class="stepper"><li class="done">Líder</li><li class="on">Civilización</li><li>Partida</li></ol><h2>Escenario y civilización</h2></header>
-      <div class="scr-body">
-        <fieldset class="step"><legend>Escenario</legend><div id="scenarios" class="seg"></div><p id="sc-desc" class="desc"></p></fieldset>
-        <fieldset class="step"><legend>Civilización</legend><div id="cultures" class="culgrid"></div><p id="cu-desc" class="desc"></p></fieldset>
+      <div class="pick-grid">
+        <div class="pick-col">
+          <fieldset class="step"><legend>Escenario</legend><div id="scenarios" class="seg"></div><p id="sc-desc" class="desc"></p></fieldset>
+          <fieldset class="step"><legend>Civilización</legend><div id="cultures" class="culgrid"></div><p id="cu-desc" class="desc"></p></fieldset>
+        </div>
+        <div class="pick-view">
+          <div id="civ-stage" class="model-stage" aria-hidden="true"></div>
+          <div id="civ-people" class="people"></div>
+          <p class="hint small muted">Arrastra con el ratón para girar · rueda para acercar · doble clic para volver a encuadrar.</p>
+        </div>
       </div>
       <footer class="scr-foot"><button class="btn big" data-go="leader" type="button">Atrás</button><button class="btn primary big" data-go="setup" type="button">Siguiente: partida</button></footer>
     </div>
 
-    <div id="scr-setup" class="scr scr-mid" hidden>
+    <div id="scr-setup" class="scr scr-wide" hidden>
       <header class="scr-head"><ol class="stepper"><li class="done">Líder</li><li class="done">Civilización</li><li class="on">Partida</li></ol><h2>Configura la partida</h2></header>
-      <div class="scr-body">
-        <div id="setup-summary" class="setup-summary"></div>
-        <fieldset class="step"><legend>Dificultad</legend><div id="difficulties" class="seg"></div><p id="df-desc" class="desc"></p></fieldset>
-        <fieldset class="step"><legend>Punto de partida</legend><label for="opt-start" class="sr">Provincia inicial</label><select id="opt-start"></select><p id="st-desc" class="desc"></p></fieldset>
-        <details class="adv"><summary>Opciones avanzadas</summary>
-          <div class="opts">
-            <label for="opt-speed">Velocidad<select id="opt-speed"><option value="normal">Normal · unos 320 turnos</option><option value="rapida">Rápida · unos 160 turnos</option></select></label>
-            <label for="opt-seed">Semilla del mapa<input id="opt-seed" type="number" inputmode="numeric" placeholder="Aleatoria"></label>
-          </div>
-        </details>
+      <div class="pick-grid">
+        <div class="pick-col">
+          <div id="setup-summary" class="setup-summary"></div>
+          <fieldset class="step"><legend>Dificultad</legend><div id="difficulties" class="seg"></div><p id="df-desc" class="desc"></p></fieldset>
+          <fieldset class="step"><legend>Punto de partida</legend><label for="opt-start" class="sr">Provincia inicial</label><select id="opt-start"></select><p id="st-desc" class="desc"></p></fieldset>
+          <details class="adv"><summary>Opciones avanzadas</summary>
+            <div class="opts">
+              <label for="opt-speed">Velocidad<select id="opt-speed"><option value="normal">Normal · unos 320 turnos</option><option value="rapida">Rápida · unos 160 turnos</option></select></label>
+              <label for="opt-seed">Semilla del mapa<input id="opt-seed" type="number" inputmode="numeric" placeholder="Aleatoria"></label>
+            </div>
+          </details>
+        </div>
+        <div class="pick-view">
+          <div id="land-stage" class="model-stage" aria-hidden="true"></div>
+          <div id="land-info" class="land-info"></div>
+        </div>
       </div>
       <footer class="scr-foot"><button class="btn big" data-go="civ" type="button">Atrás</button><button id="btn-start" class="btn primary big" type="button">Comenzar la historia</button></footer>
     </div>
@@ -120,6 +134,7 @@
     <aside id="side">
       <div id="panel"></div>
       <div class="endbar">
+        <div id="tasks" hidden></div>
         <p id="end-status"></p>
         <button id="btn-end" class="btn primary big" type="button"></button>
       </div>
@@ -139,6 +154,7 @@
   <script src="js/data/continent.js"></script>
   <script src="js/data/leaders.js"></script>
   <script src="js/data/leaders_hist.js"></script>
+  <script src="js/data/novedades.js"></script>
   <script src="js/core/mapgen.js"></script>
   <script src="js/core/game.js"></script>
   <script src="js/core/ai.js"></script>
@@ -164,6 +180,9 @@
   <script src="js/ui/intro_ui.js"></script>
   <script src="js/ui/advisor.js"></script>
   <script src="js/ui/summary.js"></script>
+  <script src="js/ui/tasks.js"></script>
+  <script src="js/ui/chronicle_ui.js"></script>
+  <script src="js/ui/novedades_ui.js"></script>
   <script src="js/ui/minimap.js"></script>
   <script src="js/ui/a11y.js"></script>
 </body>

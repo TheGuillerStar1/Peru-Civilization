@@ -36,6 +36,53 @@
 #turn-summary .ts-link:hover, #turn-summary .ts-link:focus-visible { color: var(--qolli-2); text-decoration: underline; }
 #turn-summary li.ts-war .ts-link { color: var(--cinabrio); }
 
+/* Lista de pendientes del turno (js/ui/tasks.js): filas accionables sobre el botón de fin de turno.
+   Cada fila es un botón .task-go con el texto a la izquierda y la acción a la derecha (em). */
+#tasks { display: grid; gap: 3px; }
+#tasks .task-head { display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  font: 700 var(--t-xs)/1.2 var(--f-display); letter-spacing: .06em; color: var(--qolli-2); }
+#tasks .task-count { background: var(--qolli); color: var(--hilo); border-radius: 2px; padding: 0 5px;
+  font: 700 var(--t-xs)/16px var(--f-body); font-variant-numeric: tabular-nums; }
+#tasks .task-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; max-height: 34vh; overflow: auto; }
+#tasks .task { display: flex; align-items: flex-start; gap: 6px; background: #0b1022aa;
+  border-left: 3px solid var(--qolli); border-radius: 2px; }
+#tasks .task.war { border-left-color: var(--cinabrio); }
+#tasks .task.advice { border-left-color: var(--grana-2); }
+#tasks .task-ico { flex: none; display: flex; padding: 6px 0 6px 6px; }
+#tasks .task-ico .ico { width: 15px; height: 15px; color: var(--qolli); }
+#tasks .task.war .task-ico .ico { color: var(--cinabrio); }
+#tasks .task.advice .task-ico .ico { color: var(--grana-2); }
+#tasks .task-go { flex: 1; min-width: 0; display: flex; align-items: baseline; justify-content: space-between;
+  gap: 8px; background: none; border: 0; padding: 6px 8px 6px 2px; color: var(--algodon);
+  font: 400 var(--t-xs)/1.35 var(--f-body); text-align: left; cursor: pointer; }
+#tasks .task-go b { font-weight: 500; }
+#tasks .task-go em { flex: none; font-style: normal; font-weight: 700; color: var(--qolli-2); white-space: nowrap; }
+#tasks .task.war .task-go em { color: #ffab9a; }
+#tasks .task-go:hover b, #tasks .task-go:focus-visible b { color: var(--qolli-2); text-decoration: underline; }
+#tasks .task-more { font-size: var(--t-xs); color: var(--algodon-2); padding-left: 9px; }
+
+/* Registro de la crónica (js/ui/chronicle_ui.js): filtros por tipo, búsqueda y salto al mapa.
+   Usa sus propias clases (.chr-*) para no depender de .log, que vive en style.css. */
+.chr-tools { display: grid; gap: var(--sp-2); margin: var(--sp-2) 0; }
+.chr-filters { display: flex; flex-wrap: wrap; gap: 4px; }
+.chr-filters button { cursor: pointer; background: transparent; }
+.chr-filters button.on { border-color: var(--qolli); color: var(--qolli-2); }
+.chr-search { display: block; }
+.chr-search input { width: 100%; box-sizing: border-box; }
+.chr-count { font-size: var(--t-xs); color: var(--algodon-2); }
+.chr-log { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 46vh; overflow: auto; }
+.chr-log li { display: flex; align-items: baseline; gap: var(--sp-2); border-left: 3px solid #34407a;
+  padding: 3px 8px; font-size: var(--t-s); }
+.chr-log li b { flex: none; min-width: 62px; color: var(--algodon-2); font-size: var(--t-xs); font-variant-numeric: tabular-nums; }
+.chr-log li span { flex: 1; }
+.chr-log li.war { border-left-color: var(--cinabrio); }
+.chr-log li.history { border-left-color: var(--qolli); }
+.chr-log li.tech { border-left-color: #a9c4ff; }
+.chr-log li.city { border-left-color: var(--verde); }
+.chr-log .chr-go { flex: none; background: none; border: 0; color: var(--qolli-2); font: 500 var(--t-xs) var(--f-body); cursor: pointer; }
+.chr-log .chr-go:hover, .chr-log .chr-go:focus-visible { text-decoration: underline; }
+.chr-empty { color: var(--algodon-2); font-size: var(--t-s); }
+
 /* Ranuras de guardado */
 .slots { display: grid; gap: 6px; margin: 8px 0; }
 .slots .slot b { display: flex; justify-content: space-between; gap: 12px; }
@@ -55,3 +102,10 @@
   #advisor { bottom: calc(46% + 100px); left: 12px; right: 12px; width: auto; min-width: 0; }
   #turn-summary { left: 12px; right: 12px; transform: none; width: auto; min-width: 0; }
 }
+
+/* Novedades (registro de versiones y parches) */
+.news { max-height: 60vh; overflow-y: auto; display: grid; gap: var(--sp-3, 12px); text-align: left; }
+.news-item h3 { font: 700 var(--t-md, 1rem)/1.3 var(--f-display); margin: 0 0 4px; }
+.news-item ul { margin: 0; padding-left: 1.1em; }
+.news-item li { margin: 2px 0; }
+.mm .nuevo { background: var(--qolli, #e2a72e); color: #1a1410; font: 700 .65em/1 var(--f-display); padding: 2px 6px; border-radius: 8px; vertical-align: middle; }

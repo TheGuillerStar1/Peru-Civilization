@@ -122,8 +122,9 @@ kbd { font: 500 0.7rem var(--f-body); padding: 0 5px; border: 1px solid var(--la
 .lp[aria-selected="true"] { border-color: var(--qolli); background: #2a2f4a; box-shadow: inset 2px 0 0 var(--qolli); }
 .lp:hover:not([aria-selected="true"]) { border-color: #46549a; }
 .leader-stage { position: relative; min-height: 320px; }
-.leader-stage::after { content: ''; position: absolute; left: 15%; right: 15%; bottom: 6%; height: 8px; background: var(--cenefa) repeat-x; background-size: 16px 8px; opacity: .8; }
-.leader-stage canvas { position: absolute; inset: 0; display: block; }
+.leader-stage::after { content: ''; position: absolute; left: 15%; right: 15%; bottom: 6%; height: 8px; background: var(--cenefa) repeat-x; background-size: 16px 8px; opacity: .8; pointer-events: none; }
+.leader-stage canvas { position: absolute; inset: 0; display: block; touch-action: none; cursor: grab; }
+.leader-stage.manipulando canvas { cursor: grabbing; }
 .leader-info { overflow-y: auto; display: grid; gap: var(--sp-3); align-content: start; background: #151c35e6; border: 1px solid #2c3766; border-radius: var(--r); padding: var(--sp-4); }
 .leader-info h3 { font-size: var(--t-xl); line-height: 1.05; }
 .leader-info p { margin: 0; }
@@ -149,9 +150,32 @@ select, input[type="number"] { font: 500 var(--t-s) var(--f-body); color: var(--
 .leader-portrait canvas { position: absolute; inset: 0; }
 .leader-portrait .lp-em { position: absolute; left: 6px; top: 6px; z-index: 2; }
 .leader-portrait .lp-em .ico { width: 26px; height: 26px; }
+/* Escenario y partida: la vitrina 3D (personajes de la civilización y el pedazo de tierra) a la derecha */
+.pick-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(300px, 1fr); gap: var(--sp-4); padding: 0 var(--sp-2) var(--sp-4); }
+.pick-col { overflow-y: auto; display: grid; gap: var(--sp-4); align-content: start; padding-right: 4px; }
+.pick-view { display: grid; grid-template-rows: minmax(210px, 1fr) auto auto; gap: var(--sp-2); min-height: 0; align-content: start; }
+.model-stage { position: relative; min-height: 210px; border: 1px solid #2c3766; border-radius: var(--r); overflow: hidden;
+  background: radial-gradient(72% 82% at 50% 56%, #26305c 0%, #151c35f5 80%); }
+.model-stage canvas { position: absolute; inset: 0; display: block; touch-action: none; cursor: grab; }
+.model-stage.manipulando canvas { cursor: grabbing; }
+.pick-view .hint { margin: 0; text-align: center; }
+.cast { display: flex; flex-wrap: wrap; gap: 4px; }
+.cast button { background: var(--lana-2); border: 1px solid #2c3766; border-radius: var(--r); color: var(--algodon);
+  font: 500 var(--t-xs) var(--f-body); padding: 5px 9px; cursor: pointer; }
+.cast button[aria-pressed="true"] { border-color: var(--qolli); background: var(--lana-3); color: var(--qolli-2); font-weight: 700; }
+.cast button:hover:not([aria-pressed="true"]) { border-color: #46549a; }
+.people, .land-info { background: #151c35e6; border: 1px solid #2c3766; border-radius: var(--r); padding: var(--sp-3);
+  display: grid; gap: var(--sp-2); align-content: start; max-height: 46vh; overflow-y: auto; }
+.people h4, .land-info h4 { font: 700 var(--t-xs) var(--f-display); letter-spacing: 0.05em; color: var(--qolli-2); }
+.people p, .land-info p { margin: 0; }
+.land-info .land-head { display: flex; align-items: center; gap: var(--sp-2); }
+.land-info .land-head b { font: 700 var(--t-l)/1.1 var(--f-display); }
 @media (max-width: 1000px) {
   .leader-pick { grid-template-columns: 1fr; grid-template-rows: auto 260px auto; overflow-y: auto; }
   .leader-list { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); max-height: none; }
+  .pick-grid { grid-template-columns: 1fr; grid-template-rows: auto 300px; overflow-y: auto; }
+  .pick-col, .pick-view { overflow: visible; max-height: none; }
+  .people, .land-info { max-height: none; }
 }
 
 /* HUD */

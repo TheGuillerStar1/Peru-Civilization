@@ -28,7 +28,9 @@
     if (info.idle.length) rows.push(`<li>${PC.icon('movimiento')}<button type="button" class="ts-link" data-ts-act="idle">${info.idle.length === 1 ? '1 unidad espera órdenes' : info.idle.length + ' unidades esperan órdenes'} <kbd>N</kbd></button></li>`);
     S.threats = info.threats;
     info.threats.forEach((th, k) => rows.push(`<li class="ts-war">${PC.icon('alerta')}<button type="button" class="ts-link" data-ts-threat="${k}">${th.foes.length === 1 ? '1 unidad' : th.foes.length + ' unidades'} de ${esc(th.civ.name)} cerca de ${esc(th.city.name)}</button></li>`));
-    if (!rows.length) { hide(); return; }
+    if (!rows.length) { hide(); return; } // sin nada que contar no se muestra: el enlace solo acompaña
+    // Registro de avisos con filtros (js/ui/chronicle_ui.js): enlace a la crónica completa.
+    if (UI.chronicle) rows.push(`<li>${PC.icon('cronica')}<button type="button" class="ts-link" data-ts-act="chronicle">Ver en la Crónica</button></li>`);
     S.el.innerHTML = `<div class="ts-head"><b>${PC.fmtYear(g.year)} · turno ${g.turn}</b><button type="button" class="ts-x" data-ts-act="close" aria-label="Cerrar el resumen">${PC.icon('cerrar')}</button></div><ul>${rows.join('')}</ul>`;
     S.el.hidden = false;
     clearTimeout(S.timer);
@@ -47,6 +49,7 @@
       if (b.dataset.tsAct === 'idle') UI.nextUnit();
       if (b.dataset.tsThreat) { const th = S.threats[+b.dataset.tsThreat]; if (th) R.centerOn(th.tile); }
       if (b.dataset.tsAct === 'close') hide();
+      if (b.dataset.tsAct === 'chronicle' && UI.chronicle) UI.chronicle.open();
     });
     S.el.addEventListener('mouseleave', () => { clearTimeout(S.timer); S.timer = setTimeout(hide, 5000); });
   }
