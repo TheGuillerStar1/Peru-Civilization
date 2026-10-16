@@ -6,7 +6,7 @@
 La historia real es el punto de partida; lo que pase después depende de ti.
 
 [![Pruebas](https://github.com/TheGuillerStar1/Peru-Civilization/actions/workflows/test.yml/badge.svg)](https://github.com/TheGuillerStar1/Peru-Civilization/actions/workflows/test.yml)
-![Versión](https://img.shields.io/badge/versi%C3%B3n-0.1.4-e2a72e)
+![Versión](https://img.shields.io/badge/versi%C3%B3n-0.1.5-e2a72e)
 ![Sin instalación](https://img.shields.io/badge/instalaci%C3%B3n-ninguna-86ba6f)
 ![three.js](https://img.shields.io/badge/3D-three.js-a3243b)
 ![Idioma](https://img.shields.io/badge/idioma-espa%C3%B1ol-28335c)
@@ -31,6 +31,23 @@ Un *Civilization* **no lineal** sobre el Perú: tus decisiones, los recursos que
 ## Novedades
 
 También dentro del juego, en **Menú → Novedades**. Cada versión o parche nuevo se anota aquí y en `js/data/novedades.js`.
+
+### v0.1.5 · Más claro de jugar y arranque rápido
+Pensada a partir del feedback de los primeros jugadores: «no se entiende cómo jugar».
+- **Movimiento**: el panel de la unidad muestra los puntos de movimiento que le quedan y cómo mover; al pasar el ratón por una casilla clara se ve cuánto cuesta llegar. Las unidades ya no saltan solas a la siguiente (opción en Opciones).
+- **Producción**: recomendación con motivo y botón directo, lo elegido queda marcado («✔ en producción») y se avisa con los turnos que tardará; los grandes proyectos dicen cuánto oro falta.
+- **Tecnologías**: explicación, leyenda de colores, tecnología recomendada y aviso al elegir.
+- **Paso del tiempo**: banda con el sol y el año que corre al terminar el turno (desactivable).
+- **Logo nuevo** (chakana con el sol) en la pestaña, el menú y el icono del móvil.
+- **Menú compacto** en pantallas pequeñas y **portada instantánea**: se ve una imagen del mapa al abrir y la maqueta 3D la reemplaza con un fundido.
+
+<table>
+<tr>
+<td width="33%"><img src="docs/img/15-produccion-recomendada.jpg" alt="Producción recomendada"><br><sub><b>Producción.</b> Recomendación con motivo y lo elegido marcado.</sub></td>
+<td width="33%"><img src="docs/img/16-tecnologias-guia.jpg" alt="Guía de tecnologías"><br><sub><b>Tecnologías.</b> Explicación, leyenda y recomendada.</sub></td>
+<td width="33%"><img src="docs/img/17-movimiento.jpg" alt="Puntos de movimiento"><br><sub><b>Movimiento.</b> Puntos que quedan y cómo mover.</sub></td>
+</tr>
+</table>
 
 ### v0.1.4 · Líderes renovados y mejoras de jugabilidad
 - **Lista de pendientes del turno (P0.1)**: filas accionables (investigación, ciudades sin producción, unidades sin órdenes, amenazas) que llevan al sitio donde se resuelven.

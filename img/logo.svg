@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Perú Civilization">
+  <defs>
+    <linearGradient id="fondo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2347"/><stop offset="1" stop-color="#0b1022"/></linearGradient>
+    <linearGradient id="oro" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3c95a"/><stop offset="1" stop-color="#e2a72e"/></linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#fondo)"/>
+  <rect x="2" y="2" width="60" height="60" rx="12" fill="none" stroke="#e2a72e" stroke-width="2"/>
+  <polygon points="29,14 35,14 35,20 41,20 41,26 50,26 50,38 41,38 41,44 35,44 35,50 29,50 29,44 23,44 23,38 14,38 14,26 23,26 23,20 29,20" fill="url(#oro)" stroke="#0b1022" stroke-width="0.8" stroke-linejoin="round"/>
+  <circle cx="32" cy="32" r="7.4" fill="#1b2347"/>
+  <circle cx="32" cy="32" r="5.6" fill="#a3243b"/>
+  <circle cx="32" cy="32" r="3" fill="url(#oro)"/>
+</svg>

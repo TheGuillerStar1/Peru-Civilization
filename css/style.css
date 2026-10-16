@@ -55,7 +55,10 @@ kbd { font: 500 0.7rem var(--f-body); padding: 0 5px; border: 1px solid var(--la
 .btn.on { border-color: var(--qolli); color: var(--qolli-2); }
 
 /* Escenario 3D */
-#stage { position: fixed; inset: 0; }
+#stage { position: fixed; inset: 0; background: #0b1022 url(../img/portada.jpg) center / cover no-repeat; }
+#stage canvas { opacity: 0; transition: opacity .9s ease; }
+#stage.ready canvas { opacity: 1; }
+@media (max-width: 760px) { #stage { background-image: url(../img/portada-m.jpg); } }
 #stage canvas { display: block; cursor: grab; touch-action: none; }
 #stage canvas.dragging { cursor: grabbing; }
 #labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }

@@ -1,6 +1,6 @@
 {
   "name": "peru-civilization",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Juego de estrategia histórica no lineal sobre el Perú (estilo Civilization).",
   "private": true,
   "scripts": {

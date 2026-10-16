@@ -274,7 +274,7 @@
     showScreen('title'); previewWorld();
   }
   function startGame(fresh) {
-    $('#menu').hidden = true; $('#hud').hidden = false;
+    $('#menu').hidden = true; $('#hud').hidden = false; $('#stage').classList.add('ready');
     R.preview = false; PC.G.preview = false;
     R.showRegions = !!prefs.regions;
     R.resize(); R.rebuild();
@@ -434,6 +434,12 @@
       <div><span>${ic('poder')}${U.ranged ? 'Distancia' : 'Ataque'}</span><b>${U.cat === 'military' && !U.commander ? `${U.atk}/${U.def}` : U.commander ? 'Aura' : '—'}</b></div></div>`;
     if (U.desc) h += `<p class="small muted" style="margin:0">${esc(U.desc)}</p>`;
     if (!own) return h + diploBox(civ) + tileInfo(t);
+    {
+      const max = PC.maxMoves(u), pips = Array.from({ length: Math.ceil(max) }, (_, k) => `<i class="${k < Math.ceil(u.moves - 0.001) ? 'on' : ''}"></i>`).join('');
+      h += `<div class="movehelp"><div class="pips" aria-hidden="true">${pips}</div><p class="small">${u.moves > 0
+        ? `<b>Te quedan ${+u.moves.toFixed(1)} de ${max} puntos de movimiento este turno.</b> Las casillas claras son adonde llegas: haz clic en una para mover. Cada casilla cuesta 1 punto o más (la sierra y la selva cuestan más). Si no la mueves ahora, pulsa <kbd>N</kbd> para pasar a la siguiente.`
+        : '<b>Sin movimiento hasta el próximo turno.</b> Pulsa <kbd>N</kbd> para pasar a otra unidad.'}</p></div>`;
+    }
     const a = PC.attrition(u, t), fr = PC.faunaRisk(u, t);
     const states = [];
     if (u.fort) states.push('Fortificada'); if (u.heal) states.push('Curándose'); if (u.sentry) states.push('De centinela'); if (u.auto) states.push('Automática'); if (u.path) states.push('En ruta');
@@ -476,8 +482,13 @@
       if (bc !== null) h += `<div class="actions"><button class="btn" data-act="buy" type="button" ${civ.gold >= bc && city.bought !== PC.G.turn ? '' : 'disabled'}>${ic('oro')}Comprar por ${bc} oro</button></div>`;
     } else h += `<p class="note ${b ? 'info' : ''}">${ic(b ? 'oro' : 'alerta')}${b ? 'Produce riqueza: la producción se convierte en oro.' : 'Elige qué producir.'}</p>`;
     h += '</div>';
-    if (PC.projectOptions) h += `<div class="sec"><h4>Grandes proyectos</h4><div class="actgrid">${PC.projectOptions(city).map((o) => `<button type="button" class="act" data-act="project" data-id="${o.id}" title="${esc(o.desc)}" ${o.ok ? '' : 'disabled'}>${ic(o.icon)}<span>${esc(o.name)}</span><small>${o.wait ? `en ${o.wait} t` : `${o.cost} oro`}</small></button>`).join('')}</div></div>`;
     const opts = PC.buildOptions(city);
+    const rec = recommendBuild(city, opts);
+    if (rec && !(b && b.kind === rec.kind && b.id === rec.id)) {
+      h += `<div class="recbox"><span class="tagrec">Recomendado</span><b>${esc(rec.name)}</b><p class="small">${esc(rec.why)}</p>
+        <button type="button" class="btn primary" data-act="build" data-kind="${rec.kind}" data-id="${rec.id}">Producir ${esc(rec.name)}</button></div>`;
+    }
+    if (!b) h += '<p class="small muted">También puedes elegir otra cosa de la lista de abajo. La producción de la ciudad se va llenando cada turno hasta completar el objeto.</p>';
     const tabs = [['unit', 'Unidades'], ['building', 'Edificios'], ['wonder', 'Maravillas']];
     h += `<div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button type="button" role="tab" data-tab="${k}" aria-selected="${UI.buildTab === k}">${l} <small>${opts.filter((o) => o.kind === k).length}</small></button>`).join('')}</div>`;
     const list = opts.filter((o) => o.kind === UI.buildTab || (UI.buildTab === 'building' && o.kind === 'riqueza'));
@@ -492,10 +503,28 @@
       if (o.kind === 'riqueza') tip = 'Convierte la producción en oro';
       const icon = o.kind === 'unit' ? PC.unitIconKey(o.id) : o.kind === 'wonder' ? 'maravilla' : o.kind === 'riqueza' ? 'oro' : 'edificio';
       const active = b && b.kind === o.kind && b.id === o.id;
-      return `<button type="button" class="bopt ${active ? 'active' : ''}" data-act="build" data-kind="${o.kind}" data-id="${o.id}">${ic(icon)}<span>${esc(o.name)}</span><em>${turns}</em><small>${esc(tip)}</small></button>`;
+      return `<button type="button" class="bopt ${active ? 'active' : ''}" data-act="build" data-kind="${o.kind}" data-id="${o.id}" aria-pressed="${active}">${ic(icon)}<span>${esc(o.name)}</span><em>${active ? '✔ en producción' : turns}</em><small>${esc(tip)}</small></button>`;
     }).join('') : '<p class="small muted">Nada disponible en esta categoría. Investiga nuevas tecnologías para desbloquear más.</p>') + '</div>';
+    if (PC.projectOptions) h += `<div class="sec"><h4>Grandes proyectos</h4><p class="small muted" style="margin:0">Se pagan con oro, no con producción. Los que están apagados todavía no se pueden pagar.</p><div class="actgrid">${PC.projectOptions(city).map((o) => `<button type="button" class="act" data-act="project" data-id="${o.id}" title="${esc(o.desc)}" ${o.ok ? '' : 'disabled'}>${ic(o.icon)}<span>${esc(o.name)}</span><small>${o.wait ? `disponible en ${o.wait} t` : `${o.cost} oro${o.ok ? '' : ` (te faltan ${Math.max(0, Math.ceil(o.cost - PC.civ(city.civ).gold))})`}`}</small></button>`).join('')}</div></div>`;
     if (city.buildings.length) h += `<div class="sec"><h4>Construido</h4><div class="chips">${city.buildings.map((x) => `<span class="chip">${esc((PC.BUILDINGS[x] || PC.WONDERS[x]).name)}</span>`).join('')}</div></div>`;
     return h;
+  }
+  // Qué producir primero: cubre lo que a una civilización recién nacida le falta (explorar, defenderse, trabajar la tierra, crecer).
+  function recommendBuild(city, opts) {
+    const p = PC.civ(city.civ), mine = PC.civUnits(p), has = (id) => mine.some((u) => u.type === id);
+    const ok = (kind, id) => opts.find((o) => o.kind === kind && o.id === id);
+    const pick = (kind, id, why) => { const o = ok(kind, id); return o ? { kind, id, name: o.name, why } : null; };
+    const military = mine.filter((u) => PC.utype(u).cat === 'military' && !PC.utype(u).commander).length;
+    return (!has('explorador') && pick('unit', 'explorador', 'Descubre el terreno y las provincias vecinas, y es barato. Un explorador al principio te ahorra sorpresas.'))
+      || (military < 1 && pick('unit', 'guerrero', 'Una ciudad sin defensa es una invitación. Un guerrero protege la ciudad y ahuyenta a los saqueadores.'))
+      || (!has('trabajador') && pick('unit', 'trabajador', 'Construye chacras, andenes y caminos: más alimento y producción para esta ciudad.'))
+      || (PC.civCities(p).length < 3 && !has('colono') && pick('unit', 'colono', 'Funda otra ciudad: más provincias, más producción y más ciencia.'))
+      || (() => {
+        const score = (o) => { const d = PC.BUILDINGS[o.id] || {}; return (Object.values(d.y || {}).reduce((x, v) => x + v, 0) + (d.stab || 0) / 3) / Math.max(1, o.cost); };
+        const b = opts.filter((o) => o.kind === 'building').sort((x, y) => score(y) - score(x))[0];
+        return b ? { kind: 'building', id: b.id, name: b.name, why: 'Es el edificio que más rinde por lo que cuesta: mejora la ciudad para siempre.' } : null;
+      })()
+      || null;
   }
   function onPanelClick(e) {
     const tab = e.target.closest('[data-tab]');
@@ -514,7 +543,11 @@
     else if (act === 'skip' && u) { u.skipTurn = PC.G.turn; nextUnit(); }
     else if (act === 'stop' && u) { u.path = null; UI.select({ unit: u }); }
     else if (act === 'disband' && u) { ask(`¿Disolver ${PC.UNITS[u.type].name}?`, 'Disolver', () => { PC.removeUnit(u); UI.select(null); refresh(); }); }
-    else if (act === 'build' && sel && sel.city) { sel.city.build = { kind: b.dataset.kind, id: b.dataset.id }; UI.select({ city: sel.city }); }
+    else if (act === 'build' && sel && sel.city) {
+      sel.city.build = { kind: b.dataset.kind, id: b.dataset.id }; UI.select({ city: sel.city });
+      const o = PC.buildOptions(sel.city).find((x) => x.kind === b.dataset.kind && x.id === b.dataset.id);
+      if (o) toast(o.kind === 'riqueza' ? `${sel.city.name} producirá oro.` : `${sel.city.name} producirá: ${o.name} (unos ${Math.max(1, Math.ceil(o.cost / Math.max(1, PC.cityYields(sel.city).p)))} turnos).`, 'event');
+    }
     else if (act === 'buy' && sel && sel.city) { PC.buy(sel.city); UI.select({ city: sel.city }); }
     else if (act === 'project' && sel && sel.city) { PC.startProject(sel.city, b.dataset.id); UI.select({ city: sel.city }); }
     else if (act === 'fase2' && PC.canAdvancePhase()) { PC.startNextPhase(); PC.G.phaseChanged = false; startGame(false); }
@@ -635,6 +668,10 @@
     if (t.res && PC.resVisible(PC.player(), t.res)) html += `<br>Recurso: ${esc(PC.RESOURCES[t.res].name)}`;
     if (t.fauna) html += `<br><span class="warn">${esc(PC.FAUNA[t.fauna].name)}</span>`;
     const su = R.sel && R.sel.unit;
+    if (su && R.reach && R.reach.has(t.i) && su.civ === PC.G.playerId) {
+      const cost = +(su.moves - R.reach.get(t.i)).toFixed(1), rest = +R.reach.get(t.i).toFixed(1);
+      html += `<br><b class="good">Cuesta ${cost} de ${PC.maxMoves(su)} puntos de movimiento</b> · te quedarán ${rest}<br><small>Clic para mover aquí</small>`;
+    }
     if (su && R.targets && R.targets.includes(t.i)) {
       const o = PC.combatOdds(su, t.i);
       html += `<br><b class="${o.ratio >= 1 ? 'good' : 'bad'}">Ataque ${o.A.toFixed(1)} contra ${o.D.toFixed(1)}</b>`;
@@ -683,11 +720,21 @@
     else UI.select({ tile: t });
     refresh();
   }
+  // Tras mover o atacar la unidad sigue seleccionada (con lo que le queda), y el jugador decide cuándo pasar a otra
+  // (N, Tab o Enter). Quien prefiera el salto automático lo activa en Opciones.
   function afterAction(u) {
-    if (PC.G.units.includes(u) && u.moves > 0) UI.select({ unit: u }); else UI.select(null);
+    const alive = PC.G.units.includes(u);
+    const left = alive ? +u.moves.toFixed(1) : 0;
+    if (alive) UI.select({ unit: u }); else UI.select(null);
     refresh();
-    if (!R.sel) setTimeout(() => { if (!UI.modal) nextUnit(); }, 200);
+    if (alive && PC.civ(u.civ).isPlayer) {
+      const U = PC.utype(u), max = PC.maxMoves(u);
+      toast(left > 0 ? `${U.name}: le quedan ${left} de ${max} puntos de movimiento. Sigue seleccionada.`
+        : `${U.name}: sin movimiento este turno. Pulsa N para pasar a la siguiente unidad.`);
+    }
+    if ((!alive || !(u.moves > 0)) && UI.pref('autoSiguiente', false)) setTimeout(() => { if (!UI.modal) nextUnit(); }, 200);
   }
+  UI.afterMove = afterAction;
   function onKey(e) {
     if (!PC.G || PC.G.preview || $('#hud').hidden) return;
     if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
@@ -720,12 +767,14 @@
     PC.civUnits(p).forEach((u) => { if (u.path) PC.followPath(u); });
     PC.civUnits(p).forEach((u) => { if (u.auto && !u.task) PC.autoUnit(u); });
     $('#btn-end').disabled = true;
+    const before = { turn: g.turn, year: g.year };
     setTimeout(() => {
       try { PC.endTurn(); } catch (err) { console.error(err); toast('Algo falló al procesar el turno: ' + err.message, 'war'); }
       PC.civUnits(p).forEach((u) => { if (u.auto && !u.task) PC.autoUnit(u); });
       $('#btn-end').disabled = false;
       storage.set(PC.serialize());
       UI.select(null);
+      if (UI.timeLapse) UI.timeLapse(before, { turn: g.turn, year: g.year });
       emit('turn');
       refresh();
       if (g.eventQueue.length) showEvent();
@@ -738,6 +787,7 @@
     emit('refresh');
   }
   UI.refresh = refresh;
+  window.addEventListener('DOMContentLoaded', () => UI.addOption('autoSiguiente', 'Pasar solo a la siguiente unidad cuando una se queda sin movimiento', false));
 
   // ------------------------------------------------------------------ Avisos
   const TOAST_ICON = { war: 'guerra', tech: 'tecnologia', history: 'cronica', event: 'cronica', city: 'ciudad', warn: 'alerta', info: 'sol' };
@@ -791,7 +841,15 @@
   }
   function openTechs() {
     const p = PC.player();
-    let h = `<h2>Tecnologías</h2><p class="lead">Investigación acumulada: <b class="num">${Math.round(p.progress)}</b>. Elige la siguiente; las que muestran un recurso exigen controlarlo o comerciarlo, y por comercio cuestan más.</p><div class="techtree">`;
+    const sci = PC.civCities(p).reduce((s, c) => s + PC.cityYields(c).s, 0);
+    let recId = null; try { recId = PC.aiChooseTech(p); } catch (err) { recId = null; }
+    if (!recId || !PC.canResearch(p, recId)) recId = (PC.availableTechs(p)[0] || {}).id || null;
+    const cur = p.research ? PC.TECH[p.research] : null;
+    let h = `<h2>Tecnologías</h2>
+      <div class="techhelp"><p><b>¿Qué es esto?</b> Cada tecnología desbloquea cosas nuevas: unidades, edificios, mejoras de terreno o maravillas. Se investigan de una en una y tardan varios turnos según tu ciencia (<b>+${sci} por turno</b>).</p>
+      <p class="small"><span class="lg avail"></span>Dorada: puedes investigarla ya · <span class="lg current"></span>En curso · <span class="lg known"></span>Conocida · <span class="lg locked"></span>Gris: bloqueada (te dice qué le falta: otra tecnología o un recurso).</p>
+      ${cur ? `<p class="small">Ahora investigas <b>${esc(cur.name)}</b>. Si eliges otra, el avance se conserva.</p>` : '<p class="small"><b>Aún no investigas nada.</b> Pulsa una tecnología dorada; la marcada como <em>Recomendada</em> es una buena primera opción.</p>'}</div>
+      <p class="lead">Investigación acumulada: <b class="num">${Math.round(p.progress)}</b>. Las que muestran un recurso exigen controlarlo o comerciarlo, y por comercio cuestan más.</p><div class="techtree">`;
     PC.ERAS.forEach((era) => {
       h += `<div class="era" style="--era:${era.color}"><h4>${esc(era.name)}</h4>`;
       PC.TECHS.filter((t) => t.era === era.id).forEach((t) => {
@@ -803,6 +861,7 @@
         const tags = [];
         if (t.needs) tags.push(`<span class="tag res">${esc(t.needs.map((r) => PC.RESOURCES[r].name).join(' o '))}</span>`);
         if (t.hy === null) tags.push('<span class="tag">Historia alternativa</span>');
+        if (t.id === recId && can) tags.unshift('<span class="tag rec">Recomendada</span>');
         h += `<button type="button" class="tech ${cls}" data-tech="${t.id}" ${can ? '' : 'disabled'}><span>${esc(t.name)}</span>
           ${tags.length ? `<span class="tags">${tags.join('')}</span>` : ''}<small>${esc(t.desc || '')}</small>
           ${known ? '<em>Conocida</em>' : `<em>${PC.techCost(p, t.id)} de investigación${acc === 'trade' ? ', por comercio' : ''}</em>`}
@@ -953,7 +1012,13 @@
         return;
       }
       const tech = e.target.closest('[data-tech]');
-      if (tech && !tech.disabled) { PC.player().research = tech.dataset.tech; closeModal(); return; }
+      if (tech && !tech.disabled) {
+        const pl = PC.player(); pl.research = tech.dataset.tech; closeModal();
+        const sci = PC.civCities(pl).reduce((s, c) => s + PC.cityYields(c).s, 0);
+        const turns = Math.max(1, Math.ceil((PC.techCost(pl, pl.research) - pl.progress) / Math.max(1, sci)));
+        toast(`Investigando ${PC.TECH[pl.research].name}: lista en unos ${turns} turnos.`, 'event');
+        return;
+      }
       const lb = e.target.closest('[data-leader]');
       if (lb) { openLeader(PC.civ(+lb.dataset.leader)); return; }
       const da = e.target.closest('[data-dact]');
@@ -1006,6 +1071,8 @@
     }
     if (prefs.quality && R.setQuality) R.setQuality(prefs.quality);
     bindMenu(); bindMap(); bindModal(); renderNav();
-    previewWorld(); showScreen('title');
+    showScreen('title');
+    // La portada (imagen) ya está a la vista: la maqueta 3D se genera justo después y la reemplaza con un fundido.
+    setTimeout(() => { previewWorld(); requestAnimationFrame(() => $('#stage').classList.add('ready')); }, 40);
   });
 })(globalThis.PC = globalThis.PC || {});
