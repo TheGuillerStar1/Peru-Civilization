@@ -21,6 +21,11 @@
   const HEIGHT = { oceano: 0.04, lago: 0.1, desierto: 0.24, valle: 0.2, sierra: 0.55, puna: 0.78, cordillera: 0.95, ceja: 0.42, selva: 0.28,
     llanura: 0.22, pampa: 0.2, estepa: 0.26, bosque: 0.32, pradera: 0.2, taiga: 0.3, tundra: 0.22 };
   R.tileXZ = (t) => [(t.c + 0.5 * (t.r & 1)) * SQ3, t.r * 1.5];
+  // Mapa continuo: anchura del mundo (0 si el mapa no da la vuelta) y reducción de una distancia en x a la copia más cercana.
+  const worldW = () => (PC.G && PC.G.map && PC.G.map.wrap ? PC.G.map.cols * SQ3 : 0);
+  const wrapDx = (dx) => { const W = worldW(); return W ? dx - Math.round(dx / W) * W : dx; };
+  R.worldWidth = worldW;
+  R.wrapDx = wrapDx;
   R.tileTop = (t) => HEIGHT[t.terrain] + (t.terrain === 'oceano' ? 0 : (PC.hash2(t.c, t.r, 11) - 0.5) * 0.06);
   const C = (hex) => new THREE.Color(hex);
 
@@ -123,7 +128,8 @@
     container.appendChild(renderer.domElement);
     renderer.domElement.id = 'map3d';
     scene = new THREE.Scene();
-    scene.background = C('#10162b');
+    // Color de fondo como color de limpieza (no como scene.background): así las pasadas del mapa continuo no se borran entre sí.
+    scene.background = null; renderer.setClearColor(0x10162b, 1);
     scene.fog = new THREE.Fog(0x10162b, 30, 75);
     camera = new THREE.PerspectiveCamera(38, 1, 0.1, 300);
     raycaster = new THREE.Raycaster();
@@ -169,7 +175,7 @@
   function updateCamera() {
     if (camGoal.active) {
       cam.tx += (camGoal.tx - cam.tx) * 0.14; cam.tz += (camGoal.tz - cam.tz) * 0.14;
-      if (Math.abs(camGoal.tx - cam.tx) + Math.abs(camGoal.tz - cam.tz) < 0.01) camGoal.active = false;
+      if (Math.abs(camGoal.tx - cam.tx) + Math.abs(camGoal.tz - cam.tz) < 0.01) { camGoal.active = false; normCam(); }
     }
     const k = (cam.dist - cam.minD) / (cam.maxD - cam.minD);
     const tilt = 0.95 - 0.45 * k; // más inclinada de cerca
@@ -182,21 +188,35 @@
     const ca = Math.cos(cam.az), sa = Math.sin(cam.az);
     cam.tx += (-dx * ca - dy * sa) * f; cam.tz += (dx * sa - dy * ca) * f;
     camGoal.active = false;
+    normCam();
   };
+  // Con el mapa continuo la cámara nunca sale del rango [0, ancho): al pasar un borde reaparece por el otro.
+  function normCam() {
+    const W = worldW(); if (!W) return;
+    cam.tx = ((cam.tx % W) + W) % W;
+  }
   R.rotate = function (d) { cam.az += d; };
   R.zoom = function (f) { cam.dist = PC.clamp(cam.dist * f, cam.minD, cam.maxD); };
   R.centerOn = function (t, instant) {
-    const [x, z] = R.tileXZ(t);
+    const [x0, z] = R.tileXZ(t);
+    const x = cam.tx + wrapDx(x0 - cam.tx); // la copia del destino más cercana: se llega por el camino corto
     camGoal.tx = x; camGoal.tz = z; camGoal.active = true;
-    if (instant) { cam.tx = x; cam.tz = z; camGoal.active = false; }
+    if (instant) { cam.tx = x; cam.tz = z; camGoal.active = false; normCam(); }
   };
   R.pick = function (mx, my) {
     if (!tileMesh) return null;
     const v = new THREE.Vector2((mx / R.w) * 2 - 1, -(my / R.h) * 2 + 1);
     raycaster.setFromCamera(v, camera);
-    const hit = raycaster.intersectObject(tileMesh, false)[0];
-    if (!hit) return null;
-    return tileList[Math.floor(hit.faceIndex / 18)] || null;
+    const W = worldW(), o0 = raycaster.ray.origin.x;
+    let best = null;
+    for (const s of W ? [0, W, -W] : [0]) {
+      raycaster.ray.origin.x = o0 - s; // la copia desplazada +s equivale a mover el rayo -s
+      const hit = raycaster.intersectObject(tileMesh, false)[0];
+      if (hit && (!best || hit.distance < best.distance)) best = hit;
+    }
+    raycaster.ray.origin.x = o0;
+    if (!best) return null;
+    return tileList[Math.floor(best.faceIndex / 18)] || null;
   };
 
   // ---------------------------------------------------------------- mapa base
@@ -457,7 +477,8 @@
       const [x1, z1] = R.tileXZ(t), h1 = R.tileTop(t);
       PC.neighbors(t).forEach((n) => {
         if (!n.road || n.i < t.i || !PC.isExplored(n.i)) return;
-        const [x2, z2] = R.tileXZ(n), h2 = R.tileTop(n);
+        const [x2r, z2] = R.tileXZ(n), h2 = R.tileTop(n);
+        const x2 = x1 + wrapDx(x2r - x1);
         const mx = (x1 + x2) / 2, mz = (z1 + z2) / 2, my = (h1 + h2) / 2 + 0.03;
         const len = Math.hypot(x2 - x1, z2 - z1);
         const ang = Math.atan2(z2 - z1, x2 - x1);
@@ -933,13 +954,34 @@
     if (!tmpV.v) tmpV.v = new THREE.Vector3();
     labels.forEach((el) => {
       const t = el._t; if (!t) return;
-      const [x, z] = R.tileXZ(t);
+      const [x0, z] = R.tileXZ(t);
+      const x = cam.tx + wrapDx(x0 - cam.tx);
       tmpV.v.set(x, R.tileTop(t) + 0.7, z + 0.55).project(camera);
       const sx = (tmpV.v.x + 1) / 2 * R.w, sy = (1 - tmpV.v.y) / 2 * R.h;
       const vis = tmpV.v.z < 1 && sx > -80 && sx < R.w + 80 && sy > -40 && sy < R.h + 40 && cam.dist < 40;
       el.style.display = vis ? '' : 'none';
       if (vis) el.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -50%)`;
     });
+  }
+
+  // Mapa continuo: cerca de un borde lateral se dibuja también la copia del mundo del otro lado
+  // (se desplaza la cámara, no los objetos: así unidades, ciudades y sombras salen solas en la costura).
+  function renderWorld() {
+    const W = worldW();
+    const half = cam.dist * 1.6 + 6;
+    const shifts = [0];
+    if (W && cam.tx < half) shifts.push(W);
+    if (W && cam.tx > W - half) shifts.push(-W);
+    if (shifts.length === 1) { renderer.render(scene, camera); return; }
+    const px = camera.position.x, sx = sun.position.x, stx = sun.target.position.x;
+    renderer.autoClear = false; renderer.clear();
+    shifts.forEach((sh) => {
+      camera.position.x = px + sh; sun.position.x = sx + sh; sun.target.position.x = stx + sh;
+      sun.target.updateMatrixWorld();
+      renderer.render(scene, camera);
+    });
+    camera.position.x = px; sun.position.x = sx; sun.target.position.x = stx; sun.target.updateMatrixWorld();
+    renderer.autoClear = true;
   }
 
   // ---------------------------------------------------------------- ciclo
@@ -953,7 +995,9 @@
     updateCamera();
     unitViews.forEach((v) => {
       if (v.target) {
-        v.group.position.lerp(v.target, Math.min(1, dt * 7));
+        const p = v.group.position, k = Math.min(1, dt * 7), dx = wrapDx(v.target.x - p.x);
+        p.x += dx * k; p.y += (v.target.y - p.y) * k; p.z += (v.target.z - p.z) * k;
+        if (Math.abs(dx) + Math.abs(v.target.y - p.y) + Math.abs(v.target.z - p.z) < 0.01) p.copy(v.target); // llega a su casilla real
       }
       const bob = v.selected ? Math.abs(Math.sin(time * 4)) * 0.05 : 0;
       v.body.position.y = bob;
@@ -963,7 +1007,7 @@
       v.ring.material.opacity = v.ready ? 0.95 : v.own ? 0.55 : 0.85;
       v.hp.quaternion.copy(camera.quaternion);
     });
-    renderer.render(scene, camera);
+    renderWorld();
     placeLabels();
   }
 

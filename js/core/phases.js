@@ -196,8 +196,34 @@
     return na.concat(inYear(sa[era], year).filter((f) => !minor.includes(f[0])).map((f) => [f[0], f[1], f[2], f[3], Math.min(2, Math.max(1, f[4] - 1))]));
   };
 
+  // Mapa continuo: las casillas vacías del rectángulo pasan a ser mar, de modo que se puede navegar de un borde al otro
+  // (el Pacífico se une con el Atlántico, como la vuelta al mundo de Civilization). Las casillas nuevas no llevan región ni recurso.
+  PC.fillOceanRect = function (map) {
+    const rowLat = new Array(map.rows).fill(null), ref = new Array(map.rows).fill(null);
+    map.tiles.forEach((t) => { if (t && rowLat[t.r] === null) { rowLat[t.r] = t.lat; ref[t.r] = t; } });
+    for (let r = 0; r < map.rows; r++) {
+      if (rowLat[r] !== null) continue;
+      let up = r - 1, dn = r + 1;
+      while (up >= 0 && rowLat[up] === null) up--;
+      while (dn < map.rows && rowLat[dn] === null) dn++;
+      const a = up >= 0 ? up : dn, b = dn < map.rows ? dn : up;
+      rowLat[r] = a === b ? rowLat[a] : rowLat[a] + (rowLat[b] - rowLat[a]) * (r - a) / (b - a);
+      ref[r] = ref[a] || ref[b];
+    }
+    for (let r = 0; r < map.rows; r++) {
+      for (let c = 0; c < map.cols; c++) {
+        const i = r * map.cols + c;
+        if (map.tiles[i]) continue;
+        const x = c + ((r & 1) ? 0.5 : 0), t0 = ref[r];
+        map.tiles[i] = newTile(i, c, r, x, rowLat[r], t0 ? t0.lon + (x - t0.x) : 0, 'oceano');
+      }
+    }
+    return map;
+  };
+
   function moveToContinent(phase, map) {
     const g = PC.G;
+    if (g.wrap) PC.fillOceanRect(map);
     const player = PC.player();
     const oldTile = (i) => g.map.tiles[i];
     // Ciudades y unidades del jugador, con sus coordenadas reales.
@@ -208,7 +234,7 @@
     const memory = {};
     g.civs.forEach((c) => { if (!c.isPlayer && c.alive && PC.civCities(c).length) memory[c.key] = { att: PC.rel(c, player).att, embassy: !!PC.rel(player, c).embassy }; });
     g.phase = phase;
-    g.map = map;
+    g.map = map; g.map.wrap = !!g.wrap;
     g.explored = new Array(g.map.tiles.length).fill(-1);
     g.cities = []; g.units = []; g.routes = [];
     g.civs = g.civs.filter((c) => c.isPlayer);

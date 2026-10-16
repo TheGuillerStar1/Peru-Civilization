@@ -32,6 +32,7 @@
       notices: [], nextId: 1, autoplay: !!o.autoplay, divergences: [], revealAll: false
     };
     g.map = PC.generatePeruMap(seed);
+    g.wrap = !!o.wrap; g.map.wrap = false; // mapa continuo: opción de la partida; el mapa del Perú es una región con bordes, y da la vuelta desde Sudamérica
     g.explored = new Array(g.map.tiles.length).fill(-1);
 
     const cul = PC.CULTURES[o.culture];

@@ -6,7 +6,7 @@
 La historia real es el punto de partida; lo que pase después depende de ti.
 
 [![Pruebas](https://github.com/TheGuillerStar1/Peru-Civilization/actions/workflows/test.yml/badge.svg)](https://github.com/TheGuillerStar1/Peru-Civilization/actions/workflows/test.yml)
-![Versión](https://img.shields.io/badge/versi%C3%B3n-0.1.5-e2a72e)
+![Versión](https://img.shields.io/badge/versi%C3%B3n-0.1.4-e2a72e)
 ![Sin instalación](https://img.shields.io/badge/instalaci%C3%B3n-ninguna-86ba6f)
 ![three.js](https://img.shields.io/badge/3D-three.js-a3243b)
 ![Idioma](https://img.shields.io/badge/idioma-espa%C3%B1ol-28335c)
@@ -32,39 +32,37 @@ Un *Civilization* **no lineal** sobre el Perú: tus decisiones, los recursos que
 
 También dentro del juego, en **Menú → Novedades**. Cada versión o parche nuevo se anota aquí y en `js/data/novedades.js`.
 
-### v0.1.5 · Más claro de jugar y arranque rápido
-Pensada a partir del feedback de los primeros jugadores: «no se entiende cómo jugar».
-- **Movimiento**: el panel de la unidad muestra los puntos de movimiento que le quedan y cómo mover; al pasar el ratón por una casilla clara se ve cuánto cuesta llegar. Las unidades ya no saltan solas a la siguiente (opción en Opciones).
-- **Producción**: recomendación con motivo y botón directo, lo elegido queda marcado («✔ en producción») y se avisa con los turnos que tardará; los grandes proyectos dicen cuánto oro falta.
-- **Tecnologías**: explicación, leyenda de colores, tecnología recomendada y aviso al elegir.
+### v0.1.4 · Líderes renovados, juego más claro y mapa continuo
+- **Barra superior explicada**: al pasar el cursor por cada dato (oro, ciencia, cultura, influencia, cohesión, provincias, fecha, civilización y botones) dice qué es y cuánto llevas; al hacer clic abre su detalle (economía de las ciudades, tecnologías, diplomacia, cohesión, provincias o crónica).
+- **Mapa continuo, como en Civilization** (Sudamérica y América): al salir por el borde izquierdo apareces por el derecho, con unidades, barcos y cámara. El vacío del rectángulo pasa a ser mar. Opción en Opciones para las partidas nuevas; el mapa del Perú conserva sus bordes.
+- **Movimiento**: puntos de movimiento visibles, coste de cada casilla al pasar el ratón y sin salto automático de unidad (opcional).
+- **Producción** recomendada con motivo y botón directo; lo elegido queda marcado y se avisa de los turnos. **Tecnologías** explicadas, con leyenda y una recomendada.
 - **Paso del tiempo**: banda con el sol y el año que corre al terminar el turno (desactivable).
-- **Logo nuevo** (chakana con el sol) en la pestaña, el menú y el icono del móvil.
-- **Menú compacto** en pantallas pequeñas y **portada instantánea**: se ve una imagen del mapa al abrir y la maqueta 3D la reemplaza con un fundido.
-
-<table>
-<tr>
-<td width="33%"><img src="docs/img/15-produccion-recomendada.jpg" alt="Producción recomendada"><br><sub><b>Producción.</b> Recomendación con motivo y lo elegido marcado.</sub></td>
-<td width="33%"><img src="docs/img/16-tecnologias-guia.jpg" alt="Guía de tecnologías"><br><sub><b>Tecnologías.</b> Explicación, leyenda y recomendada.</sub></td>
-<td width="33%"><img src="docs/img/17-movimiento.jpg" alt="Puntos de movimiento"><br><sub><b>Movimiento.</b> Puntos que quedan y cómo mover.</sub></td>
-</tr>
-</table>
-
-### v0.1.4 · Líderes renovados y mejoras de jugabilidad
-- **Lista de pendientes del turno (P0.1)**: filas accionables (investigación, ciudades sin producción, unidades sin órdenes, amenazas) que llevan al sitio donde se resuelven.
-- **Consejero permanente (P0.2)**: 15 consejos por condición, sin techo de turno; se pueden posponer o desactivar.
-- **Crónica consultable (P0.4)**: filtros por tipo, búsqueda sin acentos, últimos 20 turnos y salto a la ciudad mencionada.
-- **Vitrinas 3D manipulables** en el menú: girar, acercar y reencuadrar.
-- **Líderes 3D rediseñados**, más fieles a sus versiones históricas (llautu y mascapaicha, tocados, capas y atuendos).
+- **Lista de pendientes** del turno, **consejero permanente** y **crónica** con filtros (P0.1, P0.2, P0.4).
+- **Líderes 3D rediseñados**, más fieles a sus versiones históricas, y **vitrinas 3D** manipulables en el menú.
+- **Logo nuevo** (chakana con el sol), **menú compacto** en pantallas pequeñas y **portada instantánea** que el 3D reemplaza con un fundido.
 - **Botón «Novedades»** en el menú con el registro de versiones y parches.
 
 <table>
 <tr>
-<td width="50%"><img src="docs/img/11-lideres-renovados.jpg" alt="Pachacútec renovado en la elección de líder"><br><sub><b>Líderes renovados.</b> Pachacútec con llautu, mascapaicha sobre la frente y yacolla crema.</sub></td>
-<td width="50%"><img src="docs/img/12-lideres-andinos.jpg" alt="Señor de Sipán con su tocado de oro"><br><sub><b>Tocados bien puestos.</b> El Señor de Sipán, con la media luna de oro pegada a la cabeza.</sub></td>
+<td width="50%"><img src="docs/img/18-cabecera-explicada.jpg" alt="Barra superior con ayuda"><br><sub><b>Barra superior explicada.</b> Cada dato dice qué es y a qué lleva el clic.</sub></td>
+<td width="50%"><img src="docs/img/19-mapa-continuo.jpg" alt="Mapa continuo"><br><sub><b>Mapa continuo.</b> Al otro lado del borde izquierdo aparece la costa este.</sub></td>
 </tr>
 <tr>
-<td width="50%"><img src="docs/img/13-pendientes-consejero.jpg" alt="Lista de pendientes del turno y consejero"><br><sub><b>Pendientes y consejero.</b> «Lo que falta este turno» con acciones directas, y el consejero permanente.</sub></td>
-<td width="50%"><img src="docs/img/14-cronica.jpg" alt="Crónica con filtros y búsqueda"><br><sub><b>Crónica consultable.</b> Filtros por tipo, búsqueda sin acentos y salto a la ciudad.</sub></td>
+<td width="50%"><img src="docs/img/15-produccion-recomendada.jpg" alt="Producción recomendada"><br><sub><b>Producción.</b> Recomendación con motivo y lo elegido marcado.</sub></td>
+<td width="50%"><img src="docs/img/16-tecnologias-guia.jpg" alt="Guía de tecnologías"><br><sub><b>Tecnologías.</b> Explicación, leyenda y recomendada.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/img/17-movimiento.jpg" alt="Puntos de movimiento"><br><sub><b>Movimiento.</b> Puntos que quedan y cómo mover.</sub></td>
+<td width="50%"><img src="docs/img/11-lideres-renovados.jpg" alt="Pachacútec renovado"><br><sub><b>Líderes renovados.</b> Pachacútec con llautu, mascapaicha y yacolla.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/img/12-lideres-andinos.jpg" alt="Señor de Sipán"><br><sub><b>Tocados bien puestos.</b> El Señor de Sipán, con la media luna de oro.</sub></td>
+<td width="50%"><img src="docs/img/13-pendientes-consejero.jpg" alt="Pendientes y consejero"><br><sub><b>Pendientes y consejero.</b> «Lo que falta este turno» con acciones directas.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/img/14-cronica.jpg" alt="Crónica con filtros"><br><sub><b>Crónica consultable.</b> Filtros por tipo, búsqueda y salto a la ciudad.</sub></td>
+<td width="50%"></td>
 </tr>
 </table>
 

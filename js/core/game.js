@@ -6,9 +6,19 @@
   PC.civ = (id) => G().civs.find((c) => c.id === id);
   PC.player = () => PC.civ(G().playerId);
   PC.tile = (i) => G().map.tiles[i];
-  PC.tileCR = (c, r) => { const m = G().map; return (c < 0 || r < 0 || c >= m.cols || r >= m.rows) ? null : m.tiles[r * m.cols + c]; };
+  // Mapa continuo (como en Civilization): con map.wrap, salir por un borde lateral lleva al borde opuesto.
+  PC.tileCR = (c, r) => {
+    const m = G().map;
+    if (r < 0 || r >= m.rows) return null;
+    if (m.wrap) c = ((c % m.cols) + m.cols) % m.cols; else if (c < 0 || c >= m.cols) return null;
+    return m.tiles[r * m.cols + c];
+  };
   PC.neighbors = (t) => PC.hexNeighborsCR(t.c, t.r).map(([c, r]) => PC.tileCR(c, r)).filter(Boolean);
-  PC.dist = (a, b) => PC.hexDistCR(a.c, a.r, b.c, b.r);
+  PC.dist = (a, b) => {
+    const d = PC.hexDistCR(a.c, a.r, b.c, b.r), m = G().map;
+    if (!m.wrap) return d;
+    return Math.min(d, PC.hexDistCR(a.c, a.r, b.c + m.cols, b.r), PC.hexDistCR(a.c, a.r, b.c - m.cols, b.r));
+  };
   PC.tilesWithin = (t, rad) => G().map.tiles.filter((u) => u && PC.dist(t, u) <= rad);
   PC.cityAt = (i) => { const t = PC.tile(i); return t && t.cityId ? PC.cityById(t.cityId) : null; };
   PC.cityById = (id) => G().cities.find((c) => c.id === id);

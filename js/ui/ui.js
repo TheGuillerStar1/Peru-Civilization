@@ -249,7 +249,7 @@
     $('#opt-regions').onchange = (e) => { prefs.regions = e.target.checked; savePrefs(); };
     $('#btn-start').onclick = () => {
       const seed = +$('#opt-seed').value || undefined;
-      PC.newGame({ scenario: UI.menu.scenario, culture: UI.menu.culture, difficulty: UI.menu.difficulty, leader: UI.menu.leader, startRegion: UI.menu.start || undefined, seed, speed: $('#opt-speed').value });
+      PC.newGame({ scenario: UI.menu.scenario, culture: UI.menu.culture, difficulty: UI.menu.difficulty, leader: UI.menu.leader, startRegion: UI.menu.start || undefined, seed, speed: $('#opt-speed').value, wrap: UI.pref('mapaContinuo', true) });
       startGame(true);
     };
     $('#btn-continue').onclick = () => {
@@ -787,6 +787,7 @@
     emit('refresh');
   }
   UI.refresh = refresh;
+  window.addEventListener('DOMContentLoaded', () => UI.addOption('mapaContinuo', 'Mapa continuo, como en Civilization: salir por un borde lleva al opuesto (vale para las partidas nuevas)', true));
   window.addEventListener('DOMContentLoaded', () => UI.addOption('autoSiguiente', 'Pasar solo a la siguiente unidad cuando una se queda sin movimiento', false));
 
   // ------------------------------------------------------------------ Avisos
@@ -919,6 +920,7 @@
     if (R.mountLeader) R.mountLeader($('#dlg-stage'), L.model, civ.color);
   }
   UI.openLeader = openLeader;
+  UI.openTechs = openTechs; UI.openDiplo = openDiplo; UI.openRegions = openRegions; UI.openChronicle = openChronicle; UI.openMenu = openMenu;
   function openDiplo() {
     const p = PC.player(), g = PC.G;
     const others = g.civs.filter((c) => c.alive && !c.isPlayer && (PC.civCities(c).length || PC.civUnits(c).length));
