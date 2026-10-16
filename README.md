@@ -40,6 +40,17 @@ También dentro del juego, en **Menú → Novedades**. Cada versión o parche nu
 - **Líderes 3D rediseñados**, más fieles a sus versiones históricas (llautu y mascapaicha, tocados, capas y atuendos).
 - **Botón «Novedades»** en el menú con el registro de versiones y parches.
 
+<table>
+<tr>
+<td width="50%"><img src="docs/img/11-lideres-renovados.jpg" alt="Pachacútec renovado en la elección de líder"><br><sub><b>Líderes renovados.</b> Pachacútec con llautu, mascapaicha sobre la frente y yacolla crema.</sub></td>
+<td width="50%"><img src="docs/img/12-lideres-andinos.jpg" alt="Señor de Sipán con su tocado de oro"><br><sub><b>Tocados bien puestos.</b> El Señor de Sipán, con la media luna de oro pegada a la cabeza.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/img/13-pendientes-consejero.jpg" alt="Lista de pendientes del turno y consejero"><br><sub><b>Pendientes y consejero.</b> «Lo que falta este turno» con acciones directas, y el consejero permanente.</sub></td>
+<td width="50%"><img src="docs/img/14-cronica.jpg" alt="Crónica con filtros y búsqueda"><br><sub><b>Crónica consultable.</b> Filtros por tipo, búsqueda sin acentos y salto a la ciudad.</sub></td>
+</tr>
+</table>
+
 **Parche 0.1.4** — corregidos los modelos de Pachacútec, Túpac Yupanqui, Huayna Cápac, Manco Inca, Castilla y Grau, que no se dibujaban; constantes duplicadas que impedían cargar el render 3D; hueco entre falda y pecho en los vestidos largos; borla del llautu sobre los ojos y tocados flotantes.
 
 ### v0.1.3 · La Conquista

@@ -1,6 +1,7 @@
 // Registro de cambios del juego (el más reciente primero). Lo muestra el botón «Novedades» del menú
 // y se refleja en la sección «Novedades» del README. Al publicar una versión o un parche, se añade
-// una entrada nueva arriba: { v: versión, fecha, titulo, tipo: 'version' | 'parche', cambios: [...] }.
+// una entrada nueva arriba: { v: versión, fecha, titulo, tipo: 'version' | 'parche', cambios: [...], capturas: [[archivo, pie], ...] }
+  // (las capturas viven en docs/img/ y se enseñan en la ventana Novedades y en el README).
 (function (PC) {
   'use strict';
   PC.VERSION = '0.1.4';
@@ -13,6 +14,12 @@
         'Vitrinas 3D manipulables en el menú: arrastra para girar, rueda para acercar y doble clic para reencuadrar.',
         'Líderes 3D rediseñados: más legibles y fieles a sus versiones históricas (llautu y mascapaicha de los Sapa Inca, tocados de Taycanamo y del Señor de Sipán, capa de Pachacútec, manto de Mama Ocllo, cañón de Bolognesi, poncho de Cáceres).',
         'Nuevo botón «Novedades» en el menú con este registro de versiones y parches.'
+      ],
+      capturas: [
+        ['docs/img/11-lideres-renovados.jpg', 'Pachacútec con su llautu, la mascapaicha sobre la frente y la yacolla crema.'],
+        ['docs/img/12-lideres-andinos.jpg', 'Señor de Sipán y Mama Ocllo: tocados pegados a la cabeza y manto nuevo.'],
+        ['docs/img/13-pendientes-consejero.jpg', 'Lista de pendientes del turno y consejero permanente.'],
+        ['docs/img/14-cronica.jpg', 'Crónica con filtros por tipo, búsqueda y salto a la ciudad.']
       ] },
     { v: '0.1.4', fecha: '2026-10-16', tipo: 'parche', titulo: 'Parche: modelos de líderes que no se dibujaban',
       cambios: [

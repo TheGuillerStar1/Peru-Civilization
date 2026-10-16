@@ -109,3 +109,8 @@
 .news-item ul { margin: 0; padding-left: 1.1em; }
 .news-item li { margin: 2px 0; }
 .mm .nuevo { background: var(--qolli, #e2a72e); color: #1a1410; font: 700 .65em/1 var(--f-display); padding: 2px 6px; border-radius: 8px; vertical-align: middle; }
+
+.news-shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--sp-3, 12px); margin-top: var(--sp-2, 8px); }
+.news-shots figure { margin: 0; }
+.news-shots img { width: 100%; height: auto; display: block; border-radius: 6px; border: 1px solid rgba(255,255,255,.12); }
+.news-shots figcaption { margin-top: 4px; }
